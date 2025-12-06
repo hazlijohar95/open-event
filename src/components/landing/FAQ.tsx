@@ -5,28 +5,36 @@ import { CaretDown } from '@phosphor-icons/react'
 
 const faqs = [
   {
-    question: 'Is Open-Event really free?',
-    answer: 'The core platform is open-source and free to self-host. We also offer managed hosting plans with premium features like advanced analytics, priority support, and custom integrations.',
+    question: 'is this thing really free?',
+    answer: 'yep. the core platform is open-source and free forever. self-host it, fork it, do whatever you want with it. we also have managed hosting if you\'d rather not deal with servers (we get it).',
   },
   {
-    question: 'How do sponsors measure ROI?',
-    answer: 'Sponsors can track booth visits via QR codes, lead captures, brand impressions, and post-event surveys. All metrics are compiled into automated ROI reports that sponsors can share with their teams.',
+    question: 'help, i need to talk to a human!',
+    answer: 'send us an email at hello@open-event.io. we actually read those. wild, we know.',
   },
   {
-    question: 'What vendor categories are supported?',
-    answer: 'We support all major event vendor categories: Catering & F&B, AV & Tech, Venues, Printing & Signage, Merchandise & Swag, Photography & Video, Security, Transportation, and more. Custom categories can be added.',
+    question: 'how do sponsors know their money isn\'t going into a black hole?',
+    answer: 'real metrics, not vanity numbers. booth scans, lead captures, actual engagement data. we compile it into reports that don\'t require a PhD to understand. your CFO will thank you.',
   },
   {
-    question: 'Can I import my existing vendor list?',
-    answer: 'Yes! You can import vendors via CSV or sync through our API. We also offer migration assistance for teams moving from spreadsheets or other platforms.',
+    question: 'can i import my 47-tab vendor spreadsheet?',
+    answer: 'we\'ve seen worse. CSV import, API sync, or just paste it in. we\'ll figure it out. no judgment on your spreadsheet organization skills (okay, maybe a little).',
   },
   {
-    question: 'How does AI matching work?',
-    answer: 'Our AI analyzes event requirements (type, audience, budget, location) against sponsor/vendor profiles (industry, past performance, pricing, availability) to suggest best-fit partners with a match score and reasoning.',
+    question: 'how does the AI matching actually work?',
+    answer: 'it looks at your event requirements and vendor profiles, does some math that would make your head spin, and suggests partners that actually make sense. it\'s like a dating app, but for events. and less awkward.',
   },
   {
-    question: 'Is my data secure?',
-    answer: 'Absolutely. Open-Event is open-source so you can audit the code. For managed hosting, we use encrypted connections, regular backups, and follow industry best practices. Self-hosting gives you complete data control.',
+    question: 'is my data secure?',
+    answer: 'we\'re open-source, so you can literally audit the code yourself. for managed hosting: encryption, backups, the works. or self-host and keep everything on your own servers. your paranoia, your choice.',
+  },
+  {
+    question: 'will open-event make my events better?',
+    answer: 'legally we cannot guarantee that, but... yes. obviously yes.',
+  },
+  {
+    question: 'do you ship internationally?',
+    answer: 'we\'re software, we ship everywhere the internet exists. if you\'re reading this from a submarine or the ISS, please let us know. that would be cool.',
   },
 ]
 
@@ -45,10 +53,10 @@ export function FAQ() {
           )}
         >
           <h2 className="font-mono text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-            Questions?
+            got questions?
           </h2>
           <p className="text-lg text-muted-foreground mt-4">
-            Common questions about Open-Event.
+            we probably have answers. probably.
           </p>
         </div>
 
