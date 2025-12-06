@@ -14,14 +14,17 @@ export async function getCurrentUser(
   // Get the authenticated user identity from Convex auth
   const identity = await ctx.auth.getUserIdentity()
   
-  if (!identity) {
+  if (!identity || !identity.email) {
     return null
   }
+  
+  // Extract email after null check (TypeScript now knows it's defined)
+  const email = identity.email
   
   // Look up the user in the database by email
   const user = await ctx.db
     .query('users')
-    .withIndex('by_email', (q) => q.eq('email', identity.email))
+    .withIndex('by_email', (q) => q.eq('email', email))
     .first()
   
   // Return null if user doesn't exist in database
