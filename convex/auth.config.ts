@@ -20,7 +20,7 @@ import { AuthConfig } from "convex/server";
 export default {
   providers: [
     {
-      domain: process.env.CLERK_ISSUER_URL || "YOUR_ISSUER_URL",
+      domain: "https://infinite-catfish-76.clerk.accounts.dev",
       applicationID: "convex",
     },
   ],

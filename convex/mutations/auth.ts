@@ -19,12 +19,20 @@ export const syncUser = mutation({
     }
 
     const clerkId = identity.subject
-    const email = identity.email
-    const name = identity.name ?? identity.email?.split('@')[0] ?? 'User'
+    // Clerk JWTs sometimes omit `email` unless the template includes it.
+    // Fall back to the first email address if available, otherwise throw a helpful error.
+    const email =
+      identity.email ??
+      // Some Clerk payloads expose emailAddresses array
+      (identity as any).emailAddresses?.[0]?.email ??
+      (identity as any).primaryEmailAddress?.emailAddress
+    const name = identity.name ?? email?.split('@')[0] ?? 'User'
     const imageUrl = identity.pictureUrl
 
     if (!email) {
-      throw new Error('No email found in identity')
+      throw new Error(
+        'No email found in identity. Ensure your Clerk JWT template includes the email claim (e.g. {{user.primary_email_address.email_address}}) and that the user has an email.'
+      )
     }
 
     // Check if user already exists by Clerk ID
