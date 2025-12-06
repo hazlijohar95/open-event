@@ -1,6 +1,14 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   CalendarPlus,
   MagnifyingGlass,
@@ -8,9 +16,19 @@ import {
   Gear,
   Bell,
   User,
+  SignOut,
+  UserCircle,
 } from '@phosphor-icons/react'
 
 export function Dashboard() {
+  const navigate = useNavigate()
+
+  const handleSignOut = () => {
+    // TODO: Backend engineer will implement actual sign out logic
+    console.log('Sign out')
+    navigate('/')
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -27,9 +45,44 @@ export function Dashboard() {
               <Bell size={20} weight="duotone" className="text-muted-foreground" />
             </button>
             <ThemeToggle />
-            <button className="p-2 rounded-lg hover:bg-muted transition-colors">
-              <User size={20} weight="duotone" className="text-muted-foreground" />
-            </button>
+
+            {/* Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                  <User size={20} weight="duotone" className="text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">John Doe</p>
+                    <p className="text-xs text-muted-foreground">john@example.com</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile" className="cursor-pointer">
+                    <UserCircle size={16} weight="duotone" className="mr-2" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/settings" className="cursor-pointer">
+                    <Gear size={16} weight="duotone" className="mr-2" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <SignOut size={16} weight="duotone" className="mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
