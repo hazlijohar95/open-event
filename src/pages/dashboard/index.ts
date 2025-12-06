@@ -1,1 +1,8 @@
 export { Dashboard } from './Dashboard'
+export { DashboardOverview } from './DashboardOverview'
+export { EventsPage } from './EventsPage'
+export { EventCreatePage } from './EventCreatePage'
+export { VendorsPage } from './VendorsPage'
+export { SponsorsPage } from './SponsorsPage'
+export { AnalyticsPage } from './AnalyticsPage'
+export { SettingsPage } from './SettingsPage'

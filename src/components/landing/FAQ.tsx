@@ -42,7 +42,7 @@ export function FAQ() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6">
+    <section className="py-24 sm:py-32 px-6 section-divider">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div

@@ -102,8 +102,11 @@ export function CoreConcept() {
   const currentSteps = audienceSteps[activeAudience].steps
 
   return (
-    <section className="py-24 sm:py-32 px-6 bg-muted/30">
-      <div className="max-w-6xl mx-auto">
+    <section className="relative py-24 sm:py-32 px-6 bg-muted/30 section-divider overflow-hidden">
+      {/* Subtle dot pattern */}
+      <div className="absolute inset-0 bg-dot-pattern opacity-50" />
+
+      <div className="relative max-w-6xl mx-auto">
         {/* Header */}
         <div
           ref={ref}
@@ -140,11 +143,16 @@ export function CoreConcept() {
           </div>
         </div>
 
-        {/* Steps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
-          {currentSteps.map((step, index) => (
-            <StepCard key={`${activeAudience}-${step.number}`} step={step} index={index} />
-          ))}
+        {/* Steps Grid with connecting line */}
+        <div className="relative mt-16">
+          {/* Connecting line - visible on md and up */}
+          <div className="hidden md:block absolute top-[60px] left-[16.67%] right-[16.67%] h-px bg-border" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {currentSteps.map((step, index) => (
+              <StepCard key={`${activeAudience}-${step.number}`} step={step} index={index} />
+            ))}
+          </div>
         </div>
       </div>
     </section>

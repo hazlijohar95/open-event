@@ -5,11 +5,14 @@ export function WhyOpenSource() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6">
+    <section className="relative py-24 sm:py-32 px-6 section-divider overflow-hidden">
+      {/* Grid background */}
+      <div className="absolute inset-0 bg-grid-pattern-subtle" />
+
       <div
         ref={ref}
         className={cn(
-          'max-w-4xl mx-auto space-y-8 transition-all duration-700',
+          'relative max-w-4xl mx-auto space-y-8 transition-all duration-700',
           isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
         )}
       >

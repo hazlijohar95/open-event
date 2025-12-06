@@ -39,8 +39,11 @@ export function AIAgent() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6 bg-muted/30">
-      <div className="max-w-6xl mx-auto">
+    <section className="relative py-24 sm:py-32 px-6 bg-muted/30 section-divider overflow-hidden">
+      {/* Subtle dot pattern */}
+      <div className="absolute inset-0 bg-dot-pattern opacity-30" />
+
+      <div className="relative max-w-6xl mx-auto">
         {/* Header */}
         <div
           ref={ref}

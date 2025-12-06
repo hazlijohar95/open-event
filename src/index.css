@@ -287,3 +287,84 @@ body {
 .animate-demo-slide-right {
   animation: demo-slide-right 500ms ease-out forwards;
 }
+
+/* Grid pattern background - inspired by Zed */
+.bg-grid-pattern {
+  background-image:
+    linear-gradient(to right, var(--border) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.bg-grid-pattern-subtle {
+  background-image:
+    linear-gradient(to right, oklch(0.5 0 0 / 5%) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.5 0 0 / 5%) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.dark .bg-grid-pattern-subtle {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 5%) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 5%) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Dot pattern background */
+.bg-dot-pattern {
+  background-image: radial-gradient(oklch(0.5 0 0 / 15%) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.dark .bg-dot-pattern {
+  background-image: radial-gradient(oklch(1 0 0 / 10%) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Section divider line */
+.section-divider {
+  position: relative;
+}
+
+.section-divider::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(90%, 1200px);
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--border) 20%,
+    var(--border) 80%,
+    transparent
+  );
+}
+
+/* Gradient fade edges for grid */
+.grid-fade-edges {
+  mask-image:
+    linear-gradient(to bottom, transparent, black 100px, black calc(100% - 100px), transparent),
+    linear-gradient(to right, transparent, black 100px, black calc(100% - 100px), transparent);
+  mask-composite: intersect;
+  -webkit-mask-image:
+    linear-gradient(to bottom, transparent, black 100px, black calc(100% - 100px), transparent),
+    linear-gradient(to right, transparent, black 100px, black calc(100% - 100px), transparent);
+  -webkit-mask-composite: source-in;
+}
+
+/* Accent gradient background for CTA sections */
+.bg-accent-gradient {
+  background: linear-gradient(135deg, oklch(0.55 0.2 260) 0%, oklch(0.45 0.25 280) 100%);
+}
+
+/* Subtle glow effect */
+.glow-subtle {
+  box-shadow: 0 0 60px -15px oklch(0.6 0.15 260 / 20%);
+}
+
+.dark .glow-subtle {
+  box-shadow: 0 0 60px -15px oklch(0.7 0.15 260 / 15%);
+}

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { AudienceToggle } from '@/components/ui/audience-toggle'
@@ -9,19 +8,16 @@ import { DemoModal } from '@/components/demo'
 import { useAudienceToggle, type Audience } from '@/hooks/use-audience-toggle'
 import {
   GithubLogo,
-  Code,
-  Rocket,
+  ArrowRight,
   Play,
-  BookOpen,
-  CaretDown,
   SignIn,
-  type Icon,
 } from '@phosphor-icons/react'
 
 interface HeroContent {
   headline: string
   subheadline: string[]
-  ctas: { label: string; icon: Icon; variant: 'default' | 'outline' | 'ghost' }[]
+  primaryCta: { label: string; action: 'github' | 'signup' }
+  secondaryCta: { label: string; action: 'docs' | 'demo' }
   badges: string[]
 }
 
@@ -32,11 +28,8 @@ const content: Record<Audience, HeroContent> = {
       'Self-host or extend. Full API access.',
       'Build custom workflows for any event type.',
     ],
-    ctas: [
-      { label: 'View on GitHub', icon: GithubLogo, variant: 'default' },
-      { label: 'Read Docs', icon: BookOpen, variant: 'outline' },
-      { label: 'Try the API', icon: Code, variant: 'ghost' },
-    ],
+    primaryCta: { label: 'View on GitHub', action: 'github' },
+    secondaryCta: { label: 'Read the docs', action: 'docs' },
     badges: ['open-source', 'self-hostable', 'api-first'],
   },
   organizer: {
@@ -45,16 +38,11 @@ const content: Record<Audience, HeroContent> = {
       'Find vetted sponsors and vendors, manage logistics with AI,',
       'and execute flawless events — all in one platform.',
     ],
-    ctas: [
-      { label: 'Book a Demo', icon: Rocket, variant: 'default' },
-      { label: 'Watch Demo', icon: Play, variant: 'outline' },
-      { label: 'See How It Works', icon: CaretDown, variant: 'ghost' },
-    ],
+    primaryCta: { label: 'Get Started Free', action: 'signup' },
+    secondaryCta: { label: 'Watch demo', action: 'demo' },
     badges: ['ai-powered', 'all-in-one', 'open-source'],
   },
 }
-
-const floatAnimations = ['animate-float-slow', 'animate-float-medium', 'animate-float-fast']
 
 function HeroContentLayer({
   data,
@@ -69,6 +57,21 @@ function HeroContentLayer({
   onWatchDemo?: () => void
   onGetStarted?: () => void
 }) {
+  const handlePrimaryClick = () => {
+    if (data.primaryCta.action === 'github') {
+      window.open('https://github.com/hazlijohar95/open-event', '_blank')
+    } else if (data.primaryCta.action === 'signup') {
+      onGetStarted?.()
+    }
+  }
+
+  const handleSecondaryClick = () => {
+    if (data.secondaryCta.action === 'demo') {
+      onWatchDemo?.()
+    }
+    // 'docs' action can link to docs page when ready
+  }
+
   return (
     <div
       className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 ease-out ${
@@ -88,52 +91,43 @@ function HeroContentLayer({
           {data.subheadline[1]}
         </p>
 
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
-          {data.ctas.map(({ label, icon: IconComponent, variant }) => {
-            const handleClick = () => {
-              if (label === 'Watch Demo') onWatchDemo?.()
-              else if (label === 'Book a Demo') onGetStarted?.()
-              else if (label === 'View on GitHub') {
-                window.open('https://github.com/hazlijohar95/open-event', '_blank')
-              }
-            }
-            return (
-              <Button
-                key={label}
-                size="lg"
-                variant={variant}
-                className="w-full sm:w-auto"
-                onClick={handleClick}
-              >
-                {variant === 'default' ? (
-                  <>
-                    {label}
-                    <IconComponent className="ml-2" size={18} weight="duotone" />
-                  </>
-                ) : (
-                  <>
-                    <IconComponent className="mr-2" size={18} weight="duotone" />
-                    {label}
-                  </>
-                )}
-              </Button>
-            )
-          })}
+        {/* CTAs - Clean 2-button layout */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-12">
+          <Button
+            size="lg"
+            className="w-full sm:w-auto group"
+            onClick={handlePrimaryClick}
+          >
+            {data.primaryCta.label}
+            {data.primaryCta.action === 'github' ? (
+              <GithubLogo className="ml-2" size={18} weight="duotone" />
+            ) : (
+              <ArrowRight className="ml-2 transition-transform group-hover:translate-x-0.5" size={18} weight="bold" />
+            )}
+          </Button>
+
+          <button
+            onClick={handleSecondaryClick}
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer group"
+          >
+            {data.secondaryCta.action === 'demo' && (
+              <Play size={16} weight="fill" className="text-primary" />
+            )}
+            <span className="text-sm font-medium border-b border-transparent group-hover:border-current">
+              {data.secondaryCta.label}
+            </span>
+          </button>
         </div>
 
-        {/* Badge Row */}
-        <div className="flex items-center justify-center gap-3 mt-12">
+        {/* Badge Row - Static, no animation */}
+        <div className="flex items-center justify-center gap-2 mt-12">
           {data.badges.map((badge, index) => (
-            <span key={`${audienceKey}-${badge}`} className="flex items-center gap-3">
-              <Badge
-                variant="secondary"
-                className={floatAnimations[index % floatAnimations.length]}
-              >
+            <span key={`${audienceKey}-${badge}`} className="flex items-center gap-2">
+              <span className="text-xs font-mono text-muted-foreground">
                 {badge}
-              </Badge>
+              </span>
               {index < data.badges.length - 1 && (
-                <span className="text-muted-foreground">·</span>
+                <span className="text-muted-foreground/50">·</span>
               )}
             </span>
           ))}
@@ -154,30 +148,32 @@ export function Hero() {
 
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden">
+      {/* Grid Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern-subtle" />
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-transparent to-background" />
+
       {/* Navigation */}
       <nav className="relative z-20 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
         <Link to="/" className="hover:opacity-80 transition-opacity">
           <Logo />
         </Link>
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-4 sm:gap-6">
           <AudienceToggle value={audience} onChange={setAudience} />
           <ThemeToggle />
-          <div className="hidden sm:flex items-center gap-2 ml-2">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/sign-in">
-                <SignIn size={16} weight="duotone" className="mr-1.5" />
-                Sign In
-              </Link>
-            </Button>
+          <div className="hidden sm:flex items-center gap-6">
+            <Link
+              to="/sign-in"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Sign in
+            </Link>
             <Button size="sm" asChild>
               <Link to="/sign-up">Get Started</Link>
             </Button>
           </div>
-          <Button variant="ghost" size="icon" className="sm:hidden" asChild>
-            <Link to="/sign-in">
-              <SignIn size={20} weight="duotone" />
-            </Link>
-          </Button>
+          <Link to="/sign-in" className="sm:hidden text-muted-foreground hover:text-foreground transition-colors">
+            <SignIn size={20} weight="duotone" />
+          </Link>
         </div>
       </nav>
 

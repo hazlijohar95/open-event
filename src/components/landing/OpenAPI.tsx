@@ -98,8 +98,11 @@ export function OpenAPI() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6 bg-muted/30">
-      <div className="max-w-5xl mx-auto">
+    <section className="relative py-24 sm:py-32 px-6 bg-muted/30 section-divider overflow-hidden">
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 bg-grid-pattern-subtle" />
+
+      <div className="relative max-w-5xl mx-auto">
         <div
           ref={ref}
           className={cn(

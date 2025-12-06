@@ -34,8 +34,11 @@ export function ScreenPreviews() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6 bg-muted/30">
-      <div className="max-w-6xl mx-auto">
+    <section className="relative py-24 sm:py-32 px-6 bg-muted/30 section-divider overflow-hidden">
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 bg-grid-pattern-subtle" />
+
+      <div className="relative max-w-6xl mx-auto">
         {/* Header */}
         <div
           ref={ref}
@@ -88,8 +91,9 @@ function PreviewCard({
     >
       {/* Placeholder Image Area */}
       <div className="aspect-video bg-muted/50 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-grid-pattern-subtle" />
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-        <IconComponent size={48} weight="duotone" className="text-muted-foreground/30" />
+        <IconComponent size={48} weight="duotone" className="text-muted-foreground/30 relative z-10" />
 
         {/* Decorative elements */}
         <div className="absolute top-4 left-4 right-4 h-2 bg-muted-foreground/10 rounded" />

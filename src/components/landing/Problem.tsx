@@ -5,7 +5,7 @@ export function Problem() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6">
+    <section className="py-24 sm:py-32 px-6 section-divider">
       <div
         ref={ref}
         className={cn(

@@ -1,4 +1,7 @@
+import { useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useMutation } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { OnboardingProgress } from '@/components/onboarding'
 import { useOnboarding } from '@/hooks/use-onboarding'
@@ -25,6 +28,9 @@ const steps = [
 
 export function Onboarding() {
   const navigate = useNavigate()
+  const saveProfile = useMutation(api.organizerProfiles.saveProfile)
+  const hasSavedRef = useRef(false)
+
   const {
     currentStep,
     totalSteps,
@@ -35,12 +41,31 @@ export function Onboarding() {
     skipOnboarding,
   } = useOnboarding()
 
-  // Navigate to completion when done
-  if (isComplete) {
-    // TODO: Backend engineer will save the answers to Convex here
-    console.log('Onboarding complete:', answers)
-    navigate('/onboarding/complete', { replace: true })
-  }
+  // Save onboarding data and navigate to completion when done
+  useEffect(() => {
+    if (isComplete && !hasSavedRef.current) {
+      hasSavedRef.current = true
+
+      // Save profile to Convex
+      saveProfile({
+        organizationName: answers.organizationName,
+        organizationType: answers.organizationType,
+        eventTypes: answers.eventTypes,
+        eventScale: answers.eventScale,
+        goals: answers.goals,
+        experienceLevel: answers.experienceLevel,
+        referralSource: answers.referralSource,
+      })
+        .then(() => {
+          navigate('/onboarding/complete', { replace: true })
+        })
+        .catch((error) => {
+          console.error('Failed to save onboarding data:', error)
+          // Navigate anyway - we don't want to block the user
+          navigate('/onboarding/complete', { replace: true })
+        })
+    }
+  }, [isComplete, answers, saveProfile, navigate])
 
   const CurrentStepComponent = steps[currentStep - 1]
 

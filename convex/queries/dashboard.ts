@@ -41,7 +41,7 @@ export const getSuperadminDashboard = query({
         vendors.map((v) => ({
           id: v._id,
           name: v.name,
-          category: '', // Not in minimal schema, return empty string
+          category: v.category,
           submittedAt: v.createdAt,
         }))
       )
@@ -56,7 +56,7 @@ export const getSuperadminDashboard = query({
           return {
             id: event._id,
             title: event.title,
-            date: event.date,
+            date: event.startDate,
             organizerName: organizer?.name || 'Unknown',
           }
         })
@@ -94,8 +94,8 @@ export const getOrganizerDashboard = query({
 
     const now = Date.now()
 
-    // Count upcoming events (date >= now)
-    const upcomingEvents = allEvents.filter((e) => e.date >= now).length
+    // Count upcoming events (startDate >= now)
+    const upcomingEvents = allEvents.filter((e) => e.startDate >= now).length
 
     // Build events array with required shape
     const events = await Promise.all(
@@ -131,8 +131,8 @@ export const getOrganizerDashboard = query({
         return {
           id: event._id,
           title: event.title,
-          date: event.date,
-          venue: '', // Not in minimal schema, return empty string
+          date: event.startDate,
+          venue: event.venueName ?? '', // Use venueName from expanded schema
           sponsors: {
             total: eventSponsors.length,
             pending: pendingSponsors,

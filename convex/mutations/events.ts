@@ -9,7 +9,9 @@ import { v } from 'convex/values'
 export const createEvent = mutation({
   args: {
     title: v.string(),
-    date: v.number(), // Unix timestamp
+    startDate: v.number(), // Unix timestamp
+    description: v.optional(v.string()),
+    eventType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Assert organizer role
@@ -19,7 +21,10 @@ export const createEvent = mutation({
     const eventId = await ctx.db.insert('events', {
       organizerId: currentUser._id,
       title: args.title,
-      date: args.date,
+      startDate: args.startDate,
+      description: args.description,
+      eventType: args.eventType,
+      status: 'draft',
       createdAt: Date.now(),
     })
 
@@ -64,10 +69,10 @@ export const vendorApply = mutation({
     await ctx.db.insert('eventVendors', {
       eventId: args.eventId,
       vendorId: args.vendorId,
+      status: 'inquiry',
       createdAt: Date.now(),
     })
 
     return { success: true }
   },
 })
-
