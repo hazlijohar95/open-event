@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ClerkProvider } from '@clerk/clerk-react'
+import { ClerkProvider, useAuth } from '@clerk/clerk-react'
 import { ConvexProvider, ConvexReactClient } from 'convex/react'
+import { ConvexProviderWithClerk } from 'convex/react-clerk'
 import './index.css'
 import App from './App.tsx'
 
@@ -12,28 +13,38 @@ if (!clerkPubKey) {
   console.warn('Missing VITE_CLERK_PUBLISHABLE_KEY - Auth will not work')
 }
 
-// Convex is optional for now - will be configured later
+// Convex URL
 const convexUrl = import.meta.env.VITE_CONVEX_URL
 const convex = convexUrl ? new ConvexReactClient(convexUrl) : null
 
 function Providers({ children }: { children: React.ReactNode }) {
-  // Wrap with Clerk if key exists
-  let content = children
-
-  if (clerkPubKey) {
-    content = (
+  // Both Clerk and Convex configured - use integrated provider
+  if (clerkPubKey && convex) {
+    return (
       <ClerkProvider publishableKey={clerkPubKey}>
-        {content}
+        <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+          {children}
+        </ConvexProviderWithClerk>
       </ClerkProvider>
     )
   }
 
-  // Wrap with Convex if configured
-  if (convex) {
-    content = <ConvexProvider client={convex}>{content}</ConvexProvider>
+  // Only Clerk configured
+  if (clerkPubKey) {
+    return (
+      <ClerkProvider publishableKey={clerkPubKey}>
+        {children}
+      </ClerkProvider>
+    )
   }
 
-  return content
+  // Only Convex configured
+  if (convex) {
+    return <ConvexProvider client={convex}>{children}</ConvexProvider>
+  }
+
+  // Neither configured
+  return <>{children}</>
 }
 
 createRoot(document.getElementById('root')!).render(
