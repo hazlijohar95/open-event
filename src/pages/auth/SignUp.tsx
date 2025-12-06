@@ -1,8 +1,89 @@
-import { SignUp as ClerkSignUp } from '@clerk/clerk-react'
-import { Link } from 'react-router-dom'
+import { useAuthActions } from '@convex-dev/auth/react'
+import { useConvexAuth } from 'convex/react'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { toast } from 'sonner'
+import {
+  Envelope,
+  Lock,
+  GoogleLogo,
+  MagicWand,
+  CircleNotch,
+  User,
+} from '@phosphor-icons/react'
+
+type AuthFlow = 'password' | 'magicLink'
 
 export function SignUp() {
+  const { signIn } = useAuthActions()
+  const { isAuthenticated, isLoading } = useConvexAuth()
+  const navigate = useNavigate()
+  const [flow, setFlow] = useState<AuthFlow>('password')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
+
+  // Redirect if already authenticated (e.g., after OAuth callback)
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate('/onboarding', { replace: true })
+    }
+  }, [isAuthenticated, isLoading, navigate])
+
+  const handlePasswordSignUp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email || !password) {
+      toast.error('Please enter email and password')
+      return
+    }
+    if (password.length < 8) {
+      toast.error('Password must be at least 8 characters')
+      return
+    }
+    setLoading(true)
+    try {
+      await signIn('password', { email, password, name, flow: 'signUp' })
+      navigate('/onboarding')
+    } catch {
+      toast.error('Failed to create account. Email may already be in use.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!email) {
+      toast.error('Please enter your email')
+      return
+    }
+    setLoading(true)
+    try {
+      await signIn('resend', { email })
+      setMagicLinkSent(true)
+      toast.success('Check your email for the magic link!')
+    } catch {
+      toast.error('Failed to send magic link')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignUp = async () => {
+    setLoading(true)
+    try {
+      await signIn('google', { redirectTo: '/onboarding' })
+    } catch {
+      toast.error('Failed to sign up with Google')
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex">
       {/* Left Panel - Image Background (hidden on mobile) */}
@@ -48,9 +129,7 @@ export function SignUp() {
                 />
               ))}
             </div>
-            <p className="text-white/60 text-sm">
-              Join 500+ event organizers
-            </p>
+            <p className="text-white/60 text-sm">Join 500+ event organizers</p>
           </div>
         </div>
       </div>
@@ -81,30 +160,220 @@ export function SignUp() {
         {/* Main Content */}
         <main className="flex-1 flex items-center justify-center px-6 py-8 lg:px-12">
           <div className="w-full max-w-md">
-            <ClerkSignUp
-              appearance={{
-                elements: {
-                  rootBox: 'w-full',
-                  card: 'bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl w-full',
-                  headerTitle: 'font-mono text-2xl font-bold',
-                  headerSubtitle: 'text-muted-foreground',
-                  formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-foreground',
-                  formFieldInput: 'bg-background border-border',
-                  footerActionLink: 'text-primary hover:text-primary/80',
-                  dividerLine: 'bg-border',
-                  dividerText: 'text-muted-foreground',
-                  socialButtonsBlockButton: 'border-border bg-background hover:bg-muted',
-                  socialButtonsBlockButtonText: 'text-foreground',
-                  formFieldLabel: 'text-foreground',
-                  identityPreviewText: 'text-foreground',
-                  identityPreviewEditButton: 'text-primary',
-                },
-              }}
-              routing="path"
-              path="/sign-up"
-              signInUrl="/sign-in"
-              fallbackRedirectUrl="/onboarding"
-            />
+            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl p-8">
+              <div className="text-center mb-8">
+                <h1 className="font-mono text-2xl font-bold mb-2">
+                  Create Account
+                </h1>
+                <p className="text-muted-foreground">
+                  Get started with your free account today.
+                </p>
+              </div>
+
+              {/* Google OAuth Button */}
+              <button
+                onClick={handleGoogleSignUp}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-3 border border-border bg-background hover:bg-muted rounded-lg py-3 px-4 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+              >
+                <GoogleLogo size={20} weight="bold" />
+                Continue with Google
+              </button>
+
+              {/* Divider */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">
+                    Or continue with
+                  </span>
+                </div>
+              </div>
+
+              {/* Toggle between password and magic link */}
+              <div className="flex rounded-lg border border-border p-1 mb-6">
+                <button
+                  onClick={() => setFlow('password')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    flow === 'password'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <Lock size={16} weight="duotone" />
+                  Password
+                </button>
+                <button
+                  onClick={() => {
+                    setFlow('magicLink')
+                    setMagicLinkSent(false)
+                  }}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    flow === 'magicLink'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  <MagicWand size={16} weight="duotone" />
+                  Magic Link
+                </button>
+              </div>
+
+              {flow === 'password' ? (
+                <form onSubmit={handlePasswordSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <div className="relative">
+                      <User
+                        size={18}
+                        weight="duotone"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      />
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Your name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <div className="relative">
+                      <Envelope
+                        size={18}
+                        weight="duotone"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <div className="relative">
+                      <Lock
+                        size={18}
+                        weight="duotone"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      />
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Min. 8 characters"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="pl-10"
+                        required
+                        minLength={8}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <CircleNotch
+                          size={18}
+                          weight="bold"
+                          className="animate-spin"
+                        />
+                        Creating account...
+                      </>
+                    ) : (
+                      'Create Account'
+                    )}
+                  </button>
+                </form>
+              ) : magicLinkSent ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Envelope
+                      size={32}
+                      weight="duotone"
+                      className="text-primary"
+                    />
+                  </div>
+                  <h3 className="font-semibold mb-2">Check your email</h3>
+                  <p className="text-muted-foreground text-sm mb-4">
+                    We sent a magic link to <strong>{email}</strong>
+                  </p>
+                  <button
+                    onClick={() => setMagicLinkSent(false)}
+                    className="text-primary text-sm hover:underline"
+                  >
+                    Use a different email
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleMagicLink} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="magic-email">Email</Label>
+                    <div className="relative">
+                      <Envelope
+                        size={18}
+                        weight="duotone"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                      />
+                      <Input
+                        id="magic-email"
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <CircleNotch
+                          size={18}
+                          weight="bold"
+                          className="animate-spin"
+                        />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <MagicWand size={18} weight="duotone" />
+                        Send Magic Link
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
+
+              <p className="text-center text-sm text-muted-foreground mt-6">
+                Already have an account?{' '}
+                <Link
+                  to="/sign-in"
+                  className="text-primary hover:underline font-medium"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
         </main>
 
@@ -112,9 +381,13 @@ export function SignUp() {
         <footer className="px-6 py-4 lg:px-12 text-center lg:text-left">
           <p className="text-xs text-muted-foreground">
             By continuing, you agree to our{' '}
-            <Link to="/terms" className="underline hover:text-foreground">Terms of Service</Link>
-            {' '}and{' '}
-            <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>
+            <Link to="/terms" className="underline hover:text-foreground">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="underline hover:text-foreground">
+              Privacy Policy
+            </Link>
           </p>
         </footer>
       </div>

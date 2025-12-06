@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { getCurrentUser } from './auth'
+import { getCurrentUser } from './lib/auth'
 
 // Create a new AI conversation
 export const create = mutation({

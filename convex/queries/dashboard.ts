@@ -1,5 +1,5 @@
 import { query } from '../_generated/server'
-import { assertRole } from '../auth'
+import { assertRole } from '../lib/auth'
 
 /**
  * Superadmin Dashboard Query

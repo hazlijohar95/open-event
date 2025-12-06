@@ -1,6 +1,6 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { getCurrentUser } from './auth'
+import { getCurrentUser } from './lib/auth'
 
 // Save or update organizer profile (onboarding data)
 export const saveProfile = mutation({
@@ -62,10 +62,15 @@ export const getMyProfile = query({
   },
 })
 
-// Get profile by user ID (for admin use)
+// Get profile by user ID - superadmin only
 export const getByUserId = query({
   args: { userId: v.id('users') },
   handler: async (ctx, args) => {
+    const currentUser = await getCurrentUser(ctx)
+    if (!currentUser || currentUser.role !== 'superadmin') {
+      throw new Error('Superadmin access required')
+    }
+
     const profile = await ctx.db
       .query('organizerProfiles')
       .withIndex('by_user', (q) => q.eq('userId', args.userId))

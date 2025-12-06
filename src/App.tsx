@@ -1,5 +1,4 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { AuthenticateWithRedirectCallback } from '@clerk/clerk-react'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
 import {
@@ -32,11 +31,6 @@ import {
 } from '@/pages/dashboard'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 import { PrivacyPolicy, TermsOfService } from '@/pages/legal'
-import { ClerkConvexSync } from '@/components/auth/ClerkConvexSync'
-import { DebugAuth } from '@/components/auth/DebugAuth'
-
-// Check if Convex is configured
-const isConvexConfigured = Boolean(import.meta.env.VITE_CONVEX_URL)
 
 function LandingPage() {
   return (
@@ -64,14 +58,9 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <BrowserRouter>
-        {/* Sync Clerk user to Convex when signed in */}
-        {isConvexConfigured && <ClerkConvexSync />}
-        {/* Debug component - remove after fixing auth */}
-        <DebugAuth />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/sign-in" element={<SignIn />} />
-          <Route path="/sign-in/sso-callback" element={<AuthenticateWithRedirectCallback />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/onboarding/complete" element={<OnboardingComplete />} />

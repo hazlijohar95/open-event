@@ -1,5 +1,6 @@
-import { useUser } from '@clerk/clerk-react'
 import { useQuery, useMutation } from 'convex/react'
+import { useAuthActions } from '@convex-dev/auth/react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import {
   User,
@@ -7,16 +8,12 @@ import {
   Bell,
   Shield,
   CheckCircle,
-  Camera,
   Envelope,
   Calendar,
   Users,
   Target,
   Briefcase,
-  CaretRight,
   SignOut,
-  Key,
-  DeviceMobile,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
@@ -32,7 +29,6 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
-import { useClerk } from '@clerk/clerk-react'
 
 const organizationTypes = [
   { value: 'company', label: 'Company' },
@@ -71,8 +67,9 @@ const experienceLevels = [
 ]
 
 export function SettingsPage() {
-  const { user } = useUser()
-  const { signOut, openUserProfile } = useClerk()
+  const { signOut } = useAuthActions()
+  const navigate = useNavigate()
+  const user = useQuery(api.queries.auth.getCurrentUser)
   const profile = useQuery(api.organizerProfiles.getMyProfile)
   const saveProfile = useMutation(api.organizerProfiles.saveProfile)
 
@@ -152,6 +149,7 @@ export function SettingsPage() {
   const handleSignOut = async () => {
     try {
       await signOut()
+      navigate('/sign-in')
     } catch {
       toast.error('Failed to sign out')
     }
@@ -186,10 +184,10 @@ export function SettingsPage() {
       <div className="p-6 rounded-xl border border-border bg-card">
         <div className="flex items-center gap-4">
           <div className="relative">
-            {user?.imageUrl ? (
+            {user?.image ? (
               <img
-                src={user.imageUrl}
-                alt={user.fullName || 'Profile'}
+                src={user.image}
+                alt={user.name || 'Profile'}
                 className="w-20 h-20 rounded-full object-cover border-2 border-border"
               />
             ) : (
@@ -197,18 +195,12 @@ export function SettingsPage() {
                 <User size={40} weight="duotone" className="text-primary" />
               </div>
             )}
-            <button
-              onClick={() => openUserProfile()}
-              className="absolute -bottom-1 -right-1 p-1.5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              <Camera size={14} weight="bold" />
-            </button>
           </div>
           <div className="flex-1">
-            <h2 className="text-lg font-semibold">{user?.fullName || 'User'}</h2>
+            <h2 className="text-lg font-semibold">{user?.name || 'User'}</h2>
             <p className="text-sm text-muted-foreground flex items-center gap-1.5">
               <Envelope size={14} />
-              {user?.primaryEmailAddress?.emailAddress}
+              {user?.email}
             </p>
             {formData.organizationName && (
               <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
@@ -217,17 +209,6 @@ export function SettingsPage() {
               </p>
             )}
           </div>
-          <button
-            onClick={() => openUserProfile()}
-            className={cn(
-              'hidden sm:inline-flex items-center gap-2 px-3 py-1.5 rounded-lg',
-              'border border-border text-sm',
-              'hover:bg-muted transition-colors cursor-pointer'
-            )}
-          >
-            Edit Profile
-            <CaretRight size={14} />
-          </button>
         </div>
       </div>
 
@@ -325,47 +306,21 @@ export function SettingsPage() {
           <div className="rounded-xl border border-border bg-card p-6">
             <h3 className="font-semibold mb-6 flex items-center gap-2">
               <Shield size={18} weight="duotone" className="text-primary" />
-              Security
+              Account
             </h3>
 
             <div className="space-y-4">
-              <button
-                onClick={() => openUserProfile()}
-                className={cn(
-                  'w-full flex items-center justify-between p-4 rounded-lg border border-border',
-                  'hover:bg-muted/50 transition-colors cursor-pointer text-left'
-                )}
-              >
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                    <Key size={20} weight="duotone" className="text-muted-foreground" />
+                    <Envelope size={20} weight="duotone" className="text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm">Password & Authentication</p>
-                    <p className="text-xs text-muted-foreground">Update password and 2FA settings</p>
+                    <p className="font-medium text-sm">Email Address</p>
+                    <p className="text-xs text-muted-foreground">{user?.email || 'Not set'}</p>
                   </div>
                 </div>
-                <CaretRight size={16} className="text-muted-foreground" />
-              </button>
-
-              <button
-                onClick={() => openUserProfile()}
-                className={cn(
-                  'w-full flex items-center justify-between p-4 rounded-lg border border-border',
-                  'hover:bg-muted/50 transition-colors cursor-pointer text-left'
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                    <DeviceMobile size={20} weight="duotone" className="text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">Connected Devices</p>
-                    <p className="text-xs text-muted-foreground">Manage your logged-in devices</p>
-                  </div>
-                </div>
-                <CaretRight size={16} className="text-muted-foreground" />
-              </button>
+              </div>
 
               <button
                 onClick={handleSignOut}

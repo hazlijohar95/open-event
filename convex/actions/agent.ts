@@ -149,8 +149,7 @@ export const chat = action({
         let parsedArgs: Record<string, unknown> = {}
         try {
           parsedArgs = JSON.parse(toolCall.function.arguments)
-        } catch (parseError) {
-          console.error(`Failed to parse tool arguments for ${toolCall.function.name}:`, parseError)
+        } catch {
           // Continue with empty arguments rather than failing the whole request
         }
         toolCalls.push({

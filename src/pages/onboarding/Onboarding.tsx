@@ -47,7 +47,6 @@ export function Onboarding() {
   useEffect(() => {
     if (existingProfile && !hasCheckedProfile.current) {
       hasCheckedProfile.current = true
-      console.log('[Onboarding] User already has profile, redirecting to dashboard')
       navigate('/dashboard', { replace: true })
     }
   }, [existingProfile, navigate])
@@ -70,8 +69,7 @@ export function Onboarding() {
         .then(() => {
           navigate('/onboarding/complete', { replace: true })
         })
-        .catch((error) => {
-          console.error('Failed to save onboarding data:', error)
+        .catch(() => {
           // Navigate anyway - we don't want to block the user
           navigate('/onboarding/complete', { replace: true })
         })

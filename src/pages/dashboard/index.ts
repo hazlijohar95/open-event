@@ -1,4 +1,3 @@
-export { Dashboard } from './Dashboard'
 export { DashboardOverview } from './DashboardOverview'
 export { EventsPage } from './EventsPage'
 export { EventCreatePage } from './EventCreatePage'

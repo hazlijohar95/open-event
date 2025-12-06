@@ -1,19 +1,28 @@
 import { defineSchema, defineTable } from 'convex/server'
+import { authTables } from '@convex-dev/auth/server'
 import { v } from 'convex/values'
 
 export default defineSchema({
-  // Users - Only superadmin and organizer roles for Phase 2
+  // Convex Auth tables (authAccounts, authSessions, authRefreshTokens, authVerificationCodes, authVerifiers, authRateLimits)
+  ...authTables,
+
+  // Users - Extended with app-specific fields
+  // Convex Auth manages: name, email, image, emailVerificationTime, phone, phoneVerificationTime, isAnonymous
   users: defineTable({
-    clerkId: v.string(),
-    email: v.string(),
-    name: v.string(),
-    imageUrl: v.optional(v.string()),
-    role: v.union(v.literal('superadmin'), v.literal('organizer')),
-    createdAt: v.number(),
+    // Auth fields (managed by Convex Auth)
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    image: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+
+    // App-specific fields
+    role: v.optional(v.union(v.literal('superadmin'), v.literal('organizer'))),
+    createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
-  })
-    .index('by_clerk_id', ['clerkId'])
-    .index('by_email', ['email']),
+  }).index('email', ['email']),
 
   // Organizer Profiles - Stores onboarding data for personalization
   organizerProfiles: defineTable({

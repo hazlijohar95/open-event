@@ -1,4 +1,3 @@
-import { useUser } from '@clerk/clerk-react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import {
@@ -47,7 +46,7 @@ const quickActions = [
 ]
 
 export function DashboardOverview() {
-  const { user } = useUser()
+  const user = useQuery(api.queries.auth.getCurrentUser)
   const profile = useQuery(api.organizerProfiles.getMyProfile)
 
   return (
@@ -55,7 +54,7 @@ export function DashboardOverview() {
       {/* Welcome Section */}
       <div>
         <h1 className="text-2xl font-bold font-mono">
-          Welcome back{user?.firstName ? `, ${user.firstName}` : ''}
+          Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
         </h1>
         <p className="text-muted-foreground mt-1">
           {profile?.organizationName

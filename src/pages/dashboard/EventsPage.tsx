@@ -4,34 +4,11 @@ import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { Plus, Calendar, FunnelSimple, MapPin, Clock, DotsThree } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
-
-const statusFilters = [
-  { value: 'all', label: 'All' },
-  { value: 'draft', label: 'Draft' },
-  { value: 'planning', label: 'Planning' },
-  { value: 'active', label: 'Active' },
-  { value: 'completed', label: 'Completed' },
-]
-
-const statusColors: Record<string, { bg: string; text: string }> = {
-  draft: { bg: 'bg-zinc-500/10', text: 'text-zinc-500' },
-  planning: { bg: 'bg-amber-500/10', text: 'text-amber-500' },
-  active: { bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
-  completed: { bg: 'bg-blue-500/10', text: 'text-blue-500' },
-  cancelled: { bg: 'bg-red-500/10', text: 'text-red-500' },
-}
+import { eventStatusColors, eventStatusFilters, formatDate } from '@/lib/constants'
 
 export function EventsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const events = useQuery(api.events.getMyEvents, { status: statusFilter === 'all' ? undefined : statusFilter })
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
 
   return (
     <div className="space-y-6">
@@ -56,7 +33,7 @@ export function EventsPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
-        {statusFilters.map((filter) => (
+        {eventStatusFilters.map((filter) => (
           <button
             key={filter.value}
             onClick={() => setStatusFilter(filter.value)}
@@ -122,7 +99,7 @@ export function EventsPage() {
         // Events List
         <div className="space-y-3">
           {events.map((event) => {
-            const colors = statusColors[event.status] || statusColors.draft
+            const colors = eventStatusColors[event.status] || eventStatusColors.draft
             return (
               <Link
                 key={event._id}

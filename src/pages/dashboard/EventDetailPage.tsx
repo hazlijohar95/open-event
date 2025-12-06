@@ -23,31 +23,15 @@ import {
   LinkSimple,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import {
+  eventStatusColors,
+  vendorStatusColors,
+  sponsorTierColors,
+  formatDate as formatDateUtil,
+  formatTime as formatTimeUtil,
+} from '@/lib/constants'
 import { toast } from 'sonner'
 import { useState } from 'react'
-
-const statusColors: Record<string, { bg: string; text: string; label: string }> = {
-  draft: { bg: 'bg-zinc-500/10', text: 'text-zinc-500', label: 'Draft' },
-  planning: { bg: 'bg-amber-500/10', text: 'text-amber-500', label: 'Planning' },
-  active: { bg: 'bg-emerald-500/10', text: 'text-emerald-500', label: 'Active' },
-  completed: { bg: 'bg-blue-500/10', text: 'text-blue-500', label: 'Completed' },
-  cancelled: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Cancelled' },
-}
-
-const vendorStatusColors: Record<string, { bg: string; text: string }> = {
-  inquiry: { bg: 'bg-zinc-500/10', text: 'text-zinc-500' },
-  negotiating: { bg: 'bg-amber-500/10', text: 'text-amber-500' },
-  confirmed: { bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
-  declined: { bg: 'bg-red-500/10', text: 'text-red-500' },
-  completed: { bg: 'bg-blue-500/10', text: 'text-blue-500' },
-}
-
-const tierColors: Record<string, { bg: string; text: string }> = {
-  platinum: { bg: 'bg-purple-500/10', text: 'text-purple-500' },
-  gold: { bg: 'bg-amber-500/10', text: 'text-amber-500' },
-  silver: { bg: 'bg-zinc-400/10', text: 'text-zinc-400' },
-  bronze: { bg: 'bg-orange-700/10', text: 'text-orange-700' },
-}
 
 export function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>()
@@ -70,23 +54,6 @@ export function EventDetailPage() {
   )
 
   const deleteEvent = useMutation(api.events.remove)
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-    })
-  }
-
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    })
-  }
 
   const handleDelete = async () => {
     if (!eventId) return
@@ -150,7 +117,7 @@ export function EventDetailPage() {
     )
   }
 
-  const colors = statusColors[event.status] || statusColors.draft
+  const colors = eventStatusColors[event.status] || eventStatusColors.draft
 
   return (
     <div className="space-y-6">
@@ -223,13 +190,13 @@ export function EventDetailPage() {
             <div className="space-y-3">
               <div className="flex items-center gap-3">
                 <Clock size={16} className="text-muted-foreground" />
-                <span>{formatDate(event.startDate)}</span>
+                <span>{formatDateUtil(event.startDate, 'long')}</span>
               </div>
               <div className="flex items-center gap-3">
                 <Clock size={16} className="text-muted-foreground" />
                 <span>
-                  {formatTime(event.startDate)}
-                  {event.endDate && ` - ${formatTime(event.endDate)}`}
+                  {formatTimeUtil(event.startDate)}
+                  {event.endDate && ` - ${formatTimeUtil(event.endDate)}`}
                 </span>
               </div>
               {event.timezone && (
@@ -578,7 +545,7 @@ function SponsorCard({ eventSponsor }: { eventSponsor: {
   if (!sponsor) return null
 
   const statusStyle = vendorStatusColors[status] || vendorStatusColors.inquiry
-  const tierStyle = tier ? tierColors[tier] || tierColors.bronze : null
+  const tierStyle = tier ? sponsorTierColors[tier] || sponsorTierColors.bronze : null
 
   return (
     <div className="p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
@@ -652,7 +619,7 @@ function SponsorCardCompact({ eventSponsor }: { eventSponsor: {
   const { sponsor, tier } = eventSponsor
   if (!sponsor) return null
 
-  const tierStyle = tier ? tierColors[tier] || tierColors.bronze : null
+  const tierStyle = tier ? sponsorTierColors[tier] || sponsorTierColors.bronze : null
 
   return (
     <div className="flex items-center justify-between gap-2 py-2">

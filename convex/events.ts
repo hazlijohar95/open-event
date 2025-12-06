@@ -1,11 +1,14 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
-import { getCurrentUser } from './auth'
+import { getCurrentUser } from './lib/auth'
 
+// List all events - public for marketplace, but only returns basic info
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query('events').collect()
+    // Return only active/planning events for public listing
+    const events = await ctx.db.query('events').collect()
+    return events.filter((e) => e.status === 'active' || e.status === 'planning')
   },
 })
 
@@ -33,16 +36,35 @@ export const getMyEvents = query({
   },
 })
 
+// Get event by ID - public for active events, owner/superadmin for drafts
 export const get = query({
   args: { id: v.id('events') },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id)
+    const event = await ctx.db.get(args.id)
+    if (!event) return null
+
+    // Public events (active/planning) can be viewed by anyone
+    if (event.status === 'active' || event.status === 'planning') {
+      return event
+    }
+
+    // Draft/cancelled events require ownership or superadmin
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required to view this event')
+    }
+
+    if (user.role !== 'superadmin' && event.organizerId !== user._id) {
+      throw new Error('Access denied')
+    }
+
+    return event
   },
 })
 
+// Create event - organizers only, creates for themselves
 export const create = mutation({
   args: {
-    organizerId: v.id('users'),
     title: v.string(),
     startDate: v.number(), // Unix timestamp
     description: v.optional(v.string()),
@@ -62,8 +84,21 @@ export const create = mutation({
     timezone: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required')
+    }
+
+    // Validate budget/attendees are non-negative
+    if (args.budget !== undefined && args.budget < 0) {
+      throw new Error('Budget cannot be negative')
+    }
+    if (args.expectedAttendees !== undefined && args.expectedAttendees < 0) {
+      throw new Error('Expected attendees cannot be negative')
+    }
+
     return await ctx.db.insert('events', {
-      organizerId: args.organizerId,
+      organizerId: user._id, // Always use current user's ID
       title: args.title,
       startDate: args.startDate,
       description: args.description,
@@ -83,6 +118,7 @@ export const create = mutation({
   },
 })
 
+// Update event - owner or superadmin only
 export const update = mutation({
   args: {
     id: v.id('events'),
@@ -116,6 +152,29 @@ export const update = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required')
+    }
+
+    const event = await ctx.db.get(args.id)
+    if (!event) {
+      throw new Error('Event not found')
+    }
+
+    // Only owner or superadmin can update
+    if (user.role !== 'superadmin' && event.organizerId !== user._id) {
+      throw new Error('Access denied - you can only update your own events')
+    }
+
+    // Validate budget/attendees are non-negative
+    if (args.budget !== undefined && args.budget < 0) {
+      throw new Error('Budget cannot be negative')
+    }
+    if (args.expectedAttendees !== undefined && args.expectedAttendees < 0) {
+      throw new Error('Expected attendees cannot be negative')
+    }
+
     const { id, ...updates } = args
     // Filter out undefined values
     const cleanUpdates = Object.fromEntries(
@@ -128,9 +187,42 @@ export const update = mutation({
   },
 })
 
+// Delete event - owner or superadmin only
 export const remove = mutation({
   args: { id: v.id('events') },
   handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required')
+    }
+
+    const event = await ctx.db.get(args.id)
+    if (!event) {
+      throw new Error('Event not found')
+    }
+
+    // Only owner or superadmin can delete
+    if (user.role !== 'superadmin' && event.organizerId !== user._id) {
+      throw new Error('Access denied - you can only delete your own events')
+    }
+
+    // Delete related records (eventVendors, eventSponsors)
+    const eventVendors = await ctx.db
+      .query('eventVendors')
+      .withIndex('by_event', (q) => q.eq('eventId', args.id))
+      .collect()
+    for (const ev of eventVendors) {
+      await ctx.db.delete(ev._id)
+    }
+
+    const eventSponsors = await ctx.db
+      .query('eventSponsors')
+      .withIndex('by_event', (q) => q.eq('eventId', args.id))
+      .collect()
+    for (const es of eventSponsors) {
+      await ctx.db.delete(es._id)
+    }
+
     await ctx.db.delete(args.id)
   },
 })

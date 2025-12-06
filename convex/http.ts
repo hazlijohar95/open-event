@@ -1,17 +1,15 @@
 import { httpRouter } from 'convex/server'
 import { httpAction } from './_generated/server'
+import { auth } from './auth'
 
 // ============================================================================
 // HTTP Router
 // ============================================================================
-// 
-// Note: AI chat functionality is handled via Convex actions (actions/agent.ts)
-// which properly supports 'use node' for OpenAI SDK.
-// 
-// This file is for any public HTTP endpoints that don't require Node.js runtime.
-// ============================================================================
 
 const http = httpRouter()
+
+// Convex Auth HTTP routes (handles OAuth callbacks, magic links, etc.)
+auth.addHttpRoutes(http)
 
 // Health check endpoint
 http.route({

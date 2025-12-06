@@ -81,7 +81,7 @@ export async function executeToolHandler(
 
 async function handleCreateEvent(
   ctx: ActionCtx,
-  userId: string,
+  _userId: string,
   args: Record<string, unknown>
 ): Promise<ToolResult> {
   // Extract and validate required fields
@@ -105,8 +105,8 @@ async function handleCreateEvent(
   const startTimestamp = new Date(`${startDateStr}T${startTimeStr}`).getTime()
 
   // Create the event via mutation with all fields
+  // Note: organizerId is automatically set from the authenticated user in the mutation
   const eventId = await ctx.runMutation(api.events.create, {
-    organizerId: userId as Id<'users'>,
     title,
     description,
     eventType,

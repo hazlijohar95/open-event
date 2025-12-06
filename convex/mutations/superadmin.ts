@@ -1,5 +1,5 @@
 import { mutation } from '../_generated/server'
-import { assertRole } from '../auth'
+import { assertRole } from '../lib/auth'
 import { v } from 'convex/values'
 
 /**

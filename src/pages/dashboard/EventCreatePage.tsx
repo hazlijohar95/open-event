@@ -169,7 +169,6 @@ export function EventCreatePage() {
         }, 1500)
       }
     } catch (err) {
-      console.error('Chat error:', err)
       const error = err instanceof Error ? err : new Error('Unknown error')
       setError(error)
 
@@ -239,8 +238,7 @@ export function EventCreatePage() {
           navigate(`/dashboard/events/${eventId}`)
         }, 1500)
       }
-    } catch (err) {
-      console.error('Confirm error:', err)
+    } catch {
       toast.error('Failed to confirm action')
     } finally {
       setIsLoading(false)
