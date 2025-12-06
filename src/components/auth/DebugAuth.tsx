@@ -34,6 +34,7 @@ export function DebugAuth() {
           iss: payload.iss,
           aud: payload.aud,
           sub: payload.sub,
+          email: payload.email,
           exp: payload.exp,
           iat: payload.iat,
           fullPayload: payload
@@ -54,6 +55,18 @@ export function DebugAuth() {
           console.error('   Expected: "https://infinite-catfish-76.clerk.accounts.dev"')
         } else {
           console.log('✅ [DebugAuth] iss claim is correct')
+        }
+
+        // Check email claim
+        if (!payload.email) {
+          console.error('❌ [DebugAuth] PROBLEM: email claim is missing!')
+          console.error('   Available claims:', Object.keys(payload))
+          console.error('   Full payload:', payload)
+          console.error('   ACTION REQUIRED: Add email claim to Clerk JWT template')
+          console.error('   In Clerk Dashboard → JWT Templates → convex → Claims')
+          console.error('   Add custom claim: email = {{user.primary_email_address.email_address}}')
+        } else {
+          console.log('✅ [DebugAuth] email claim found:', payload.email)
         }
       } catch (error) {
         console.error('🔴 [DebugAuth] Error decoding token:', error)

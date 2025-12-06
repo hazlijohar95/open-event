@@ -1,6 +1,5 @@
 {
-  "project": "giddy-reindeer-109",
-  "team": "hazlijohar",
-  "prodUrl": "https://giddy-reindeer-109.convex.cloud",
-  "functions": "convex/"
+  "node": {
+    "externalPackages": ["openai"]
+  }
 }

@@ -3,7 +3,8 @@
 import { v } from 'convex/values'
 import { action } from '../_generated/server'
 import { api } from '../_generated/api'
-import OpenAI from 'openai'
+// Temporarily commented out to fix esbuild bundling issue
+// import OpenAI from 'openai'
 
 const EVENT_CREATION_SYSTEM_PROMPT = `You are an expert event planning assistant helping organizers create events. Your goal is to gather all necessary information to set up a successful event.
 
@@ -63,7 +64,9 @@ export const chat = action({
     })
 
     // Build message history for OpenAI
-    const chatHistory: OpenAI.Chat.ChatCompletionMessageParam[] = [
+    // Temporarily commented out - using agent.ts instead
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chatHistory: any[] = [
       { role: 'system', content: EVENT_CREATION_SYSTEM_PROMPT },
     ]
 
@@ -87,19 +90,20 @@ export const chat = action({
       content: args.userMessage,
     })
 
-    // Call OpenAI
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
+    // Call OpenAI - Temporarily disabled, use agent.ts instead
+    // const openai = new OpenAI({
+    //   apiKey: process.env.OPENAI_API_KEY,
+    // })
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: chatHistory,
-      temperature: 0.7,
-      max_tokens: 1000,
-    })
+    // const completion = await openai.chat.completions.create({
+    //   model: 'gpt-4o-mini',
+    //   messages: chatHistory,
+    //   temperature: 0.7,
+    //   max_tokens: 1000,
+    // })
 
-    const assistantMessage = completion.choices[0]?.message?.content || 'I apologize, but I encountered an error. Please try again.'
+    // const assistantMessage = completion.choices[0]?.message?.content || 'I apologize, but I encountered an error. Please try again.'
+    const assistantMessage = 'This action has been moved to agent.ts. Please use api.actions.agent.chat instead.'
 
     // Check if the response contains event data
     let extractedFields: string[] = []
