@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { OnboardingState, OnboardingAnswers } from '@/types/onboarding'
 
+/** Total number of onboarding steps */
 const TOTAL_STEPS = 7
 
 const initialState: OnboardingState = {
@@ -10,9 +11,34 @@ const initialState: OnboardingState = {
   isComplete: false,
 }
 
+/**
+ * Hook for managing multi-step onboarding flow state.
+ * Handles step navigation, answer collection, and completion tracking.
+ *
+ * @returns Onboarding state and navigation controls
+ *
+ * @example
+ * ```tsx
+ * const {
+ *   currentStep,
+ *   totalSteps,
+ *   answers,
+ *   isComplete,
+ *   nextStep,
+ *   prevStep,
+ * } = useOnboarding()
+ *
+ * // Move to next step with data
+ * nextStep({ role: 'organizer' })
+ *
+ * // Go back
+ * prevStep()
+ * ```
+ */
 export function useOnboarding() {
   const [state, setState] = useState<OnboardingState>(initialState)
 
+  /** Jump to a specific step (clamped to valid range) */
   const goToStep = useCallback((step: number) => {
     setState((prev) => ({
       ...prev,
@@ -20,6 +46,7 @@ export function useOnboarding() {
     }))
   }, [])
 
+  /** Advance to next step, optionally saving answer data */
   const nextStep = useCallback((data?: Partial<OnboardingAnswers>) => {
     setState((prev) => {
       const newAnswers = data ? { ...prev.answers, ...data } : prev.answers
@@ -41,6 +68,7 @@ export function useOnboarding() {
     })
   }, [])
 
+  /** Go back to previous step */
   const prevStep = useCallback(() => {
     setState((prev) => ({
       ...prev,
@@ -48,6 +76,7 @@ export function useOnboarding() {
     }))
   }, [])
 
+  /** Skip remaining steps and mark as complete */
   const skipOnboarding = useCallback(() => {
     setState((prev) => ({
       ...prev,
@@ -55,6 +84,7 @@ export function useOnboarding() {
     }))
   }, [])
 
+  /** Update answers without changing step */
   const updateAnswers = useCallback((data: Partial<OnboardingAnswers>) => {
     setState((prev) => ({
       ...prev,
@@ -62,6 +92,7 @@ export function useOnboarding() {
     }))
   }, [])
 
+  /** Reset to initial state */
   const reset = useCallback(() => {
     setState(initialState)
   }, [])

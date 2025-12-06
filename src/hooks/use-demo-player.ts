@@ -1,23 +1,53 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 export interface UseDemoPlayerOptions {
-  sceneDuration?: number // Duration per scene in ms
+  /** Duration per scene in milliseconds */
+  sceneDuration?: number
+  /** Total number of scenes */
   sceneCount?: number
+  /** Start playing automatically */
   autoPlay?: boolean
+  /** Loop back to beginning when finished */
   loop?: boolean
 }
 
 export interface UseDemoPlayerReturn {
+  /** Current scene index (0-based) */
   currentScene: number
-  sceneProgress: number // 0-1 within current scene
-  totalProgress: number // 0-1 overall
+  /** Progress within current scene (0-1) */
+  sceneProgress: number
+  /** Overall progress (0-1) */
+  totalProgress: number
+  /** Whether animation is currently playing */
   isPlaying: boolean
+  /** Start or resume playback */
   play: () => void
+  /** Pause playback */
   pause: () => void
+  /** Reset to beginning */
   reset: () => void
+  /** Jump to specific scene */
   goToScene: (scene: number) => void
 }
 
+/**
+ * Hook for controlling a multi-scene demo animation.
+ * Uses requestAnimationFrame for smooth, performant animations.
+ * Automatically pauses on tab blur and respects reduced motion preferences.
+ *
+ * @param options - Configuration options
+ * @returns Demo player state and controls
+ *
+ * @example
+ * ```tsx
+ * const { currentScene, isPlaying, play, pause } = useDemoPlayer({
+ *   sceneDuration: 5000,
+ *   sceneCount: 5,
+ *   autoPlay: true,
+ *   loop: true,
+ * })
+ * ```
+ */
 export function useDemoPlayer(options: UseDemoPlayerOptions = {}): UseDemoPlayerReturn {
   const {
     sceneDuration = 7000,
@@ -26,10 +56,17 @@ export function useDemoPlayer(options: UseDemoPlayerOptions = {}): UseDemoPlayer
     loop = true,
   } = options
 
-  const [isPlaying, setIsPlaying] = useState(autoPlay)
+  // Initialize playing state respecting reduced motion preference
+  const [isPlaying, setIsPlaying] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      return autoPlay && !prefersReducedMotion
+    }
+    return autoPlay
+  })
   const [elapsed, setElapsed] = useState(0)
   const lastTimeRef = useRef<number | null>(null)
-  const rafRef = useRef<number | null>(null)
+  const rafRef = useRef<number>(0)
 
   const totalDuration = sceneDuration * sceneCount
 
@@ -38,49 +75,44 @@ export function useDemoPlayer(options: UseDemoPlayerOptions = {}): UseDemoPlayer
   const currentScene = Math.min(Math.floor(elapsed / sceneDuration), sceneCount - 1)
   const sceneProgress = (elapsed % sceneDuration) / sceneDuration
 
-  // Animation loop using requestAnimationFrame
-  const tick = useCallback((timestamp: number) => {
-    if (lastTimeRef.current === null) {
-      lastTimeRef.current = timestamp
-    }
-
-    const delta = timestamp - lastTimeRef.current
-    lastTimeRef.current = timestamp
-
-    setElapsed((prev) => {
-      const next = prev + delta
-      if (next >= totalDuration) {
-        if (loop) {
-          return next % totalDuration
-        } else {
-          setIsPlaying(false)
-          return totalDuration
-        }
-      }
-      return next
-    })
-
-    rafRef.current = requestAnimationFrame(tick)
-  }, [totalDuration, loop])
-
   // Start/stop animation loop
   useEffect(() => {
-    if (isPlaying) {
-      lastTimeRef.current = null
-      rafRef.current = requestAnimationFrame(tick)
-    } else {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current)
-        rafRef.current = null
-      }
+    if (!isPlaying) {
+      return
     }
 
-    return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current)
+    lastTimeRef.current = null
+
+    const tick = (timestamp: number) => {
+      if (lastTimeRef.current === null) {
+        lastTimeRef.current = timestamp
       }
+
+      const delta = timestamp - lastTimeRef.current
+      lastTimeRef.current = timestamp
+
+      setElapsed((prev) => {
+        const next = prev + delta
+        if (next >= totalDuration) {
+          if (loop) {
+            return next % totalDuration
+          } else {
+            setIsPlaying(false)
+            return totalDuration
+          }
+        }
+        return next
+      })
+
+      rafRef.current = requestAnimationFrame(tick)
     }
-  }, [isPlaying, tick])
+
+    rafRef.current = requestAnimationFrame(tick)
+
+    return () => {
+      cancelAnimationFrame(rafRef.current)
+    }
+  }, [isPlaying, totalDuration, loop])
 
   // Pause when tab loses focus
   useEffect(() => {
@@ -96,13 +128,6 @@ export function useDemoPlayer(options: UseDemoPlayerOptions = {}): UseDemoPlayer
     }
   }, [isPlaying])
 
-  // Respect reduced motion preference
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    if (mediaQuery.matches) {
-      setIsPlaying(false)
-    }
-  }, [])
 
   const play = useCallback(() => setIsPlaying(true), [])
   const pause = useCallback(() => setIsPlaying(false), [])

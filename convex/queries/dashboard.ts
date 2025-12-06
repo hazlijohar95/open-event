@@ -1,6 +1,5 @@
 import { query } from '../_generated/server'
-import { assertRole, getCurrentUser } from '../auth'
-import { Id } from '../_generated/dataModel'
+import { assertRole } from '../auth'
 
 /**
  * Superadmin Dashboard Query
