@@ -24,6 +24,7 @@ import {
   EventsPage,
   EventCreatePage,
   EventDetailPage,
+  EventEditPage,
   VendorsPage,
   SponsorsPage,
   AnalyticsPage,
@@ -79,6 +80,7 @@ function App() {
             <Route path="events" element={<EventsPage />} />
             <Route path="events/new" element={<EventCreatePage />} />
             <Route path="events/:eventId" element={<EventDetailPage />} />
+            <Route path="events/:eventId/edit" element={<EventEditPage />} />
             <Route path="vendors" element={<VendorsPage />} />
             <Route path="sponsors" element={<SponsorsPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />

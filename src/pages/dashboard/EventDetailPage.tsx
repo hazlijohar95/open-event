@@ -17,6 +17,10 @@ import {
   Handshake,
   CheckCircle,
   Warning,
+  Plus,
+  Star,
+  Envelope,
+  LinkSimple,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -30,6 +34,21 @@ const statusColors: Record<string, { bg: string; text: string; label: string }> 
   cancelled: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Cancelled' },
 }
 
+const vendorStatusColors: Record<string, { bg: string; text: string }> = {
+  inquiry: { bg: 'bg-zinc-500/10', text: 'text-zinc-500' },
+  negotiating: { bg: 'bg-amber-500/10', text: 'text-amber-500' },
+  confirmed: { bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
+  declined: { bg: 'bg-red-500/10', text: 'text-red-500' },
+  completed: { bg: 'bg-blue-500/10', text: 'text-blue-500' },
+}
+
+const tierColors: Record<string, { bg: string; text: string }> = {
+  platinum: { bg: 'bg-purple-500/10', text: 'text-purple-500' },
+  gold: { bg: 'bg-amber-500/10', text: 'text-amber-500' },
+  silver: { bg: 'bg-zinc-400/10', text: 'text-zinc-400' },
+  bronze: { bg: 'bg-orange-700/10', text: 'text-orange-700' },
+}
+
 export function EventDetailPage() {
   const { eventId } = useParams<{ eventId: string }>()
   const navigate = useNavigate()
@@ -38,6 +57,16 @@ export function EventDetailPage() {
   const event = useQuery(
     api.events.get,
     eventId ? { id: eventId as Id<'events'> } : 'skip'
+  )
+
+  const eventVendors = useQuery(
+    api.vendors.getByEvent,
+    eventId ? { eventId: eventId as Id<'events'> } : 'skip'
+  )
+
+  const eventSponsors = useQuery(
+    api.sponsors.getByEvent,
+    eventId ? { eventId: eventId as Id<'events'> } : 'skip'
   )
 
   const deleteEvent = useMutation(api.events.remove)
@@ -154,16 +183,17 @@ export function EventDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 sm:ml-auto">
-          <button
+          <Link
+            to={`/dashboard/events/${eventId}/edit`}
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
               'border border-border text-sm font-medium',
-              'hover:bg-muted transition-colors cursor-pointer'
+              'hover:bg-muted transition-colors'
             )}
           >
             <PencilSimple size={16} weight="bold" />
             Edit
-          </button>
+          </Link>
           <button
             onClick={handleDelete}
             disabled={isDeleting}
@@ -274,6 +304,58 @@ export function EventDetailPage() {
               </div>
             </div>
           )}
+
+          {/* Vendors Section - Full Width on Mobile/Tablet */}
+          <div className="rounded-xl border border-border bg-card p-6 lg:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold flex items-center gap-2">
+                <Buildings size={18} weight="duotone" className="text-primary" />
+                Vendors ({eventVendors?.length || 0})
+              </h2>
+              <Link
+                to="/dashboard/vendors"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                Browse
+                <CaretRight size={12} />
+              </Link>
+            </div>
+            {eventVendors && eventVendors.length > 0 ? (
+              <div className="space-y-3">
+                {eventVendors.map((ev) => (
+                  <VendorCard key={ev._id} eventVendor={ev} />
+                ))}
+              </div>
+            ) : (
+              <EmptyVendorState />
+            )}
+          </div>
+
+          {/* Sponsors Section - Full Width on Mobile/Tablet */}
+          <div className="rounded-xl border border-border bg-card p-6 lg:hidden">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold flex items-center gap-2">
+                <Handshake size={18} weight="duotone" className="text-primary" />
+                Sponsors ({eventSponsors?.length || 0})
+              </h2>
+              <Link
+                to="/dashboard/sponsors"
+                className="text-xs text-primary hover:underline flex items-center gap-1"
+              >
+                Browse
+                <CaretRight size={12} />
+              </Link>
+            </div>
+            {eventSponsors && eventSponsors.length > 0 ? (
+              <div className="space-y-3">
+                {eventSponsors.map((es) => (
+                  <SponsorCard key={es._id} eventSponsor={es} />
+                ))}
+              </div>
+            ) : (
+              <EmptySponsorState />
+            )}
+          </div>
         </div>
 
         {/* Right Column - Sidebar */}
@@ -313,47 +395,355 @@ export function EventDetailPage() {
             </div>
           </div>
 
-          {/* Vendors Section */}
-          <div className="rounded-xl border border-border bg-card p-6">
+          {/* Vendors Section - Sidebar on Desktop */}
+          <div className="hidden lg:block rounded-xl border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold flex items-center gap-2">
                 <Buildings size={18} weight="duotone" className="text-primary" />
                 Vendors
               </h2>
-              <Link
-                to="/dashboard/vendors"
-                className="text-xs text-primary hover:underline flex items-center gap-1"
-              >
-                Manage
-                <CaretRight size={12} />
-              </Link>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                {eventVendors?.length || 0}
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              No vendors added yet. Use the AI assistant to find and add vendors.
-            </p>
+            {eventVendors && eventVendors.length > 0 ? (
+              <div className="space-y-3">
+                {eventVendors.slice(0, 3).map((ev) => (
+                  <VendorCardCompact key={ev._id} eventVendor={ev} />
+                ))}
+                {eventVendors.length > 3 && (
+                  <p className="text-xs text-muted-foreground text-center pt-2">
+                    +{eventVendors.length - 3} more vendors
+                  </p>
+                )}
+              </div>
+            ) : (
+              <EmptyVendorState compact />
+            )}
           </div>
 
-          {/* Sponsors Section */}
-          <div className="rounded-xl border border-border bg-card p-6">
+          {/* Sponsors Section - Sidebar on Desktop */}
+          <div className="hidden lg:block rounded-xl border border-border bg-card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold flex items-center gap-2">
                 <Handshake size={18} weight="duotone" className="text-primary" />
                 Sponsors
               </h2>
-              <Link
-                to="/dashboard/sponsors"
-                className="text-xs text-primary hover:underline flex items-center gap-1"
-              >
-                Manage
-                <CaretRight size={12} />
-              </Link>
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                {eventSponsors?.length || 0}
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              No sponsors added yet. Use the AI assistant to find sponsors.
-            </p>
+            {eventSponsors && eventSponsors.length > 0 ? (
+              <div className="space-y-3">
+                {eventSponsors.slice(0, 3).map((es) => (
+                  <SponsorCardCompact key={es._id} eventSponsor={es} />
+                ))}
+                {eventSponsors.length > 3 && (
+                  <p className="text-xs text-muted-foreground text-center pt-2">
+                    +{eventSponsors.length - 3} more sponsors
+                  </p>
+                )}
+              </div>
+            ) : (
+              <EmptySponsorState compact />
+            )}
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+// Vendor Card Component (Full)
+function VendorCard({ eventVendor }: { eventVendor: {
+  _id: Id<'eventVendors'>
+  status: string
+  proposedBudget?: number
+  finalBudget?: number
+  notes?: string
+  vendor: {
+    _id: Id<'vendors'>
+    name: string
+    category: string
+    rating?: number
+    priceRange?: string
+    contactEmail?: string
+    contactPhone?: string
+    website?: string
+    verified: boolean
+  } | null
+} }) {
+  const { vendor, status, proposedBudget, finalBudget } = eventVendor
+  if (!vendor) return null
+
+  const statusStyle = vendorStatusColors[status] || vendorStatusColors.inquiry
+
+  return (
+    <div className="p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium text-sm truncate">{vendor.name}</h3>
+            {vendor.verified && (
+              <CheckCircle size={14} weight="fill" className="text-primary flex-shrink-0" />
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground capitalize mt-0.5">{vendor.category}</p>
+        </div>
+        <span className={cn('px-2 py-0.5 rounded text-xs font-medium capitalize', statusStyle.bg, statusStyle.text)}>
+          {status}
+        </span>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        {vendor.rating && (
+          <span className="flex items-center gap-1">
+            <Star size={12} weight="fill" className="text-amber-500" />
+            {vendor.rating.toFixed(1)}
+          </span>
+        )}
+        {(finalBudget || proposedBudget) && (
+          <span className="flex items-center gap-1">
+            <CurrencyDollar size={12} />
+            ${(finalBudget || proposedBudget)?.toLocaleString()}
+          </span>
+        )}
+        {vendor.contactEmail && (
+          <a href={`mailto:${vendor.contactEmail}`} className="flex items-center gap-1 hover:text-primary">
+            <Envelope size={12} />
+            Email
+          </a>
+        )}
+        {vendor.website && (
+          <a href={vendor.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">
+            <LinkSimple size={12} />
+            Website
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Vendor Card Compact (for sidebar)
+function VendorCardCompact({ eventVendor }: { eventVendor: {
+  _id: Id<'eventVendors'>
+  status: string
+  vendor: {
+    _id: Id<'vendors'>
+    name: string
+    category: string
+    verified: boolean
+  } | null
+} }) {
+  const { vendor, status } = eventVendor
+  if (!vendor) return null
+
+  const statusStyle = vendorStatusColors[status] || vendorStatusColors.inquiry
+
+  return (
+    <div className="flex items-center justify-between gap-2 py-2">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium truncate">{vendor.name}</p>
+          {vendor.verified && <CheckCircle size={12} weight="fill" className="text-primary flex-shrink-0" />}
+        </div>
+        <p className="text-xs text-muted-foreground capitalize">{vendor.category}</p>
+      </div>
+      <span className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium capitalize', statusStyle.bg, statusStyle.text)}>
+        {status}
+      </span>
+    </div>
+  )
+}
+
+// Sponsor Card Component (Full)
+function SponsorCard({ eventSponsor }: { eventSponsor: {
+  _id: Id<'eventSponsors'>
+  tier?: string
+  status: string
+  amount?: number
+  benefits?: string[]
+  sponsor: {
+    _id: Id<'sponsors'>
+    name: string
+    industry: string
+    logoUrl?: string
+    website?: string
+    contactEmail?: string
+    verified: boolean
+  } | null
+} }) {
+  const { sponsor, tier, status, amount } = eventSponsor
+  if (!sponsor) return null
+
+  const statusStyle = vendorStatusColors[status] || vendorStatusColors.inquiry
+  const tierStyle = tier ? tierColors[tier] || tierColors.bronze : null
+
+  return (
+    <div className="p-4 rounded-lg border border-border bg-muted/30 hover:bg-muted/50 transition-colors">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          {sponsor.logoUrl ? (
+            <img src={sponsor.logoUrl} alt={sponsor.name} className="w-10 h-10 rounded-lg object-cover" />
+          ) : (
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Handshake size={20} weight="duotone" className="text-primary" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="font-medium text-sm truncate">{sponsor.name}</h3>
+              {sponsor.verified && (
+                <CheckCircle size={14} weight="fill" className="text-primary flex-shrink-0" />
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground capitalize mt-0.5">{sponsor.industry}</p>
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-1">
+          <span className={cn('px-2 py-0.5 rounded text-xs font-medium capitalize', statusStyle.bg, statusStyle.text)}>
+            {status}
+          </span>
+          {tier && tierStyle && (
+            <span className={cn('px-2 py-0.5 rounded text-xs font-medium capitalize', tierStyle.bg, tierStyle.text)}>
+              {tier}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+        {amount && (
+          <span className="flex items-center gap-1">
+            <CurrencyDollar size={12} />
+            ${amount.toLocaleString()}
+          </span>
+        )}
+        {sponsor.contactEmail && (
+          <a href={`mailto:${sponsor.contactEmail}`} className="flex items-center gap-1 hover:text-primary">
+            <Envelope size={12} />
+            Email
+          </a>
+        )}
+        {sponsor.website && (
+          <a href={sponsor.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">
+            <LinkSimple size={12} />
+            Website
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// Sponsor Card Compact (for sidebar)
+function SponsorCardCompact({ eventSponsor }: { eventSponsor: {
+  _id: Id<'eventSponsors'>
+  tier?: string
+  status: string
+  sponsor: {
+    _id: Id<'sponsors'>
+    name: string
+    industry: string
+    verified: boolean
+  } | null
+} }) {
+  const { sponsor, tier } = eventSponsor
+  if (!sponsor) return null
+
+  const tierStyle = tier ? tierColors[tier] || tierColors.bronze : null
+
+  return (
+    <div className="flex items-center justify-between gap-2 py-2">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium truncate">{sponsor.name}</p>
+          {sponsor.verified && <CheckCircle size={12} weight="fill" className="text-primary flex-shrink-0" />}
+        </div>
+        <p className="text-xs text-muted-foreground capitalize">{sponsor.industry}</p>
+      </div>
+      {tier && tierStyle && (
+        <span className={cn('px-1.5 py-0.5 rounded text-[10px] font-medium capitalize', tierStyle.bg, tierStyle.text)}>
+          {tier}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// Empty Vendor State
+function EmptyVendorState({ compact }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground mb-3">No vendors yet</p>
+        <Link
+          to="/dashboard/events/new"
+          className="text-xs text-primary hover:underline"
+        >
+          Use AI to find vendors
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="text-center py-6">
+      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+        <Buildings size={24} weight="duotone" className="text-muted-foreground" />
+      </div>
+      <p className="text-sm text-muted-foreground mb-4">
+        No vendors added yet. Use the AI assistant to find and add vendors.
+      </p>
+      <Link
+        to="/dashboard/events/new"
+        className={cn(
+          'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs',
+          'bg-primary/10 text-primary hover:bg-primary/20 transition-colors'
+        )}
+      >
+        <Plus size={14} weight="bold" />
+        Find Vendors with AI
+      </Link>
+    </div>
+  )
+}
+
+// Empty Sponsor State
+function EmptySponsorState({ compact }: { compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-sm text-muted-foreground mb-3">No sponsors yet</p>
+        <Link
+          to="/dashboard/events/new"
+          className="text-xs text-primary hover:underline"
+        >
+          Use AI to find sponsors
+        </Link>
+      </div>
+    )
+  }
+
+  return (
+    <div className="text-center py-6">
+      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+        <Handshake size={24} weight="duotone" className="text-muted-foreground" />
+      </div>
+      <p className="text-sm text-muted-foreground mb-4">
+        No sponsors added yet. Use the AI assistant to discover sponsors.
+      </p>
+      <Link
+        to="/dashboard/events/new"
+        className={cn(
+          'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs',
+          'bg-primary/10 text-primary hover:bg-primary/20 transition-colors'
+        )}
+      >
+        <Plus size={14} weight="bold" />
+        Find Sponsors with AI
+      </Link>
     </div>
   )
 }

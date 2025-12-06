@@ -54,6 +54,30 @@ export const getIndustries = query({
   },
 })
 
+// Get sponsors for a specific event with full sponsor details
+export const getByEvent = query({
+  args: { eventId: v.id('events') },
+  handler: async (ctx, args) => {
+    const eventSponsors = await ctx.db
+      .query('eventSponsors')
+      .withIndex('by_event', (q) => q.eq('eventId', args.eventId))
+      .collect()
+
+    // Fetch full sponsor details for each relationship
+    const sponsorsWithDetails = await Promise.all(
+      eventSponsors.map(async (es) => {
+        const sponsor = await ctx.db.get(es.sponsorId)
+        return {
+          ...es,
+          sponsor,
+        }
+      })
+    )
+
+    return sponsorsWithDetails.filter((s) => s.sponsor !== null)
+  },
+})
+
 // Create a new sponsor (for sponsor registration - future feature)
 export const create = mutation({
   args: {

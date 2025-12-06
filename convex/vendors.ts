@@ -54,6 +54,30 @@ export const getCategories = query({
   },
 })
 
+// Get vendors for a specific event with full vendor details
+export const getByEvent = query({
+  args: { eventId: v.id('events') },
+  handler: async (ctx, args) => {
+    const eventVendors = await ctx.db
+      .query('eventVendors')
+      .withIndex('by_event', (q) => q.eq('eventId', args.eventId))
+      .collect()
+
+    // Fetch full vendor details for each relationship
+    const vendorsWithDetails = await Promise.all(
+      eventVendors.map(async (ev) => {
+        const vendor = await ctx.db.get(ev.vendorId)
+        return {
+          ...ev,
+          vendor,
+        }
+      })
+    )
+
+    return vendorsWithDetails.filter((v) => v.vendor !== null)
+  },
+})
+
 // Create a new vendor (for vendor registration - future feature)
 export const create = mutation({
   args: {

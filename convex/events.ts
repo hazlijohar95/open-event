@@ -103,6 +103,17 @@ export const update = mutation({
     // End date/timezone
     endDate: v.optional(v.number()),
     timezone: v.optional(v.string()),
+    // Requirements
+    requirements: v.optional(
+      v.object({
+        catering: v.optional(v.boolean()),
+        av: v.optional(v.boolean()),
+        photography: v.optional(v.boolean()),
+        security: v.optional(v.boolean()),
+        transportation: v.optional(v.boolean()),
+        decoration: v.optional(v.boolean()),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args
