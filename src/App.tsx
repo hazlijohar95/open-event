@@ -22,6 +22,7 @@ import { Onboarding, OnboardingComplete } from '@/pages/onboarding'
 import { Dashboard } from '@/pages/dashboard'
 import { PrivacyPolicy, TermsOfService } from '@/pages/legal'
 import { ClerkConvexSync } from '@/components/auth/ClerkConvexSync'
+import { DebugAuth } from '@/components/auth/DebugAuth'
 
 // Check if Convex is configured
 const isConvexConfigured = Boolean(import.meta.env.VITE_CONVEX_URL)
@@ -54,6 +55,8 @@ function App() {
       <BrowserRouter>
         {/* Sync Clerk user to Convex when signed in */}
         {isConvexConfigured && <ClerkConvexSync />}
+        {/* Debug component - remove after fixing auth */}
+        <DebugAuth />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/sign-in" element={<SignIn />} />
