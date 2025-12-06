@@ -12,8 +12,8 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
-    .index('by_email', ['email'])
-    .index('by_clerk_id', ['clerkId']),
+    .index('by_clerk_id', ['clerkId'])
+    .index('by_email', ['email']),
 
   // Events - Minimal fields: organizerId, title, date
   events: defineTable({

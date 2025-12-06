@@ -42,7 +42,7 @@ export function MultiSelect({
             type="button"
             onClick={() => toggleOption(option.value)}
             className={cn(
-              'relative px-4 py-3 rounded-xl border-2 text-left transition-all duration-200',
+              'relative px-4 py-3 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer',
               'hover:scale-[1.02] active:scale-[0.98]',
               'animate-in fade-in slide-in-from-bottom-2',
               isSelected

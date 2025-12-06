@@ -23,7 +23,7 @@ export function OptionCard({
       type="button"
       onClick={onClick}
       className={cn(
-        'relative w-full p-4 rounded-xl border-2 text-left transition-all duration-200',
+        'relative w-full p-4 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer',
         'hover:scale-[1.02] hover:shadow-md active:scale-[0.98]',
         'animate-in fade-in slide-in-from-bottom-2',
         isSelected

@@ -34,9 +34,11 @@ export function CallToAction() {
               <Rocket className="ml-2 group-hover:translate-x-1 transition-transform" size={18} weight="duotone" />
             </Link>
           </Button>
-          <Button size="lg" variant="outline" className="w-full sm:w-auto">
-            <GithubLogo className="mr-2" size={18} weight="duotone" />
-            View on GitHub
+          <Button size="lg" variant="outline" className="w-full sm:w-auto" asChild>
+            <a href="https://github.com/hazlijohar95/open-event" target="_blank" rel="noopener noreferrer">
+              <GithubLogo className="mr-2" size={18} weight="duotone" />
+              View on GitHub
+            </a>
           </Button>
           <Button size="lg" variant="ghost" className="w-full sm:w-auto">
             <BookOpen className="mr-2" size={18} weight="duotone" />

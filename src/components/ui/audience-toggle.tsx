@@ -21,7 +21,7 @@ export function AudienceToggle({ value, onChange }: AudienceToggleProps) {
         aria-selected={isDeveloper}
         onClick={() => onChange('developer')}
         className={cn(
-          'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200',
+          'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer',
           isDeveloper
             ? 'bg-primary text-primary-foreground shadow-sm'
             : 'text-muted-foreground hover:text-foreground'
@@ -35,7 +35,7 @@ export function AudienceToggle({ value, onChange }: AudienceToggleProps) {
         aria-selected={!isDeveloper}
         onClick={() => onChange('organizer')}
         className={cn(
-          'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200',
+          'flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer',
           !isDeveloper
             ? 'bg-primary text-primary-foreground shadow-sm'
             : 'text-muted-foreground hover:text-foreground'

@@ -19,6 +19,10 @@ import {
 import { SignIn, SignUp } from '@/pages/auth'
 import { Onboarding, OnboardingComplete } from '@/pages/onboarding'
 import { Dashboard } from '@/pages/dashboard'
+import { ClerkConvexSync } from '@/components/auth/ClerkConvexSync'
+
+// Check if Convex is configured
+const isConvexConfigured = Boolean(import.meta.env.VITE_CONVEX_URL)
 
 function LandingPage() {
   return (
@@ -46,6 +50,8 @@ function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <BrowserRouter>
+        {/* Sync Clerk user to Convex when signed in */}
+        {isConvexConfigured && <ClerkConvexSync />}
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/sign-in" element={<SignIn />} />

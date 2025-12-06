@@ -3,15 +3,7 @@ import { mutation, query } from './_generated/server'
 
 export const list = query({
   args: {
-    role: v.optional(
-      v.union(
-        v.literal('superadmin'),
-        v.literal('organizer'),
-        v.literal('vendor'),
-        v.literal('sponsor'),
-        v.literal('volunteer')
-      )
-    ),
+    role: v.optional(v.union(v.literal('superadmin'), v.literal('organizer'))),
   },
   handler: async (ctx, args) => {
     const users = await ctx.db.query('users').collect()
@@ -39,18 +31,23 @@ export const getByEmail = query({
   },
 })
 
+export const getByClerkId = query({
+  args: { clerkId: v.string() },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query('users')
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', args.clerkId))
+      .first()
+  },
+})
+
 export const create = mutation({
   args: {
+    clerkId: v.string(),
     email: v.string(),
     name: v.string(),
-    role: v.union(
-      v.literal('superadmin'),
-      v.literal('organizer'),
-      v.literal('vendor'),
-      v.literal('sponsor'),
-      v.literal('volunteer')
-    ),
-    avatarUrl: v.optional(v.string()),
+    role: v.union(v.literal('superadmin'), v.literal('organizer')),
+    imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert('users', {
@@ -64,19 +61,14 @@ export const update = mutation({
   args: {
     id: v.id('users'),
     name: v.optional(v.string()),
-    role: v.optional(
-      v.union(
-        v.literal('superadmin'),
-        v.literal('organizer'),
-        v.literal('vendor'),
-        v.literal('sponsor'),
-        v.literal('volunteer')
-      )
-    ),
-    avatarUrl: v.optional(v.string()),
+    role: v.optional(v.union(v.literal('superadmin'), v.literal('organizer'))),
+    imageUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { id, ...updates } = args
-    await ctx.db.patch(id, updates)
+    await ctx.db.patch(id, {
+      ...updates,
+      updatedAt: Date.now(),
+    })
   },
 })
