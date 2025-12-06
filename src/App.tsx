@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AuthenticateWithRedirectCallback } from '@clerk/clerk-react'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
 import {
@@ -56,6 +57,7 @@ function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/sign-in" element={<SignIn />} />
+          <Route path="/sign-in/sso-callback" element={<AuthenticateWithRedirectCallback />} />
           <Route path="/sign-up" element={<SignUp />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/onboarding/complete" element={<OnboardingComplete />} />
