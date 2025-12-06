@@ -21,11 +21,13 @@ export const syncUser = mutation({
     const clerkId = identity.subject
     // Clerk JWTs sometimes omit `email` unless the template includes it.
     // Fall back to the first email address if available, otherwise throw a helpful error.
+    // Clerk identity types vary by config, using Record for flexibility
+    const identityWithExtras = identity as Record<string, unknown>
     const email =
       identity.email ??
       // Some Clerk payloads expose emailAddresses array
-      (identity as any).emailAddresses?.[0]?.email ??
-      (identity as any).primaryEmailAddress?.emailAddress
+      (identityWithExtras.emailAddresses as Array<{ email?: string }> | undefined)?.[0]?.email ??
+      (identityWithExtras.primaryEmailAddress as { emailAddress?: string } | undefined)?.emailAddress
     const name = identity.name ?? email?.split('@')[0] ?? 'User'
     const imageUrl = identity.pictureUrl
 

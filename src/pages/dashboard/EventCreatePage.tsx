@@ -12,9 +12,13 @@ import {
   Check,
   Robot,
   Lightning,
+  Stop,
+  ArrowClockwise,
+  WarningCircle,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { ToolExecutionCard, ToolConfirmationDialog } from '@/components/agent'
+import { toast } from 'sonner'
 
 // ============================================================================
 // Types
@@ -55,19 +59,29 @@ interface AgentResponse {
   entityId?: Id<'events'>
 }
 
+interface StreamMessage {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  isStreaming?: boolean
+}
+
 // ============================================================================
 // Component
 // ============================================================================
 
 export function EventCreatePage() {
   const navigate = useNavigate()
-  const [message, setMessage] = useState('')
+  const [input, setInput] = useState('')
   const [conversationId, setConversationId] = useState<Id<'aiConversations'> | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [pendingConfirmation, setPendingConfirmation] = useState<ToolCall | null>(null)
   const [executingTools, setExecutingTools] = useState<string[]>([])
   const [lastToolResults, setLastToolResults] = useState<ToolResult[]>([])
+  const [localMessages, setLocalMessages] = useState<StreamMessage[]>([])
+  const [error, setError] = useState<Error | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   // Queries and mutations
   const activeConversation = useQuery(api.aiConversations.getActiveForEventCreation)
@@ -89,12 +103,16 @@ export function EventCreatePage() {
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, executingTools, pendingConfirmation])
+  }, [messages, localMessages, executingTools, pendingConfirmation])
 
-  // Send a message to the agent
+  // Send a message to the agent with streaming
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!message.trim() || isLoading) return
+    if (!input.trim() || isLoading) return
+
+    const userMessage = input.trim()
+    setInput('')
+    setError(null)
 
     // Start conversation if needed
     let currentConversationId = conversationId
@@ -105,21 +123,35 @@ export function EventCreatePage() {
         setConversationId(currentConversationId)
       } catch {
         setIsLoading(false)
+        toast.error('Failed to start conversation')
         return
       }
     }
 
-    const userMessage = message
-    setMessage('')
+    // Add user message to local state immediately (optimistic)
+    const userMsgId = `user-${Date.now()}`
+    setLocalMessages((prev) => [
+      ...prev,
+      { id: userMsgId, role: 'user', content: userMessage },
+    ])
+
     setIsLoading(true)
     setExecutingTools([])
     setLastToolResults([])
 
+    // Create abort controller for cancel functionality
+    abortControllerRef.current = new AbortController()
+
     try {
+      // Use the Convex action for now (non-streaming but reliable)
+      // We can switch to HTTP streaming once it's properly set up
       const response: AgentResponse = await agentChat({
         conversationId: currentConversationId,
         userMessage,
       })
+
+      // Clear local user message since it's now in DB
+      setLocalMessages((prev) => prev.filter((m) => m.id !== userMsgId))
 
       // Handle tool results
       setLastToolResults(response.toolResults)
@@ -131,13 +163,49 @@ export function EventCreatePage() {
 
       // Handle completion
       if (response.isComplete && response.entityId) {
+        toast.success('Event created successfully!')
         setTimeout(() => {
           navigate(`/dashboard/events/${response.entityId}`)
         }, 1500)
       }
+    } catch (err) {
+      console.error('Chat error:', err)
+      const error = err instanceof Error ? err : new Error('Unknown error')
+      setError(error)
+
+      // Show error toast with retry action
+      if (error.message.includes('rate limit')) {
+        toast.error('Too many requests. Please wait a moment.')
+      } else if (error.message.includes('API key') || error.message.includes('OPENAI')) {
+        toast.error('AI service unavailable. Please check the OpenAI API key in Convex dashboard.')
+      } else {
+        toast.error('Something went wrong. Please try again.', {
+          action: {
+            label: 'Retry',
+            onClick: () => {
+              setInput(userMessage)
+              setError(null)
+            },
+          },
+        })
+      }
+
+      // Remove failed message from local state
+      setLocalMessages((prev) => prev.filter((m) => m.id !== userMsgId))
     } finally {
       setIsLoading(false)
+      abortControllerRef.current = null
     }
+  }
+
+  // Stop generation
+  const handleStop = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    setIsLoading(false)
+    toast.info('Generation stopped')
   }
 
   // Handle confirmation of pending tool
@@ -158,6 +226,12 @@ export function EventCreatePage() {
       setLastToolResults([result])
       setPendingConfirmation(null)
 
+      if (result.success) {
+        toast.success(result.summary)
+      } else {
+        toast.error(result.error || 'Action failed')
+      }
+
       // Navigate to event if created
       if (result.name === 'createEvent' && result.success && result.data) {
         const eventId = (result.data as { eventId: string }).eventId
@@ -165,6 +239,9 @@ export function EventCreatePage() {
           navigate(`/dashboard/events/${eventId}`)
         }, 1500)
       }
+    } catch (err) {
+      console.error('Confirm error:', err)
+      toast.error('Failed to confirm action')
     } finally {
       setIsLoading(false)
       setExecutingTools([])
@@ -174,21 +251,27 @@ export function EventCreatePage() {
   // Handle cancellation
   const handleCancel = () => {
     setPendingConfirmation(null)
+    toast.info('Action cancelled')
+  }
+
+  // Retry after error
+  const handleRetry = () => {
+    setError(null)
   }
 
   const welcomeMessage = {
     role: 'assistant',
     content: `Hi! I'm your AI event planning assistant. I can help you:
 
-• **Create events** - Just describe your event and I'll set it up
-• **Find vendors** - Search for catering, AV, photography, and more
-• **Discover sponsors** - Find companies interested in sponsoring your event
+- **Create events** - Just describe your event and I'll set it up
+- **Find vendors** - Search for catering, AV, photography, and more
+- **Discover sponsors** - Find companies interested in sponsoring your event
 
 What would you like to do today?`,
   }
 
   const displayMessages = messages || []
-  const showWelcome = displayMessages.length === 0
+  const showWelcome = displayMessages.length === 0 && localMessages.length === 0
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -223,7 +306,7 @@ What would you like to do today?`,
             <MessageBubble role="assistant" content={welcomeMessage.content} />
           )}
 
-          {/* Conversation Messages */}
+          {/* Database Messages */}
           {displayMessages.map((msg: Message) => (
             <div key={msg._id} className="space-y-3">
               <MessageBubble role={msg.role} content={msg.content} />
@@ -244,6 +327,11 @@ What would you like to do today?`,
                 </div>
               )}
             </div>
+          ))}
+
+          {/* Local Messages (optimistic) */}
+          {localMessages.map((msg) => (
+            <MessageBubble key={msg.id} role={msg.role} content={msg.content} />
           ))}
 
           {/* Executing Tools */}
@@ -286,6 +374,28 @@ What would you like to do today?`,
             </div>
           )}
 
+          {/* Error display */}
+          {error && (
+            <div className="flex gap-4">
+              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                <WarningCircle size={20} weight="duotone" className="text-destructive" />
+              </div>
+              <div className="flex-1">
+                <div className="rounded-2xl rounded-tl-sm bg-destructive/10 border border-destructive/20 p-4 max-w-[85%]">
+                  <p className="text-sm text-destructive font-medium mb-2">Something went wrong</p>
+                  <p className="text-xs text-destructive/80 mb-3">{error.message}</p>
+                  <button
+                    onClick={handleRetry}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-destructive hover:underline cursor-pointer"
+                  >
+                    <ArrowClockwise size={14} />
+                    Try again
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Success indicator */}
           {lastToolResults.some(
             (r) => r.name === 'createEvent' && r.success
@@ -306,8 +416,8 @@ What would you like to do today?`,
           <form onSubmit={handleSendMessage} className="flex items-end gap-3">
             <div className="flex-1">
               <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder="Tell me about your event, or ask me to find vendors/sponsors..."
                 rows={1}
                 disabled={isLoading || !!pendingConfirmation}
@@ -325,9 +435,25 @@ What would you like to do today?`,
                 }}
               />
             </div>
+
+            {/* Stop button during loading */}
+            {isLoading && (
+              <button
+                type="button"
+                onClick={handleStop}
+                className={cn(
+                  'p-3 rounded-xl bg-muted text-muted-foreground',
+                  'hover:bg-muted/80 transition-colors cursor-pointer'
+                )}
+                title="Stop generating"
+              >
+                <Stop size={20} weight="fill" />
+              </button>
+            )}
+
             <button
               type="submit"
-              disabled={!message.trim() || isLoading || !!pendingConfirmation}
+              disabled={!input.trim() || isLoading || !!pendingConfirmation}
               className={cn(
                 'p-3 rounded-xl bg-primary text-primary-foreground',
                 'hover:bg-primary/90 transition-colors',
