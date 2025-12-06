@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { AudienceToggle } from '@/components/ui/audience-toggle'
+import { Logo } from '@/components/ui/logo'
 import { DemoModal } from '@/components/demo'
 import { useAudienceToggle, type Audience } from '@/hooks/use-audience-toggle'
 import {
@@ -155,7 +156,9 @@ export function Hero() {
     <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Navigation */}
       <nav className="relative z-20 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
-        <div className="font-mono text-lg font-semibold">open-event</div>
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <Logo />
+        </Link>
         <div className="flex items-center gap-2 sm:gap-4">
           <AudienceToggle value={audience} onChange={setAudience} />
           <ThemeToggle />

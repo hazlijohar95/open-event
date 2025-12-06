@@ -19,6 +19,7 @@ import {
 import { SignIn, SignUp } from '@/pages/auth'
 import { Onboarding, OnboardingComplete } from '@/pages/onboarding'
 import { Dashboard } from '@/pages/dashboard'
+import { PrivacyPolicy, TermsOfService } from '@/pages/legal'
 import { ClerkConvexSync } from '@/components/auth/ClerkConvexSync'
 
 // Check if Convex is configured
@@ -59,6 +60,8 @@ function App() {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/onboarding/complete" element={<OnboardingComplete />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
         </Routes>
         <Toaster />
       </BrowserRouter>

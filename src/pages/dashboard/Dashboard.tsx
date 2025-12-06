@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { useUser, useClerk, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { Logo } from '@/components/ui/logo'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,11 +48,8 @@ function DashboardContent() {
       {/* Header */}
       <header className="border-b border-border">
         <div className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto">
-          <Link
-            to="/"
-            className="font-mono text-lg font-semibold hover:opacity-80 transition-opacity"
-          >
-            open-event
+          <Link to="/" className="hover:opacity-80 transition-opacity">
+            <Logo />
           </Link>
           <div className="flex items-center gap-3">
             <button className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
