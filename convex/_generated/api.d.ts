@@ -8,7 +8,11 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as events from "../events.js";
+import type * as mutations_events from "../mutations/events.js";
+import type * as mutations_superadmin from "../mutations/superadmin.js";
+import type * as queries_dashboard from "../queries/dashboard.js";
 import type * as users from "../users.js";
 
 import type {
@@ -18,7 +22,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   events: typeof events;
+  "mutations/events": typeof mutations_events;
+  "mutations/superadmin": typeof mutations_superadmin;
+  "queries/dashboard": typeof queries_dashboard;
   users: typeof users;
 }>;
 
