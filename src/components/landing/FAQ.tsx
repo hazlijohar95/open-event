@@ -87,7 +87,7 @@ function FAQItem({
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors"
+        className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors cursor-pointer"
       >
         <span className="font-medium text-sm sm:text-base pr-4">{question}</span>
         <CaretDown

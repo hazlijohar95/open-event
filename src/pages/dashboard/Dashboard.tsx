@@ -54,7 +54,7 @@ function DashboardContent() {
             open-event
           </Link>
           <div className="flex items-center gap-3">
-            <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+            <button className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
               <Bell size={20} weight="duotone" className="text-muted-foreground" />
             </button>
             <ThemeToggle />
@@ -181,7 +181,7 @@ function QuickActionCard({
   description: string
 }) {
   return (
-    <button className="p-6 bg-card border border-border rounded-xl text-left hover:border-primary/50 hover:shadow-md transition-all group">
+    <button className="p-6 bg-card border border-border rounded-xl text-left hover:border-primary/50 hover:shadow-md transition-all group cursor-pointer">
       <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
         <Icon size={20} weight="duotone" className="text-primary" />
       </div>

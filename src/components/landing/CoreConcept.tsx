@@ -128,7 +128,7 @@ export function CoreConcept() {
                 key={key}
                 onClick={() => setActiveAudience(key)}
                 className={cn(
-                  'px-4 sm:px-6 py-2 rounded-md text-sm font-medium transition-all',
+                  'px-4 sm:px-6 py-2 rounded-md text-sm font-medium transition-all cursor-pointer',
                   activeAudience === key
                     ? 'bg-primary text-primary-foreground'
                     : 'text-muted-foreground hover:text-foreground'
