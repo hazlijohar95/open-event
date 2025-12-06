@@ -15,26 +15,38 @@ export function ClerkConvexSync() {
 
   useEffect(() => {
     // Only sync when Clerk is loaded and user is signed in
-    if (!isLoaded || !isSignedIn) {
+    if (!isLoaded) {
+      console.log('[ClerkConvexSync] Waiting for Clerk to load...')
+      return
+    }
+
+    if (!isSignedIn) {
+      console.log('[ClerkConvexSync] User not signed in, skipping sync')
       hasSynced.current = false
       return
     }
 
     // Prevent duplicate syncs
     if (hasSynced.current) {
+      console.log('[ClerkConvexSync] Already synced, skipping')
       return
     }
 
+    console.log('[ClerkConvexSync] Starting user sync...')
     hasSynced.current = true
 
     // Sync user to Convex
     syncUser()
-      .then(() => {
-        console.log('User synced to Convex')
+      .then((userId) => {
+        console.log('[ClerkConvexSync] ✅ User synced to Convex successfully! User ID:', userId)
       })
       .catch((error) => {
-        console.error('Failed to sync user to Convex:', error)
-        hasSynced.current = false
+        console.error('[ClerkConvexSync] ❌ Failed to sync user to Convex:', error)
+        console.error('[ClerkConvexSync] Error details:', {
+          message: error.message,
+          stack: error.stack,
+        })
+        hasSynced.current = false // Allow retry on error
       })
   }, [isLoaded, isSignedIn, syncUser])
 
