@@ -1,233 +1,259 @@
 # AI Agent System Documentation
 
-This document describes the agentic AI system built for open-event, enabling AI-powered event creation, vendor search, and sponsor discovery.
+> Complete documentation for Open Event's AI-powered event planning assistant.
+
+---
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Architecture](#architecture)
+3. [HTTP API Endpoints](#http-api-endpoints)
+4. [Available Tools](#available-tools)
+5. [Data Flow](#data-flow)
+6. [Database Schema](#database-schema)
+7. [Frontend Components](#frontend-components)
+8. [Configuration](#configuration)
+9. [Testing](#testing)
+10. [Troubleshooting](#troubleshooting)
+
+---
 
 ## Overview
 
-The system uses OpenAI's function calling (tools) to create an autonomous agent that can:
-- **Create events** - Parse natural language descriptions into structured event data
-- **Search vendors** - Find catering, AV, photography, and other service providers
-- **Search sponsors** - Discover companies interested in sponsoring events
-- **Manage events** - Update event details, get event information
+The AI Agent System enables natural language event creation through an intelligent assistant powered by **OpenAI GPT-4o-mini** with **Vercel AI SDK** for streaming responses.
+
+### Capabilities
+
+| Capability | Description |
+|------------|-------------|
+| **Event Creation** | Parse natural language into structured event data |
+| **Vendor Search** | Find catering, AV, photography, and other providers |
+| **Sponsor Discovery** | Connect with companies interested in sponsoring |
+| **Event Management** | Update details, view information, manage attendees |
+| **Contextual Awareness** | Remembers user preferences and past events |
+
+### System Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           User Interface                                 │
+│                                                                          │
+│  "I want to create a tech conference for 200 people next month"         │
+│                                    │                                     │
+└────────────────────────────────────┼─────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Convex HTTP Endpoint                              │
+│                                                                          │
+│   POST /api/chat                                                         │
+│   ├── Authenticate user via Clerk                                       │
+│   ├── Load user profile for context                                     │
+│   └── Stream response with Vercel AI SDK                                │
+│                                    │                                     │
+└────────────────────────────────────┼─────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           OpenAI GPT-4o-mini                             │
+│                                                                          │
+│   ┌─────────────────────────────────────────────────────────────┐       │
+│   │  System Prompt:                                              │       │
+│   │  "You are an expert AI event planning assistant..."         │       │
+│   │                                                              │       │
+│   │  + User Context:                                             │       │
+│   │  - Organization: Acme Corp                                   │       │
+│   │  - Event Types: conferences, meetups                         │       │
+│   │  - Experience: experienced                                   │       │
+│   └─────────────────────────────────────────────────────────────┘       │
+│                                                                          │
+│   Available Tools: createEvent, searchVendors, addVendorToEvent, etc.   │
+│                                    │                                     │
+└────────────────────────────────────┼─────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         Tool Execution                                   │
+│                                                                          │
+│   Tool: createEvent                                                      │
+│   ├── Requires Confirmation? ✅ Yes                                      │
+│   └── Returns: pending_confirmation                                      │
+│                                    │                                     │
+└────────────────────────────────────┼─────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      Confirmation Dialog                                 │
+│                                                                          │
+│   ┌─────────────────────────────────────────────────────────────┐       │
+│   │  🔧 Create Event                                             │       │
+│   │                                                              │       │
+│   │  Title: Tech Conference 2024                                 │       │
+│   │  Date: January 15, 2024                                      │       │
+│   │  Attendees: 200                                              │       │
+│   │  Type: Conference                                            │       │
+│   │                                                              │       │
+│   │                        [Cancel]  [Confirm]                   │       │
+│   └─────────────────────────────────────────────────────────────┘       │
+│                                    │                                     │
+└────────────────────────────────────┼─────────────────────────────────────┘
+                                     │
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      POST /api/chat/confirm                              │
+│                                                                          │
+│   Execute confirmed tool → Create event in database                      │
+│   Return: { success: true, eventId: "abc123" }                          │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Frontend (React)                         │
-├─────────────────────────────────────────────────────────────────┤
-│  EventCreatePage.tsx    - Chat UI for agent interaction         │
-│  ToolExecutionCard.tsx  - Shows tool execution status           │
-│  ToolConfirmationDialog - Confirms sensitive actions            │
-│  SearchResultsCard.tsx  - Displays vendor/sponsor results       │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                    Convex Actions (Backend)                     │
-├─────────────────────────────────────────────────────────────────┤
-│  actions/agent.ts       - Main agent loop with OpenAI           │
-│    - chat()             - Handles conversation + tool execution │
-│    - confirmAndExecute()- Executes user-confirmed tools         │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Agent Library (convex/lib/agent/)           │
-├─────────────────────────────────────────────────────────────────┤
-│  types.ts    - TypeScript types for tools, results, responses   │
-│  tools.ts    - OpenAI function schemas (9 tools defined)        │
-│  handlers.ts - Tool execution logic (database operations)       │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-## File Structure
-
-### Backend (Convex)
+### File Structure
 
 ```
-convex/
-├── actions/
-│   └── agent.ts              # Main agent action with OpenAI integration
-├── lib/
-│   └── agent/
-│       ├── types.ts          # Type definitions
-│       ├── tools.ts          # Tool schemas for OpenAI
-│       └── handlers.ts       # Tool execution handlers
-├── aiConversations.ts        # Conversation CRUD operations
-├── events.ts                 # Event mutations (extended for agent)
-├── vendors.ts                # Vendor queries
-├── sponsors.ts               # Sponsor queries
-└── schema.ts                 # Database schema (includes AI tables)
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND                                     │
+│                            (Convex)                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   convex/                                                                │
+│   │                                                                      │
+│   ├── http.ts                      # HTTP streaming endpoints            │
+│   │   ├── POST /api/chat           # Main chat endpoint                  │
+│   │   ├── POST /api/chat/tool      # Tool execution                      │
+│   │   └── POST /api/chat/confirm   # Confirmed execution                 │
+│   │                                                                      │
+│   ├── lib/agent/                   # Agent library                       │
+│   │   ├── types.ts                 # TypeScript definitions              │
+│   │   ├── tools.ts                 # 9 tool schemas                      │
+│   │   └── handlers.ts              # Execution handlers                  │
+│   │                                                                      │
+│   ├── aiConversations.ts           # Conversation CRUD                   │
+│   ├── events.ts                    # Event mutations                     │
+│   ├── vendors.ts                   # Vendor queries                      │
+│   ├── sponsors.ts                  # Sponsor queries                     │
+│   └── organizerProfiles.ts         # User profiles                       │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND                                    │
+│                              (React)                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│   src/                                                                   │
+│   │                                                                      │
+│   ├── pages/dashboard/                                                   │
+│   │   ├── EventCreatePage.tsx      # AI chat interface                   │
+│   │   └── EventDetailPage.tsx      # Event detail view                   │
+│   │                                                                      │
+│   ├── components/agent/                                                  │
+│   │   ├── ToolExecutionCard.tsx    # Tool status display                 │
+│   │   ├── ToolConfirmationDialog.tsx  # Action confirmation              │
+│   │   └── SearchResultsCard.tsx    # Search results                      │
+│   │                                                                      │
+│   └── lib/                                                               │
+│       └── agent-tools.ts           # Tool config & helpers               │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Frontend (React)
+### Tech Stack
 
 ```
-src/
-├── components/
-│   └── agent/
-│       ├── index.ts                    # Exports
-│       ├── ToolExecutionCard.tsx       # Tool status display
-│       ├── ToolConfirmationDialog.tsx  # Action confirmation UI
-│       └── SearchResultsCard.tsx       # Search results display
-├── lib/
-│   ├── agent-tools.ts                  # Centralized tool config
-│   └── agent-tools.test.ts             # Unit tests
-├── pages/
-│   └── dashboard/
-│       └── EventCreatePage.tsx         # Main agent chat page
-└── test/
-    └── setup.ts                        # Vitest test setup
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          AI & Streaming                                  │
+├─────────────────────────────────────────────────────────────────────────┤
+│  OpenAI GPT-4o-mini    │  Language model for natural language           │
+│  Vercel AI SDK         │  Streaming responses & tool handling           │
+│  @ai-sdk/openai        │  OpenAI provider for AI SDK                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Backend                                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Convex                │  Real-time database & serverless functions     │
+│  HTTP Actions          │  Streaming endpoints for chat                  │
+│  Mutations/Queries     │  Database operations                           │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            Frontend                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│  React 19              │  UI framework                                  │
+│  useChat hook          │  Vercel AI SDK React integration               │
+│  ShadCN UI             │  Component library                             │
+│  Phosphor Icons        │  Consistent iconography                        │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Available Tools
+---
 
-| Tool Name | Description | Requires Confirmation |
-|-----------|-------------|----------------------|
-| `createEvent` | Create a new event | ✅ Yes |
-| `updateEvent` | Update event details | ✅ Yes |
-| `getEventDetails` | Get event information | No |
-| `getUpcomingEvents` | List user's upcoming events | No |
-| `searchVendors` | Search for vendors by category | No |
-| `addVendorToEvent` | Add vendor to an event | ✅ Yes |
-| `searchSponsors` | Search for sponsors by industry | No |
-| `addSponsorToEvent` | Add sponsor to an event | ✅ Yes |
-| `getUserProfile` | Get organizer profile | No |
+## HTTP API Endpoints
 
-## Database Schema Additions
+### POST /api/chat
 
-### aiConversations
-Stores AI conversation sessions for event creation.
+Main chat endpoint with streaming responses.
 
+**Request:**
 ```typescript
-aiConversations: {
-  userId: Id<'users'>
-  eventId?: Id<'events'>       // Linked after event creation
-  status: 'active' | 'completed' | 'abandoned'
-  purpose?: string             // 'event-creation', 'vendor-search', etc.
-  context?: {
-    eventType?: string
-    extractedData?: any
-  }
-  createdAt: number
-  updatedAt?: number
+{
+  messages: CoreMessage[]  // Conversation history
 }
-```
 
-### aiMessages
-Individual messages within conversations.
-
-```typescript
-aiMessages: {
-  conversationId: Id<'aiConversations'>
+// CoreMessage format:
+{
   role: 'user' | 'assistant' | 'system'
   content: string
-  metadata?: {
-    extractedFields?: string[]    // Tools that were called
-    suggestedActions?: string[]   // Pending confirmations
-    model?: string                // 'gpt-4o-mini'
-  }
-  createdAt: number
 }
 ```
 
-## Agent Flow
+**Response:** Server-Sent Events (SSE) stream
 
-1. **User sends message** → `EventCreatePage.tsx`
-2. **Frontend calls** `agentChat` action
-3. **Agent action**:
-   - Builds conversation history
-   - Calls OpenAI with tools
-   - Loops up to 5 iterations for multi-step tasks
-   - For tools requiring confirmation → returns `pendingConfirmations`
-   - For auto-execute tools → runs handler immediately
-4. **If confirmation needed**:
-   - Frontend shows `ToolConfirmationDialog`
-   - User confirms → Frontend calls `confirmAndExecute`
-5. **Tool execution** → handlers in `handlers.ts`
-6. **Results returned** → UI updated
-
-## Environment Variables Required
-
-```env
-OPENAI_API_KEY=sk-...          # For agent LLM calls
-VITE_CONVEX_URL=https://...    # Convex deployment URL
-VITE_CLERK_PUBLISHABLE_KEY=pk_...  # Clerk auth
+```
+data: {"type":"text-delta","textDelta":"Great! "}
+data: {"type":"text-delta","textDelta":"Let me create that event..."}
+data: {"type":"tool-call","toolCallId":"call_abc","toolName":"createEvent","args":{...}}
+data: {"type":"finish","finishReason":"tool-calls"}
 ```
 
-## Testing
-
-The system includes 69 unit tests covering:
-- Agent tools configuration (`agent-tools.test.ts`)
-- ToolExecutionCard component
-- ToolConfirmationDialog component
-- SearchResultsCard component
-
-Run tests:
-```bash
-npm run test        # Watch mode
-npm run test:run    # Single run
-npm run test:coverage  # With coverage
+**Headers:**
+```
+Content-Type: text/event-stream
+Access-Control-Allow-Origin: *
 ```
 
-## Backend Engineer TODO
+---
 
-1. **Run Convex Dev Server**:
-   ```bash
-   npx convex dev
-   ```
+### POST /api/chat/tool
 
-2. **Seed Test Data** (optional):
-   - Add sample vendors to `vendors` table
-   - Add sample sponsors to `sponsors` table
+Execute a tool (auto-execute tools only).
 
-3. **Review/Extend**:
-   - `convex/lib/agent/handlers.ts` - Add more sophisticated tool logic
-   - `convex/vendors.ts` - Enhance search with filters
-   - `convex/sponsors.ts` - Enhance search with filters
-
-4. **Consider Adding**:
-   - Rate limiting for agent calls
-   - Token usage tracking
-   - Error logging/monitoring
-   - More sophisticated event creation (multi-day, recurring)
-
-## API Reference
-
-### `agentChat` Action
-
+**Request:**
 ```typescript
-// Input
 {
-  conversationId: Id<'aiConversations'>
-  userMessage: string
-  confirmedToolCalls?: string[]  // IDs of confirmed tools
-}
-
-// Output
-{
-  message: string
-  toolCalls: ToolCall[]
-  toolResults: ToolResult[]
-  pendingConfirmations: ToolCall[]
-  isComplete: boolean
-  entityId?: Id<'events'>
-}
-```
-
-### `confirmAndExecute` Action
-
-```typescript
-// Input
-{
-  conversationId: Id<'aiConversations'>
   toolCallId: string
   toolName: string
-  toolArguments: Record<string, unknown>
+  args: Record<string, unknown>
+}
+```
+
+**Response:**
+```typescript
+// For tools requiring confirmation:
+{
+  status: 'pending_confirmation'
+  toolCallId: string
+  toolName: string
+  args: Record<string, unknown>
 }
 
-// Output: ToolResult
+// For auto-execute tools:
 {
   toolCallId: string
   name: string
@@ -237,3 +263,565 @@ npm run test:coverage  # With coverage
   summary: string
 }
 ```
+
+---
+
+### POST /api/chat/confirm
+
+Execute a user-confirmed tool.
+
+**Request:**
+```typescript
+{
+  toolCallId: string
+  toolName: string
+  args: Record<string, unknown>
+  conversationId?: string  // Optional: to link event to conversation
+}
+```
+
+**Response:**
+```typescript
+{
+  toolCallId: string
+  name: string
+  success: boolean
+  data?: {
+    eventId?: string
+    vendorId?: string
+    sponsorId?: string
+  }
+  summary: string
+}
+```
+
+---
+
+## Available Tools
+
+### Tool Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         CONFIRMATION REQUIRED                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Tool              │  Description                    │  Icon            │
+├────────────────────┼─────────────────────────────────┼──────────────────┤
+│  createEvent       │  Create a new event             │  CalendarPlus    │
+│  updateEvent       │  Update event details           │  PencilSimple    │
+│  addVendorToEvent  │  Add vendor to event            │  Buildings       │
+│  addSponsorToEvent │  Add sponsor to event           │  Handshake       │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          AUTO-EXECUTE                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Tool              │  Description                    │  Icon            │
+├────────────────────┼─────────────────────────────────┼──────────────────┤
+│  getEventDetails   │  Get event information          │  Calendar        │
+│  getUpcomingEvents │  List upcoming events           │  CalendarBlank   │
+│  searchVendors     │  Search for vendors             │  MagnifyingGlass │
+│  searchSponsors    │  Search for sponsors            │  MagnifyingGlass │
+│  getUserProfile    │  Get organizer profile          │  User            │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Tool Schemas
+
+#### createEvent
+
+```typescript
+{
+  name: 'createEvent',
+  description: 'Create a new event with the provided details',
+  parameters: {
+    type: 'object',
+    properties: {
+      title: { type: 'string', description: 'Event title' },
+      description: { type: 'string', description: 'Event description' },
+      eventType: {
+        type: 'string',
+        enum: ['conference', 'workshop', 'meetup', 'seminar',
+               'networking', 'launch', 'celebration', 'other']
+      },
+      startDate: { type: 'string', description: 'ISO 8601 date string' },
+      endDate: { type: 'string', description: 'ISO 8601 date string' },
+      locationType: {
+        type: 'string',
+        enum: ['in-person', 'virtual', 'hybrid']
+      },
+      venueName: { type: 'string' },
+      venueAddress: { type: 'string' },
+      virtualPlatform: { type: 'string' },
+      expectedAttendees: { type: 'number' },
+      budget: { type: 'number' },
+      budgetCurrency: { type: 'string', default: 'USD' },
+      requirements: {
+        type: 'object',
+        properties: {
+          catering: { type: 'boolean' },
+          av: { type: 'boolean' },
+          photography: { type: 'boolean' },
+          security: { type: 'boolean' },
+          transportation: { type: 'boolean' },
+          decoration: { type: 'boolean' }
+        }
+      }
+    },
+    required: ['title', 'startDate']
+  }
+}
+```
+
+#### searchVendors
+
+```typescript
+{
+  name: 'searchVendors',
+  description: 'Search for vendors by category and location',
+  parameters: {
+    type: 'object',
+    properties: {
+      category: {
+        type: 'string',
+        enum: ['catering', 'av', 'photography', 'videography',
+               'decoration', 'security', 'transportation', 'venue']
+      },
+      location: { type: 'string' },
+      minRating: { type: 'number', minimum: 1, maximum: 5 },
+      maxBudget: { type: 'number' }
+    }
+  }
+}
+```
+
+#### searchSponsors
+
+```typescript
+{
+  name: 'searchSponsors',
+  description: 'Search for sponsors by industry and tier',
+  parameters: {
+    type: 'object',
+    properties: {
+      industry: {
+        type: 'string',
+        enum: ['technology', 'finance', 'healthcare', 'retail',
+               'education', 'entertainment', 'food', 'other']
+      },
+      tier: {
+        type: 'string',
+        enum: ['platinum', 'gold', 'silver', 'bronze']
+      },
+      minBudget: { type: 'number' }
+    }
+  }
+}
+```
+
+---
+
+## Data Flow
+
+### Event Creation Flow
+
+```
+┌─────────┐      ┌──────────────┐      ┌────────────┐      ┌──────────┐
+│  User   │      │   Frontend   │      │   Convex   │      │  OpenAI  │
+└────┬────┘      └──────┬───────┘      └─────┬──────┘      └────┬─────┘
+     │                  │                    │                   │
+     │ "Create a tech   │                    │                   │
+     │  conference"     │                    │                   │
+     │─────────────────>│                    │                   │
+     │                  │                    │                   │
+     │                  │ POST /api/chat     │                   │
+     │                  │───────────────────>│                   │
+     │                  │                    │                   │
+     │                  │                    │ streamText()      │
+     │                  │                    │──────────────────>│
+     │                  │                    │                   │
+     │                  │                    │<──────────────────│
+     │                  │                    │ tool_call:        │
+     │                  │                    │ createEvent       │
+     │                  │                    │                   │
+     │                  │<───────────────────│                   │
+     │                  │ pending_confirmation                   │
+     │                  │                    │                   │
+     │<─────────────────│                    │                   │
+     │ Show confirmation│                    │                   │
+     │ dialog           │                    │                   │
+     │                  │                    │                   │
+     │ [Confirm]        │                    │                   │
+     │─────────────────>│                    │                   │
+     │                  │                    │                   │
+     │                  │ POST /api/chat/confirm                 │
+     │                  │───────────────────>│                   │
+     │                  │                    │                   │
+     │                  │                    │ ctx.db.insert()   │
+     │                  │                    │───────┐           │
+     │                  │                    │<──────┘           │
+     │                  │                    │                   │
+     │                  │<───────────────────│                   │
+     │                  │ { success: true,   │                   │
+     │                  │   eventId: "..." } │                   │
+     │                  │                    │                   │
+     │<─────────────────│                    │                   │
+     │ Navigate to      │                    │                   │
+     │ event detail     │                    │                   │
+     │                  │                    │                   │
+```
+
+### Search Flow (Auto-Execute)
+
+```
+┌─────────┐      ┌──────────────┐      ┌────────────┐      ┌──────────┐
+│  User   │      │   Frontend   │      │   Convex   │      │  OpenAI  │
+└────┬────┘      └──────┬───────┘      └─────┬──────┘      └────┬─────┘
+     │                  │                    │                   │
+     │ "Find caterers   │                    │                   │
+     │  in NYC"         │                    │                   │
+     │─────────────────>│                    │                   │
+     │                  │                    │                   │
+     │                  │ POST /api/chat     │                   │
+     │                  │───────────────────>│                   │
+     │                  │                    │                   │
+     │                  │                    │ streamText()      │
+     │                  │                    │──────────────────>│
+     │                  │                    │                   │
+     │                  │                    │<──────────────────│
+     │                  │                    │ tool_call:        │
+     │                  │                    │ searchVendors     │
+     │                  │                    │                   │
+     │                  │                    │ executeHandler()  │
+     │                  │                    │───────┐           │
+     │                  │                    │<──────┘           │
+     │                  │                    │ vendors: [...]    │
+     │                  │                    │                   │
+     │                  │<───────────────────│                   │
+     │                  │ Stream: tool result│                   │
+     │                  │ + AI response      │                   │
+     │                  │                    │                   │
+     │<─────────────────│                    │                   │
+     │ Display search   │                    │                   │
+     │ results          │                    │                   │
+```
+
+---
+
+## Database Schema
+
+### Core Tables
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              users                                       │
+├─────────────────────────────────────────────────────────────────────────┤
+│  _id           │  Id<'users'>                                           │
+│  clerkId       │  string           │  Clerk user ID                     │
+│  email         │  string           │  User email                        │
+│  name          │  string           │  Display name                      │
+│  imageUrl      │  string?          │  Profile image                     │
+│  role          │  'superadmin' | 'organizer'                            │
+│  createdAt     │  number           │  Timestamp                         │
+│  updatedAt     │  number?          │  Timestamp                         │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              events                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│  _id               │  Id<'events'>                                      │
+│  organizerId       │  Id<'users'>     │  Event owner                    │
+│  title             │  string          │  Event title                    │
+│  description       │  string?         │  Description                    │
+│  eventType         │  string?         │  conference, meetup, etc.       │
+│  startDate         │  number          │  Unix timestamp                 │
+│  endDate           │  number?         │  Unix timestamp                 │
+│  timezone          │  string?         │  e.g. "America/New_York"        │
+│  locationType      │  'in-person' | 'virtual' | 'hybrid'                │
+│  venueName         │  string?         │  Venue name                     │
+│  venueAddress      │  string?         │  Full address                   │
+│  virtualPlatform   │  string?         │  Zoom, Meet, etc.               │
+│  expectedAttendees │  number?         │  Attendee count                 │
+│  budget            │  number?         │  Budget amount                  │
+│  budgetCurrency    │  string?         │  USD, EUR, etc.                 │
+│  requirements      │  object?         │  Catering, AV, etc.             │
+│  status            │  'draft' | 'planning' | 'active' | 'completed'     │
+│  createdAt         │  number          │  Timestamp                      │
+│  updatedAt         │  number?         │  Timestamp                      │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         aiConversations                                  │
+├─────────────────────────────────────────────────────────────────────────┤
+│  _id           │  Id<'aiConversations'>                                 │
+│  userId        │  Id<'users'>       │  Conversation owner               │
+│  eventId       │  Id<'events'>?     │  Linked event (if created)        │
+│  status        │  'active' | 'completed' | 'abandoned'                  │
+│  purpose       │  string?           │  'event-creation', etc.           │
+│  createdAt     │  number            │  Timestamp                        │
+│  updatedAt     │  number?           │  Timestamp                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            aiMessages                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│  _id             │  Id<'aiMessages'>                                    │
+│  conversationId  │  Id<'aiConversations'>                               │
+│  role            │  'user' | 'assistant' | 'system'                     │
+│  content         │  string           │  Message content                 │
+│  toolCalls       │  ToolCall[]?      │  Tool invocations                │
+│  isStreaming     │  boolean?         │  Currently streaming             │
+│  createdAt       │  number           │  Timestamp                       │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Indexes
+
+```typescript
+// users
+by_clerk_id: ['clerkId']  // Fast lookup by Clerk ID
+
+// events
+by_organizer: ['organizerId']  // User's events
+by_status: ['status']          // Filter by status
+
+// aiConversations
+by_user: ['userId']            // User's conversations
+by_event: ['eventId']          // Linked conversations
+
+// aiMessages
+by_conversation: ['conversationId']  // Messages in conversation
+```
+
+---
+
+## Frontend Components
+
+### EventCreatePage
+
+Main chat interface for AI interaction.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ← AI Event Assistant                                    ⚡ Agentic     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│                                                                          │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 🤖  Hi! I'm your AI event planning assistant.                     │  │
+│  │     I can help you:                                               │  │
+│  │     • Create events - describe and I'll set it up                 │  │
+│  │     • Find vendors - catering, AV, photography                    │  │
+│  │     • Discover sponsors - find interested companies               │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+│                        ┌─────────────────────────────────────────────┐  │
+│                        │ I want to create a tech conference          │  │
+│                        │ for 200 people next month              👤   │  │
+│                        └─────────────────────────────────────────────┘  │
+│                                                                          │
+│  ┌───────────────────────────────────────────────────────────────────┐  │
+│  │ 🤖  Great! Let me create that for you...                          │  │
+│  │                                                                    │  │
+│  │     ┌─────────────────────────────────────────────────────────┐   │  │
+│  │     │ 🔧 createEvent                              [Pending]   │   │  │
+│  │     │                                                         │   │  │
+│  │     │ Title: Tech Conference 2024                             │   │  │
+│  │     │ Type: conference                                        │   │  │
+│  │     │ Attendees: 200                                          │   │  │
+│  │     │ Date: January 15, 2024                                  │   │  │
+│  │     │                                                         │   │  │
+│  │     │                          [Cancel]  [✓ Confirm]          │   │  │
+│  │     └─────────────────────────────────────────────────────────┘   │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│  [Tell me about your event...]                                   [Send] │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### ToolExecutionCard
+
+Displays tool execution status.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  States:                                                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────────────────────────────┐  ┌─────────────────────────────┐   │
+│  │ 🔧 createEvent      [Pending]   │  │ 🔧 createEvent   [Running]  │   │
+│  │                                 │  │                    ⏳       │   │
+│  │ Waiting for confirmation...     │  │ Creating event...           │   │
+│  └─────────────────────────────────┘  └─────────────────────────────┘   │
+│                                                                          │
+│  ┌─────────────────────────────────┐  ┌─────────────────────────────┐   │
+│  │ ✓ createEvent      [Success]   │  │ ✕ createEvent     [Failed]  │   │
+│  │                                 │  │                             │   │
+│  │ Event created successfully!     │  │ Failed to create event      │   │
+│  └─────────────────────────────────┘  └─────────────────────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### ToolConfirmationDialog
+
+Modal for confirming sensitive actions.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                                                                          │
+│     ┌─────────────────────────────────────────────────────────────┐     │
+│     │                                                             │     │
+│     │   📅 Create Event                                           │     │
+│     │                                                             │     │
+│     │   ─────────────────────────────────────────────────────     │     │
+│     │                                                             │     │
+│     │   Title           Tech Conference 2024                      │     │
+│     │   Type            Conference                                │     │
+│     │   Date            January 15, 2024                          │     │
+│     │   Location        In-Person                                 │     │
+│     │   Venue           Convention Center                         │     │
+│     │   Attendees       200                                       │     │
+│     │   Budget          $10,000 USD                               │     │
+│     │                                                             │     │
+│     │   Requirements                                              │     │
+│     │   🍽️ Catering  🎤 AV  📸 Photography                        │     │
+│     │                                                             │     │
+│     │   ─────────────────────────────────────────────────────     │     │
+│     │                                                             │     │
+│     │                           [Cancel]    [✓ Confirm]           │     │
+│     │                                                             │     │
+│     └─────────────────────────────────────────────────────────────┘     │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Configuration
+
+### Environment Variables
+
+```bash
+# Required - Convex
+VITE_CONVEX_URL=https://your-project.convex.cloud
+
+# Required - Clerk Authentication
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+
+# Required - OpenAI (set in Convex Dashboard → Settings → Environment Variables)
+OPENAI_API_KEY=sk-...
+```
+
+### System Prompt
+
+The AI agent uses a carefully crafted system prompt:
+
+```
+You are an expert AI event planning assistant for open-event...
+
+## How to help users:
+1. Understand their needs - Ask clarifying questions
+2. Take action - Use your tools to create events, search, etc.
+3. Be proactive - Suggest relevant vendors/sponsors
+4. Confirm before acting - For important actions, confirm first
+
+## Guidelines:
+- Be conversational and helpful
+- When you have enough information, USE YOUR TOOLS
+- Always confirm before creating events or adding vendors
+- Keep responses concise but informative
+
+## User Context:
+- Organization: {profile.organizationName}
+- Event Types: {profile.eventTypes}
+- Experience: {profile.experienceLevel}
+```
+
+---
+
+## Testing
+
+### Test Coverage
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Test Summary                                   │
+├─────────────────────────────────────────────────────────────────────────┤
+│  Component                    │  Tests  │  Coverage                     │
+├───────────────────────────────┼─────────┼───────────────────────────────┤
+│  agent-tools.ts               │  18     │  Tool config & helpers        │
+│  ToolExecutionCard.tsx        │  11     │  All states & interactions    │
+│  ToolConfirmationDialog.tsx   │  19     │  Confirmation flows           │
+│  SearchResultsCard.tsx        │  21     │  Search result display        │
+├───────────────────────────────┼─────────┼───────────────────────────────┤
+│  TOTAL                        │  69     │                               │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Running Tests
+
+```bash
+# Watch mode (development)
+npm run test
+
+# Single run (CI)
+npm run test:run
+
+# With coverage report
+npm run test:coverage
+```
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| "Unauthorized" error | Missing Clerk auth | Ensure user is signed in |
+| "No OpenAI API key" | Missing env var | Set `OPENAI_API_KEY` in Convex Dashboard |
+| Tool not executing | Requires confirmation | Check if tool needs user confirmation |
+| Empty search results | No data | Seed database with test vendors/sponsors |
+| Streaming not working | CORS issues | Check HTTP headers in `http.ts` |
+
+### Debug Logging
+
+The HTTP endpoint includes debug logging:
+
+```typescript
+onStepFinish: async ({ toolCalls, toolResults }) => {
+  if (toolCalls && toolCalls.length > 0) {
+    console.log('Tool calls:', toolCalls.map(tc => tc.toolName))
+  }
+  if (toolResults && toolResults.length > 0) {
+    console.log('Tool results:', toolResults.length)
+  }
+}
+```
+
+View logs in the Convex Dashboard → Logs tab.
+
+### Rate Limiting
+
+Currently, there's no rate limiting implemented. Consider adding:
+
+```typescript
+// Future enhancement
+const RATE_LIMIT = 10  // requests per minute
+const rateLimiter = new RateLimiter(RATE_LIMIT)
+```
+
+---
+
+## Future Enhancements
+
+- [ ] Token usage tracking & cost monitoring
+- [ ] Rate limiting per user
+- [ ] Multi-day and recurring event support
+- [ ] Email notifications for confirmations
+- [ ] Voice input for event creation
+- [ ] Calendar integration (Google, Outlook)
+- [ ] Vendor/sponsor recommendation engine
