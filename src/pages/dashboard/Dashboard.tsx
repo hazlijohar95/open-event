@@ -1,4 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
+import { useUser, useClerk, SignedIn, SignedOut, RedirectToSignIn } from '@clerk/clerk-react'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import {
@@ -21,12 +22,24 @@ import {
 } from '@phosphor-icons/react'
 
 export function Dashboard() {
-  const navigate = useNavigate()
+  return (
+    <>
+      <SignedIn>
+        <DashboardContent />
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+    </>
+  )
+}
+
+function DashboardContent() {
+  const { user } = useUser()
+  const { signOut } = useClerk()
 
   const handleSignOut = () => {
-    // TODO: Backend engineer will implement actual sign out logic
-    console.log('Sign out')
-    navigate('/')
+    signOut({ redirectUrl: '/' })
   }
 
   return (
@@ -49,15 +62,27 @@ export function Dashboard() {
             {/* Profile Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                  <User size={20} weight="duotone" className="text-muted-foreground" />
+                <button className="p-1 rounded-lg hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                  {user?.imageUrl ? (
+                    <img
+                      src={user.imageUrl}
+                      alt={user.fullName || 'Profile'}
+                      className="w-8 h-8 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="p-1">
+                      <User size={20} weight="duotone" className="text-muted-foreground" />
+                    </div>
+                  )}
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium">John Doe</p>
-                    <p className="text-xs text-muted-foreground">john@example.com</p>
+                    <p className="text-sm font-medium">{user?.fullName || 'User'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {user?.primaryEmailAddress?.emailAddress}
+                    </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -92,7 +117,7 @@ export function Dashboard() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="font-mono text-2xl sm:text-3xl font-bold">
-            Welcome to Open-Event
+            Welcome{user?.firstName ? `, ${user.firstName}` : ''}!
           </h1>
           <p className="text-muted-foreground mt-2">
             Your personalized dashboard is being prepared.
