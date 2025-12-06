@@ -93,6 +93,9 @@ function HeroContentLayer({
             const handleClick = () => {
               if (label === 'Watch Demo') onWatchDemo?.()
               else if (label === 'Book a Demo') onGetStarted?.()
+              else if (label === 'View on GitHub') {
+                window.open('https://github.com/hazlijohar95/open-event', '_blank')
+              }
             }
             return (
               <Button
