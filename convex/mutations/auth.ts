@@ -1,61 +1,56 @@
 import { mutation } from '../_generated/server'
-import { v } from 'convex/values'
 
 /**
- * Sync the current authenticated user from Clerk to Convex database.
- * 
+ * Sync user from Clerk to Convex database.
+ * Called after sign-in/sign-up to ensure user exists in Convex.
+ *
  * This mutation:
- * 1. Gets the authenticated user identity from Clerk
- * 2. Checks if user exists in Convex database
- * 3. Creates user if they don't exist (with default role 'organizer')
- * 4. Updates user info if they exist but details changed
- * 
- * Frontend usage:
- * ```tsx
- * const syncUser = useMutation(api.mutations.auth.syncUser)
- * await syncUser()
- * ```
- * 
- * Call this after successful Clerk sign-in/sign-up.
+ * - Creates a new user if they don't exist
+ * - Updates existing user info if they do exist
+ * - Uses Clerk identity to get user details
  */
 export const syncUser = mutation({
-  args: {
-    // Optional: allow specifying role during sync (defaults to 'organizer')
-    role: v.optional(v.union(v.literal('superadmin'), v.literal('organizer'))),
-  },
-  handler: async (ctx, args) => {
-    // Get authenticated identity from Clerk
+  args: {},
+  handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity()
-    
-    if (!identity || !identity.email) {
+
+    if (!identity) {
       throw new Error('Not authenticated')
     }
 
+    const clerkId = identity.subject
     const email = identity.email
-    const name = identity.name || identity.email.split('@')[0] // Fallback to email prefix if no name
-    const role = args.role || 'organizer' // Default to organizer
+    const name = identity.name ?? identity.email?.split('@')[0] ?? 'User'
+    const imageUrl = identity.pictureUrl
 
-    // Check if user already exists
+    if (!email) {
+      throw new Error('No email found in identity')
+    }
+
+    // Check if user already exists by Clerk ID
     const existingUser = await ctx.db
       .query('users')
-      .withIndex('by_email', (q) => q.eq('email', email))
+      .withIndex('by_clerk_id', (q) => q.eq('clerkId', clerkId))
       .first()
 
     if (existingUser) {
-      // User exists - update if name changed
-      if (existingUser.name !== name) {
-        await ctx.db.patch(existingUser._id, {
-          name,
-        })
-      }
+      // Update existing user
+      await ctx.db.patch(existingUser._id, {
+        email,
+        name,
+        imageUrl,
+        updatedAt: Date.now(),
+      })
       return existingUser._id
     }
 
-    // User doesn't exist - create new user
+    // Create new user (default role: organizer)
     const userId = await ctx.db.insert('users', {
+      clerkId,
       email,
       name,
-      role,
+      imageUrl,
+      role: 'organizer',
       createdAt: Date.now(),
     })
 

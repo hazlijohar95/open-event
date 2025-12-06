@@ -4,11 +4,16 @@ import { v } from 'convex/values'
 export default defineSchema({
   // Users - Only superadmin and organizer roles for Phase 2
   users: defineTable({
+    clerkId: v.string(), // Clerk user ID for reliable lookup
     email: v.string(),
     name: v.string(),
+    imageUrl: v.optional(v.string()), // Profile picture from Clerk
     role: v.union(v.literal('superadmin'), v.literal('organizer')),
     createdAt: v.number(),
-  }).index('by_email', ['email']),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_email', ['email'])
+    .index('by_clerk_id', ['clerkId']),
 
   // Events - Minimal fields: organizerId, title, date
   events: defineTable({
