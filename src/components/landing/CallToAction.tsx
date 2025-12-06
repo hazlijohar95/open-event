@@ -1,7 +1,7 @@
 import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { Rocket, Star, BookOpen } from 'lucide-react'
+import { Rocket, Star, BookOpen } from '@phosphor-icons/react'
 
 export function CallToAction() {
   const { ref, isVisible } = useScrollAnimation()
@@ -33,15 +33,15 @@ export function CallToAction() {
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
           <Button size="lg" className="w-full sm:w-auto group">
-            <Rocket className="mr-2 h-4 w-4 group-hover:animate-bounce" />
+            <Rocket className="mr-2 group-hover:animate-bounce" size={18} weight="duotone" />
             Launch Open-Event
           </Button>
           <Button size="lg" variant="outline" className="w-full sm:w-auto">
-            <Star className="mr-2 h-4 w-4" />
+            <Star className="mr-2" size={18} weight="duotone" />
             Star on GitHub
           </Button>
           <Button size="lg" variant="ghost" className="w-full sm:w-auto">
-            <BookOpen className="mr-2 h-4 w-4" />
+            <BookOpen className="mr-2" size={18} weight="duotone" />
             Read the Docs
           </Button>
         </div>

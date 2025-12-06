@@ -1,10 +1,10 @@
 import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { cn } from '@/lib/utils'
-import { Code2, Building2, Landmark } from 'lucide-react'
+import { Code, Buildings, Bank, type Icon } from '@phosphor-icons/react'
 
 const useCases = [
   {
-    icon: Code2,
+    icon: Code,
     title: 'Hackathons & Developer Events',
     features: [
       'Volunteers',
@@ -15,7 +15,7 @@ const useCases = [
     ],
   },
   {
-    icon: Building2,
+    icon: Buildings,
     title: 'Corporate Conferences & Summits',
     features: [
       'Vendor comparison',
@@ -25,7 +25,7 @@ const useCases = [
     ],
   },
   {
-    icon: Landmark,
+    icon: Bank,
     title: 'Government & Public Events',
     features: [
       'Transparent vendor approval',
@@ -67,12 +67,12 @@ export function UseCases() {
 }
 
 function UseCaseCard({
-  icon: Icon,
+  icon: IconComponent,
   title,
   features,
   index,
 }: {
-  icon: typeof Code2
+  icon: Icon
   title: string
   features: string[]
   index: number
@@ -91,7 +91,7 @@ function UseCaseCard({
     >
       {/* Icon */}
       <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6 group-hover:bg-primary/20 transition-colors">
-        <Icon className="w-7 h-7 text-primary" />
+        <IconComponent size={28} weight="duotone" className="text-primary" />
       </div>
 
       {/* Title */}

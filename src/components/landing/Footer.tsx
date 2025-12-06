@@ -1,13 +1,13 @@
 import { Separator } from '@/components/ui/separator'
-import { Github, BookOpen, MessageCircle, Twitter, Code2, Scale } from 'lucide-react'
+import { GithubLogo, BookOpen, ChatCircle, XLogo, Code, Scales, type Icon } from '@phosphor-icons/react'
 
-const links = [
-  { icon: Github, label: 'GitHub', href: '#' },
+const links: { icon: Icon; label: string; href: string }[] = [
+  { icon: GithubLogo, label: 'GitHub', href: '#' },
   { icon: BookOpen, label: 'Documentation', href: '#' },
-  { icon: MessageCircle, label: 'Community', href: '#' },
-  { icon: Twitter, label: 'Twitter', href: '#' },
-  { icon: Code2, label: 'Open API', href: '#' },
-  { icon: Scale, label: 'MIT License', href: '#' },
+  { icon: ChatCircle, label: 'Community', href: '#' },
+  { icon: XLogo, label: 'Twitter', href: '#' },
+  { icon: Code, label: 'Open API', href: '#' },
+  { icon: Scales, label: 'MIT License', href: '#' },
 ]
 
 export function Footer() {
@@ -16,13 +16,13 @@ export function Footer() {
       <div className="max-w-6xl mx-auto">
         {/* Links */}
         <div className="flex flex-wrap items-center justify-center gap-6 mb-8">
-          {links.map(({ icon: Icon, label, href }) => (
+          {links.map(({ icon: IconComponent, label, href }) => (
             <a
               key={label}
               href={href}
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              <Icon className="w-4 h-4" />
+              <IconComponent size={16} weight="duotone" />
               <span>{label}</span>
             </a>
           ))}

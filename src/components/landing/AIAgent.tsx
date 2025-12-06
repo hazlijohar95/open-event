@@ -1,15 +1,15 @@
 import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { cn } from '@/lib/utils'
-import { Sparkles, TrendingUp, CalendarCheck, FileText, Award } from 'lucide-react'
+import { Sparkle, TrendUp, CalendarCheck, FileText, Certificate, type Icon } from '@phosphor-icons/react'
 
 const capabilities = [
   {
-    icon: Sparkles,
+    icon: Sparkle,
     title: 'Sponsor Intelligence',
     description: 'Recommends sponsors based on event type, audience, and requirements.',
   },
   {
-    icon: TrendingUp,
+    icon: TrendUp,
     title: 'Vendor Insights',
     description: 'Compares vendor pricing, suitability, reviews, and availability.',
   },
@@ -24,7 +24,7 @@ const capabilities = [
     description: 'Creates sponsor-ready post-event reports + analytics instantly.',
   },
   {
-    icon: Award,
+    icon: Certificate,
     title: 'Certificates Engine',
     description: 'Issues credits and participation certificates for volunteers and attendees.',
   },
@@ -66,12 +66,12 @@ export function AIAgent() {
 }
 
 function CapabilityCard({
-  icon: Icon,
+  icon: IconComponent,
   title,
   description,
   index,
 }: {
-  icon: typeof Sparkles
+  icon: Icon
   title: string
   description: string
   index: number
@@ -94,7 +94,7 @@ function CapabilityCard({
 
       <div className="relative">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-          <Icon className="w-6 h-6 text-primary" />
+          <IconComponent size={24} weight="duotone" className="text-primary" />
         </div>
         <h3 className="font-mono text-lg font-semibold mb-2">{title}</h3>
         <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>

@@ -4,12 +4,18 @@ import { ConvexProvider, ConvexReactClient } from 'convex/react'
 import './index.css'
 import App from './App.tsx'
 
-const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string)
+// Convex is optional for now - will be configured later
+const convexUrl = import.meta.env.VITE_CONVEX_URL
+const convex = convexUrl ? new ConvexReactClient(convexUrl) : null
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ConvexProvider client={convex}>
+    {convex ? (
+      <ConvexProvider client={convex}>
+        <App />
+      </ConvexProvider>
+    ) : (
       <App />
-    </ConvexProvider>
+    )}
   </StrictMode>,
 )

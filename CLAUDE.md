@@ -142,9 +142,58 @@ convex/
 
 ### Design System
 - **Style**: Minimal & clean with generous whitespace
-- **Typography**: Monospace (`font-mono`) for headlines
+- **Typography**: Geist font family (see below)
 - **Theme**: System preference with dark/light toggle
 - **Animations**: Moderate - scroll animations, hover effects
+
+### Typography: Geist Fonts
+We use [Geist](https://vercel.com/font) - Vercel's modern font family.
+
+- **Geist Sans** (`font-sans`): Body text, UI elements
+- **Geist Mono** (`font-mono`): Headlines, code, technical text
+
+```tsx
+// Headlines use monospace for technical feel
+<h1 className="font-mono text-4xl font-bold">Headline</h1>
+
+// Body uses sans-serif
+<p className="font-sans text-lg">Body text</p>
+```
+
+Fonts are loaded via CDN with `font-display: swap` for performance.
+
+### Icons: Phosphor Icons
+We use [Phosphor Icons](https://phosphoricons.com/) with the **duotone** weight for consistent styling.
+
+```tsx
+import { House, User, Gear } from '@phosphor-icons/react'
+
+// Standard usage with duotone weight
+<House size={24} weight="duotone" className="text-primary" />
+
+// Available weights: thin, light, regular, bold, fill, duotone
+// Always prefer "duotone" unless there's a specific design need
+```
+
+#### Icon Naming Conventions
+- Phosphor uses PascalCase: `House`, `UserCircle`, `GearSix`
+- No "Icon" suffix (unlike Lucide)
+- Check https://phosphoricons.com/ for available icons
+
+#### Common Icon Mappings (from Lucide)
+| Use Case | Phosphor Icon |
+|----------|---------------|
+| Close/X | `X` |
+| Check | `Check`, `CheckCircle` |
+| Warning | `Warning`, `WarningCircle` |
+| Error | `XCircle` |
+| Info | `Info` |
+| Loading | `CircleNotch` (with `animate-spin`) |
+| Menu | `List` |
+| Settings | `Gear`, `GearSix` |
+| User | `User`, `UserCircle` |
+| Search | `MagnifyingGlass` |
+| Arrow | `ArrowRight`, `ArrowLeft`, `CaretRight` |
 
 ### Component Patterns
 ```tsx

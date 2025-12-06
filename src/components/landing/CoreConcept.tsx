@@ -1,6 +1,6 @@
 import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { cn } from '@/lib/utils'
-import { Package, Handshake, Users, ClipboardList } from 'lucide-react'
+import { Package, Handshake, Users, Clipboard, type Icon } from '@phosphor-icons/react'
 
 const features = [
   {
@@ -19,7 +19,7 @@ const features = [
     description: 'Volunteers join → organizers assign roles → certificates issued automatically.',
   },
   {
-    icon: ClipboardList,
+    icon: Clipboard,
     title: 'Logistics',
     description: 'Tasks, materials, timelines, operations — everything structured and manageable.',
   },
@@ -65,12 +65,12 @@ export function CoreConcept() {
 }
 
 function FeatureCard({
-  icon: Icon,
+  icon: IconComponent,
   title,
   description,
   index,
 }: {
-  icon: typeof Package
+  icon: Icon
   title: string
   description: string
   index: number
@@ -88,7 +88,7 @@ function FeatureCard({
       style={{ transitionDelay: `${index * 100}ms` }}
     >
       <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-        <Icon className="w-6 h-6 text-primary" />
+        <IconComponent size={24} weight="duotone" className="text-primary" />
       </div>
       <h3 className="font-mono text-lg font-semibold mb-2">{title}</h3>
       <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>

@@ -1,10 +1,10 @@
 import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { cn } from '@/lib/utils'
-import { Shield, LayoutDashboard, Globe } from 'lucide-react'
+import { ShieldCheck, SquaresFour, Globe, type Icon } from '@phosphor-icons/react'
 
 const userTypes = [
   {
-    icon: Shield,
+    icon: ShieldCheck,
     title: 'Superadmin',
     features: [
       'Approve vendors',
@@ -16,7 +16,7 @@ const userTypes = [
     ],
   },
   {
-    icon: LayoutDashboard,
+    icon: SquaresFour,
     title: 'Organizer Dashboard',
     features: [
       'Create and manage events',
@@ -71,13 +71,13 @@ export function FeaturesByUser() {
 }
 
 function UserTypeCard({
-  icon: Icon,
+  icon: IconComponent,
   title,
   features,
   note,
   index,
 }: {
-  icon: typeof Shield
+  icon: Icon
   title: string
   features: string[]
   note?: string
@@ -98,7 +98,7 @@ function UserTypeCard({
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-primary" />
+          <IconComponent size={20} weight="duotone" className="text-primary" />
         </div>
         <h3 className="font-mono text-xl font-semibold">{title}</h3>
       </div>

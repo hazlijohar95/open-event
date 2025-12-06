@@ -1,15 +1,15 @@
 import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Store, GitPullRequest, CheckSquare, Award } from 'lucide-react'
+import { SquaresFour, Storefront, GitPullRequest, CheckSquare, Certificate, type Icon } from '@phosphor-icons/react'
 
 const previews = [
   {
-    icon: LayoutDashboard,
+    icon: SquaresFour,
     title: 'Organizer Dashboard',
     description: 'A clean, minimal command-center for events. Wide spacing. Light borders. Monospace headings.',
   },
   {
-    icon: Store,
+    icon: Storefront,
     title: 'Vendor Marketplace',
     description: 'A clean grid of vendor cards with pricing and categories. "Compare" and "Select" built in.',
   },
@@ -24,7 +24,7 @@ const previews = [
     description: 'AI-generated tasks with dependencies and status toggles.',
   },
   {
-    icon: Award,
+    icon: Certificate,
     title: 'Certificates Manager',
     description: 'Simple interface. Issue, download, send — one click.',
   },
@@ -64,12 +64,12 @@ export function ScreenPreviews() {
 }
 
 function PreviewCard({
-  icon: Icon,
+  icon: IconComponent,
   title,
   description,
   index,
 }: {
-  icon: typeof LayoutDashboard
+  icon: Icon
   title: string
   description: string
   index: number
@@ -89,7 +89,7 @@ function PreviewCard({
       {/* Placeholder Image Area */}
       <div className="aspect-video bg-muted/50 flex items-center justify-center relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-        <Icon className="w-12 h-12 text-muted-foreground/30" />
+        <IconComponent size={48} weight="duotone" className="text-muted-foreground/30" />
 
         {/* Decorative elements */}
         <div className="absolute top-4 left-4 right-4 h-2 bg-muted-foreground/10 rounded" />

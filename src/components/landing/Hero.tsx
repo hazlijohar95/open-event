@@ -1,67 +1,154 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { Github, ExternalLink, Code2 } from 'lucide-react'
+import { AudienceToggle } from '@/components/ui/audience-toggle'
+import { useAudienceToggle, type Audience } from '@/hooks/use-audience-toggle'
+import {
+  GithubLogo,
+  ArrowSquareOut,
+  Code,
+  Rocket,
+  Eye,
+  Play,
+  type Icon,
+} from '@phosphor-icons/react'
+
+interface HeroContent {
+  headline: string
+  subheadline: string[]
+  ctas: { label: string; icon: Icon; variant: 'default' | 'outline' | 'ghost' }[]
+  badges: string[]
+}
+
+const content: Record<Audience, HeroContent> = {
+  developer: {
+    headline: 'The open-source event operations system.',
+    subheadline: [
+      'Logistics, vendors, sponsors, volunteers — one clean operational flow.',
+      'AI-powered. Open by default. Built for organizers who want clarity, speed, and control.',
+    ],
+    ctas: [
+      { label: 'Get Started', icon: ArrowSquareOut, variant: 'default' },
+      { label: 'View on GitHub', icon: GithubLogo, variant: 'outline' },
+      { label: 'Open API', icon: Code, variant: 'ghost' },
+    ],
+    badges: ['open-source', 'realtime', 'ai-native'],
+  },
+  organizer: {
+    headline: 'Run events the simple way.',
+    subheadline: [
+      'One platform for vendors, sponsors, volunteers, and logistics.',
+      'No spreadsheets. No chaos. Just clarity.',
+    ],
+    ctas: [
+      { label: 'Get Started', icon: Rocket, variant: 'default' },
+      { label: 'See Features', icon: Eye, variant: 'outline' },
+      { label: 'Watch Demo', icon: Play, variant: 'ghost' },
+    ],
+    badges: ['easy-to-use', 'all-in-one', 'ai-powered'],
+  },
+}
+
+const floatAnimations = ['animate-float-slow', 'animate-float-medium', 'animate-float-fast']
+
+function HeroContentLayer({
+  data,
+  isActive,
+  audienceKey,
+}: {
+  data: HeroContent
+  isActive: boolean
+  audienceKey: string
+}) {
+  return (
+    <div
+      className={`absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500 ease-out ${
+        isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+      }`}
+    >
+      <div className="max-w-4xl mx-auto text-center w-full px-6">
+        {/* Headline */}
+        <h1 className="font-mono text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
+          {data.headline}
+        </h1>
+
+        {/* Sub-headline */}
+        <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mt-8">
+          {data.subheadline[0]}
+          <br className="hidden sm:block" />
+          {data.subheadline[1]}
+        </p>
+
+        {/* CTAs */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
+          {data.ctas.map(({ label, icon: IconComponent, variant }) => (
+            <Button key={label} size="lg" variant={variant} className="w-full sm:w-auto">
+              {variant === 'default' ? (
+                <>
+                  {label}
+                  <IconComponent className="ml-2" size={18} weight="duotone" />
+                </>
+              ) : (
+                <>
+                  <IconComponent className="mr-2" size={18} weight="duotone" />
+                  {label}
+                </>
+              )}
+            </Button>
+          ))}
+        </div>
+
+        {/* Badge Row */}
+        <div className="flex items-center justify-center gap-3 mt-12">
+          {data.badges.map((badge, index) => (
+            <span key={`${audienceKey}-${badge}`} className="flex items-center gap-3">
+              <Badge
+                variant="secondary"
+                className={floatAnimations[index % floatAnimations.length]}
+              >
+                {badge}
+              </Badge>
+              {index < data.badges.length - 1 && (
+                <span className="text-muted-foreground">·</span>
+              )}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function Hero() {
+  const { audience, setAudience, isDeveloper } = useAudienceToggle()
+
   return (
-    <section className="relative min-h-screen flex flex-col">
+    <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Navigation */}
-      <nav className="flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
+      <nav className="relative z-20 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
         <div className="font-mono text-lg font-semibold">open-event</div>
-        <ThemeToggle />
+        <div className="flex items-center gap-4">
+          <AudienceToggle value={audience} onChange={setAudience} />
+          <ThemeToggle />
+        </div>
       </nav>
 
-      {/* Hero Content */}
-      <div className="flex-1 flex items-center justify-center px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          {/* Headline */}
-          <h1 className="font-mono text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight">
-            The open-source event operations system.
-          </h1>
-
-          {/* Sub-headline */}
-          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Logistics, vendors, sponsors, volunteers — one clean operational flow.
-            <br className="hidden sm:block" />
-            AI-powered. Open by default. Built for organizers who want clarity, speed, and control.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Button size="lg" className="w-full sm:w-auto">
-              Get Started
-              <ExternalLink className="ml-2 h-4 w-4" />
-            </Button>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto">
-              <Github className="mr-2 h-4 w-4" />
-              View on GitHub
-            </Button>
-            <Button size="lg" variant="ghost" className="w-full sm:w-auto">
-              <Code2 className="mr-2 h-4 w-4" />
-              Open API
-            </Button>
-          </div>
-
-          {/* Badge Row */}
-          <div className="flex items-center justify-center gap-3 pt-8">
-            <Badge variant="secondary" className="animate-float-slow">
-              open-source
-            </Badge>
-            <span className="text-muted-foreground">·</span>
-            <Badge variant="secondary" className="animate-float-medium">
-              realtime
-            </Badge>
-            <span className="text-muted-foreground">·</span>
-            <Badge variant="secondary" className="animate-float-fast">
-              ai-native
-            </Badge>
-          </div>
-        </div>
+      {/* Hero Content - Stacked layers for crossfade */}
+      <div className="flex-1 relative">
+        <HeroContentLayer
+          data={content.developer}
+          isActive={isDeveloper}
+          audienceKey="developer"
+        />
+        <HeroContentLayer
+          data={content.organizer}
+          isActive={!isDeveloper}
+          audienceKey="organizer"
+        />
       </div>
 
       {/* Scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce z-20">
         <div className="w-6 h-10 border-2 border-muted-foreground/30 rounded-full flex justify-center">
           <div className="w-1 h-3 bg-muted-foreground/50 rounded-full mt-2" />
         </div>

@@ -2,7 +2,7 @@ import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight } from '@phosphor-icons/react'
 
 const apiEndpoints = [
   {
@@ -173,7 +173,7 @@ export function OpenAPI() {
         <div className="mt-8">
           <Button variant="outline" className="group">
             Read the Docs
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+            <ArrowRight className="ml-2 transition-transform group-hover:translate-x-1" size={18} weight="duotone" />
           </Button>
         </div>
       </div>
