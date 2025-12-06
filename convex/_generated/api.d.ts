@@ -13,6 +13,7 @@ import type * as actions_ai from "../actions/ai.js";
 import type * as aiConversations from "../aiConversations.js";
 import type * as auth from "../auth.js";
 import type * as events from "../events.js";
+import type * as http from "../http.js";
 import type * as lib_agent_handlers from "../lib/agent/handlers.js";
 import type * as lib_agent_index from "../lib/agent/index.js";
 import type * as lib_agent_tools from "../lib/agent/tools.js";
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   aiConversations: typeof aiConversations;
   auth: typeof auth;
   events: typeof events;
+  http: typeof http;
   "lib/agent/handlers": typeof lib_agent_handlers;
   "lib/agent/index": typeof lib_agent_index;
   "lib/agent/tools": typeof lib_agent_tools;

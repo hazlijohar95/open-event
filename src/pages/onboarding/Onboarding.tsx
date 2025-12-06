@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useMutation } from 'convex/react'
+import { useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { OnboardingProgress } from '@/components/onboarding'
@@ -29,7 +29,9 @@ const steps = [
 export function Onboarding() {
   const navigate = useNavigate()
   const saveProfile = useMutation(api.organizerProfiles.saveProfile)
+  const existingProfile = useQuery(api.organizerProfiles.getMyProfile)
   const hasSavedRef = useRef(false)
+  const hasCheckedProfile = useRef(false)
 
   const {
     currentStep,
@@ -40,6 +42,15 @@ export function Onboarding() {
     prevStep,
     skipOnboarding,
   } = useOnboarding()
+
+  // Check if user already completed onboarding - redirect to dashboard
+  useEffect(() => {
+    if (existingProfile && !hasCheckedProfile.current) {
+      hasCheckedProfile.current = true
+      console.log('[Onboarding] User already has profile, redirecting to dashboard')
+      navigate('/dashboard', { replace: true })
+    }
+  }, [existingProfile, navigate])
 
   // Save onboarding data and navigate to completion when done
   useEffect(() => {
@@ -68,6 +79,16 @@ export function Onboarding() {
   }, [isComplete, answers, saveProfile, navigate])
 
   const CurrentStepComponent = steps[currentStep - 1]
+
+  // Show loading while checking if user already completed onboarding
+  // existingProfile is undefined while loading, null if no profile exists
+  if (existingProfile === undefined) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      </div>
+    )
+  }
 
   const handleNext = (data: Partial<OnboardingAnswers>) => {
     nextStep(data)
