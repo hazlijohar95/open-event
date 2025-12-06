@@ -208,3 +208,82 @@ body {
   animation: float-fast 3.5s ease-in-out infinite;
   animation-delay: 1s;
 }
+
+/* Demo modal animations */
+@keyframes demo-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes demo-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes demo-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes demo-badge-pop {
+  0% {
+    transform: scale(0);
+  }
+  60% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes demo-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-2px) rotate(-2deg);
+  }
+  75% {
+    transform: translateX(2px) rotate(2deg);
+  }
+}
+
+@keyframes demo-fill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--target-width, 100%);
+  }
+}
+
+.animate-demo-fade-in {
+  animation: demo-fade-in 500ms ease-out forwards;
+}
+
+.animate-demo-scale-in {
+  animation: demo-scale-in 400ms ease-out forwards;
+}
+
+.animate-demo-slide-right {
+  animation: demo-slide-right 500ms ease-out forwards;
+}

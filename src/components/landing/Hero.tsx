@@ -1,15 +1,19 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { AudienceToggle } from '@/components/ui/audience-toggle'
+import { DemoModal } from '@/components/demo'
 import { useAudienceToggle, type Audience } from '@/hooks/use-audience-toggle'
 import {
   GithubLogo,
-  ArrowSquareOut,
   Code,
   Rocket,
-  Eye,
   Play,
+  BookOpen,
+  CaretDown,
+  SignIn,
   type Icon,
 } from '@phosphor-icons/react'
 
@@ -22,30 +26,30 @@ interface HeroContent {
 
 const content: Record<Audience, HeroContent> = {
   developer: {
-    headline: 'The open-source event operations system.',
+    headline: 'The open-source event operations stack.',
     subheadline: [
-      'Logistics, vendors, sponsors, volunteers — one clean operational flow.',
-      'AI-powered. Open by default. Built for organizers who want clarity, speed, and control.',
+      'Self-host or extend. Full API access.',
+      'Build custom workflows for any event type.',
     ],
     ctas: [
-      { label: 'Get Started', icon: ArrowSquareOut, variant: 'default' },
-      { label: 'View on GitHub', icon: GithubLogo, variant: 'outline' },
-      { label: 'Open API', icon: Code, variant: 'ghost' },
+      { label: 'View on GitHub', icon: GithubLogo, variant: 'default' },
+      { label: 'Read Docs', icon: BookOpen, variant: 'outline' },
+      { label: 'Try the API', icon: Code, variant: 'ghost' },
     ],
-    badges: ['open-source', 'realtime', 'ai-native'],
+    badges: ['open-source', 'self-hostable', 'api-first'],
   },
   organizer: {
-    headline: 'Run events the simple way.',
+    headline: 'Run seamless events with the right partners.',
     subheadline: [
-      'One platform for vendors, sponsors, volunteers, and logistics.',
-      'No spreadsheets. No chaos. Just clarity.',
+      'Find vetted sponsors and vendors, manage logistics with AI,',
+      'and execute flawless events — all in one platform.',
     ],
     ctas: [
-      { label: 'Get Started', icon: Rocket, variant: 'default' },
-      { label: 'See Features', icon: Eye, variant: 'outline' },
-      { label: 'Watch Demo', icon: Play, variant: 'ghost' },
+      { label: 'Book a Demo', icon: Rocket, variant: 'default' },
+      { label: 'Watch Demo', icon: Play, variant: 'outline' },
+      { label: 'See How It Works', icon: CaretDown, variant: 'ghost' },
     ],
-    badges: ['easy-to-use', 'all-in-one', 'ai-powered'],
+    badges: ['ai-powered', 'all-in-one', 'open-source'],
   },
 }
 
@@ -55,10 +59,14 @@ function HeroContentLayer({
   data,
   isActive,
   audienceKey,
+  onWatchDemo,
+  onGetStarted,
 }: {
   data: HeroContent
   isActive: boolean
   audienceKey: string
+  onWatchDemo?: () => void
+  onGetStarted?: () => void
 }) {
   return (
     <div
@@ -81,21 +89,33 @@ function HeroContentLayer({
 
         {/* CTAs */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12">
-          {data.ctas.map(({ label, icon: IconComponent, variant }) => (
-            <Button key={label} size="lg" variant={variant} className="w-full sm:w-auto">
-              {variant === 'default' ? (
-                <>
-                  {label}
-                  <IconComponent className="ml-2" size={18} weight="duotone" />
-                </>
-              ) : (
-                <>
-                  <IconComponent className="mr-2" size={18} weight="duotone" />
-                  {label}
-                </>
-              )}
-            </Button>
-          ))}
+          {data.ctas.map(({ label, icon: IconComponent, variant }) => {
+            const handleClick = () => {
+              if (label === 'Watch Demo') onWatchDemo?.()
+              else if (label === 'Book a Demo') onGetStarted?.()
+            }
+            return (
+              <Button
+                key={label}
+                size="lg"
+                variant={variant}
+                className="w-full sm:w-auto"
+                onClick={handleClick}
+              >
+                {variant === 'default' ? (
+                  <>
+                    {label}
+                    <IconComponent className="ml-2" size={18} weight="duotone" />
+                  </>
+                ) : (
+                  <>
+                    <IconComponent className="mr-2" size={18} weight="duotone" />
+                    {label}
+                  </>
+                )}
+              </Button>
+            )
+          })}
         </div>
 
         {/* Badge Row */}
@@ -121,15 +141,37 @@ function HeroContentLayer({
 
 export function Hero() {
   const { audience, setAudience, isDeveloper } = useAudienceToggle()
+  const [demoOpen, setDemoOpen] = useState(false)
+  const navigate = useNavigate()
+
+  const handleGetStarted = () => {
+    navigate('/sign-up')
+  }
 
   return (
     <section className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Navigation */}
       <nav className="relative z-20 flex items-center justify-between px-6 py-4 max-w-7xl mx-auto w-full">
         <div className="font-mono text-lg font-semibold">open-event</div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <AudienceToggle value={audience} onChange={setAudience} />
           <ThemeToggle />
+          <div className="hidden sm:flex items-center gap-2 ml-2">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/sign-in">
+                <SignIn size={16} weight="duotone" className="mr-1.5" />
+                Sign In
+              </Link>
+            </Button>
+            <Button size="sm" asChild>
+              <Link to="/sign-up">Get Started</Link>
+            </Button>
+          </div>
+          <Button variant="ghost" size="icon" className="sm:hidden" asChild>
+            <Link to="/sign-in">
+              <SignIn size={20} weight="duotone" />
+            </Link>
+          </Button>
         </div>
       </nav>
 
@@ -144,6 +186,8 @@ export function Hero() {
           data={content.organizer}
           isActive={!isDeveloper}
           audienceKey="organizer"
+          onWatchDemo={() => setDemoOpen(true)}
+          onGetStarted={handleGetStarted}
         />
       </div>
 
@@ -153,6 +197,9 @@ export function Hero() {
           <div className="w-1 h-3 bg-muted-foreground/50 rounded-full mt-2" />
         </div>
       </div>
+
+      {/* Demo Modal */}
+      <DemoModal open={demoOpen} onOpenChange={setDemoOpen} />
     </section>
   )
 }

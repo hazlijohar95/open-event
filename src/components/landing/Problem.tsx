@@ -15,28 +15,31 @@ export function Problem() {
       >
         {/* Title */}
         <h2 className="font-mono text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-          Event management is messy.
+          Event ops is broken.
         </h2>
 
-        {/* Body */}
+        {/* Body - 3 audiences */}
         <div className="space-y-6 text-lg sm:text-xl text-muted-foreground leading-relaxed">
           <p>
-            Organizers juggle vendors, sponsors, logistics, volunteers, schedules,
-            materials, certificates, and reporting — usually across dozens of
-            spreadsheets, DMs, emails, and tools that don't talk to each other.
+            <span className="text-foreground font-medium">Organizers</span> waste weeks
+            chasing vendors, vetting sponsors, and managing volunteers across 10+ tools.
           </p>
 
-          <p className="font-medium text-foreground">
-            Ticketing solves ticketing.
-            <br />
-            But nobody solves event operations.
+          <p>
+            <span className="text-foreground font-medium">Sponsors</span> can't measure ROI
+            or find the right events to back.
+          </p>
+
+          <p>
+            <span className="text-foreground font-medium">Vendors</span> miss opportunities
+            because there's no central marketplace.
           </p>
         </div>
 
         {/* Closing line */}
         <div className="pt-4 border-l-4 border-primary pl-6">
           <p className="text-xl sm:text-2xl font-medium">
-            Open-Event fixes this with one unified, open-source operations system.
+            Open-Event fixes all of this.
           </p>
         </div>
       </div>

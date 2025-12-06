@@ -1,42 +1,65 @@
 import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { cn } from '@/lib/utils'
-import { ShieldCheck, SquaresFour, Globe, type Icon } from '@phosphor-icons/react'
+import {
+  Handshake,
+  Storefront,
+  Calendar,
+  ChartLineUp,
+  Target,
+  UsersThree,
+  CurrencyDollar,
+  Star,
+  ShieldCheck,
+  Sparkle,
+  Certificate,
+  ClipboardText,
+  type Icon,
+} from '@phosphor-icons/react'
 
-const userTypes = [
+interface Benefit {
+  icon: Icon
+  text: string
+}
+
+const stakeholders = [
   {
-    icon: ShieldCheck,
-    title: 'Superadmin',
-    features: [
-      'Approve vendors',
-      'Approve sponsors',
-      'Approve volunteers (optional)',
-      'Manage categories + platform-level configuration',
-      'Maintain ecosystem cleanliness',
-      'Oversee data across all events',
+    title: 'Sponsors Get',
+    subtitle: 'Measurable ROI, not just logo placement',
+    color: 'text-amber-500',
+    bgColor: 'bg-amber-500/10',
+    benefits: [
+      { icon: ChartLineUp, text: 'Real engagement metrics (booth visits, QR scans, leads)' },
+      { icon: Target, text: 'Audience match scoring before you commit' },
+      { icon: UsersThree, text: 'Lead capture & attribution tracking' },
+      { icon: ClipboardText, text: 'Post-event ROI reports generated automatically' },
+      { icon: CurrencyDollar, text: 'Multi-event discount tracking' },
     ],
   },
   {
-    icon: SquaresFour,
-    title: 'Organizer Dashboard',
-    features: [
-      'Create and manage events',
-      'View and compare approved vendors',
-      'Manage sponsor applications',
-      'Assign and approve volunteers',
-      'Plan logistics',
-      'Generate AI reports',
-      'Issue certificates & credits',
+    title: 'Vendors Get',
+    subtitle: 'Inbound opportunities, not cold outreach',
+    color: 'text-emerald-500',
+    bgColor: 'bg-emerald-500/10',
+    benefits: [
+      { icon: Calendar, text: 'Inbound event opportunities in your category' },
+      { icon: CurrencyDollar, text: 'Transparent pricing (no bidding wars)' },
+      { icon: Star, text: 'Reviews & ratings that build reputation' },
+      { icon: UsersThree, text: 'Repeat client management' },
+      { icon: ShieldCheck, text: 'Payment protection and contracts' },
     ],
   },
   {
-    icon: Globe,
-    title: 'Public Submission Portals',
-    features: [
-      'Vendor application',
-      'Sponsor application',
-      'Volunteer application',
+    title: 'Organizers Get',
+    subtitle: 'One dashboard to rule them all',
+    color: 'text-primary',
+    bgColor: 'bg-primary/10',
+    benefits: [
+      { icon: Storefront, text: 'Pre-vetted sponsor & vendor marketplace' },
+      { icon: Sparkle, text: 'AI-powered matching & recommendations' },
+      { icon: Handshake, text: 'Centralized logistics dashboard' },
+      { icon: Certificate, text: 'Automated certificates & reports' },
+      { icon: ClipboardText, text: 'Zero spreadsheet chaos' },
     ],
-    note: 'No accounts or logins required for external parties — one-click and done.',
   },
 ]
 
@@ -44,7 +67,7 @@ export function FeaturesByUser() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6 bg-muted/30">
+    <section className="py-24 sm:py-32 px-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div
@@ -55,14 +78,17 @@ export function FeaturesByUser() {
           )}
         >
           <h2 className="font-mono text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-            Features by user type.
+            Everyone wins.
           </h2>
+          <p className="text-lg text-muted-foreground mt-4 max-w-2xl mx-auto">
+            Practical benefits for every stakeholder — not just features.
+          </p>
         </div>
 
-        {/* User Type Grid */}
+        {/* Stakeholder Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {userTypes.map((userType, index) => (
-            <UserTypeCard key={userType.title} {...userType} index={index} />
+          {stakeholders.map((stakeholder, index) => (
+            <StakeholderCard key={stakeholder.title} {...stakeholder} index={index} />
           ))}
         </div>
       </div>
@@ -70,17 +96,19 @@ export function FeaturesByUser() {
   )
 }
 
-function UserTypeCard({
-  icon: IconComponent,
+function StakeholderCard({
   title,
-  features,
-  note,
+  subtitle,
+  color,
+  bgColor,
+  benefits,
   index,
 }: {
-  icon: Icon
   title: string
-  features: string[]
-  note?: string
+  subtitle: string
+  color: string
+  bgColor: string
+  benefits: Benefit[]
   index: number
 }) {
   const { ref, isVisible } = useScrollAnimation()
@@ -89,36 +117,32 @@ function UserTypeCard({
     <div
       ref={ref}
       className={cn(
-        'p-6 rounded-lg border border-border bg-background',
-        'transition-all duration-500',
+        'p-6 rounded-xl border border-border bg-card',
+        'transition-all duration-500 hover:shadow-lg',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
       style={{ transitionDelay: `${index * 150}ms` }}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <IconComponent size={20} weight="duotone" className="text-primary" />
-        </div>
-        <h3 className="font-mono text-xl font-semibold">{title}</h3>
+      <div className="mb-6">
+        <h3 className={cn('font-mono text-xl font-bold', color)}>{title}</h3>
+        <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
       </div>
 
-      {/* Features List */}
-      <ul className="space-y-3">
-        {features.map((feature) => (
-          <li key={feature} className="flex items-start gap-3">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-            <span className="text-sm text-muted-foreground">{feature}</span>
-          </li>
-        ))}
+      {/* Benefits List */}
+      <ul className="space-y-4">
+        {benefits.map((benefit, i) => {
+          const IconComponent = benefit.icon
+          return (
+            <li key={i} className="flex items-start gap-3">
+              <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', bgColor)}>
+                <IconComponent size={16} weight="duotone" className={color} />
+              </div>
+              <span className="text-sm text-foreground leading-relaxed pt-1">{benefit.text}</span>
+            </li>
+          )
+        })}
       </ul>
-
-      {/* Note */}
-      {note && (
-        <div className="mt-6 pt-4 border-t border-border">
-          <p className="text-xs text-muted-foreground italic">{note}</p>
-        </div>
-      )}
     </div>
   )
 }

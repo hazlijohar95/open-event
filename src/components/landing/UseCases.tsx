@@ -5,33 +5,35 @@ import { Code, Buildings, Bank, type Icon } from '@phosphor-icons/react'
 const useCases = [
   {
     icon: Code,
-    title: 'Hackathons & Developer Events',
+    title: 'Tech Conferences & Hackathons',
+    highlight: '50+ sponsors in one pipeline',
     features: [
-      'Volunteers',
-      'Sponsors',
-      'Outcome reports',
-      'AI logistics',
-      'Vendor coordination (food, equipment, venue)',
+      'AI vendor comparison for AV, catering, swag',
+      'Volunteer shift scheduling with check-in',
+      'Automated speaker certificates',
+      'Post-event sponsor ROI reports',
     ],
   },
   {
     icon: Buildings,
-    title: 'Corporate Conferences & Summits',
+    title: 'Corporate Events & Summits',
+    highlight: 'Procurement-ready documentation',
     features: [
-      'Vendor comparison',
-      'Multi-tier sponsor applications',
-      'Logistics planning',
-      'Data-rich analytics',
+      'Multi-tier sponsor packages with tracking',
+      'Vendor comparison with pricing transparency',
+      'Executive reporting dashboards',
+      'Compliance-ready audit trails',
     ],
   },
   {
     icon: Bank,
-    title: 'Government & Public Events',
+    title: 'Community & Public Events',
+    highlight: 'Budget-conscious vendor matching',
     features: [
-      'Transparent vendor approval',
-      'Volunteer management',
-      'Reporting and documentation',
-      'Procurement clarity',
+      'Micro-sponsor management ($500-$5k)',
+      'Volunteer management & certificates',
+      'Local vendor discovery',
+      'Free tier for non-profits',
     ],
   },
 ]
@@ -69,11 +71,13 @@ export function UseCases() {
 function UseCaseCard({
   icon: IconComponent,
   title,
+  highlight,
   features,
   index,
 }: {
   icon: Icon
   title: string
+  highlight: string
   features: string[]
   index: number
 }) {
@@ -83,7 +87,7 @@ function UseCaseCard({
     <div
       ref={ref}
       className={cn(
-        'group p-6 rounded-lg border border-border bg-background',
+        'group p-6 rounded-xl border border-border bg-card',
         'transition-all duration-500 hover:-translate-y-1 hover:shadow-lg hover:border-primary/20',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
@@ -95,13 +99,16 @@ function UseCaseCard({
       </div>
 
       {/* Title */}
-      <h3 className="font-mono text-lg font-semibold mb-4">{title}</h3>
+      <h3 className="font-mono text-lg font-semibold mb-2">{title}</h3>
+
+      {/* Highlight */}
+      <p className="text-sm text-primary font-medium mb-4">{highlight}</p>
 
       {/* Features */}
       <ul className="space-y-2">
         {features.map((feature) => (
           <li key={feature} className="flex items-start gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50 mt-2 shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-primary/50 mt-2 shrink-0" />
             <span className="text-sm text-muted-foreground">{feature}</span>
           </li>
         ))}

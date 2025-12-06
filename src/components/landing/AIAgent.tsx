@@ -6,27 +6,32 @@ const capabilities = [
   {
     icon: Sparkle,
     title: 'Sponsor Intelligence',
-    description: 'Recommends sponsors based on event type, audience, and requirements.',
+    description: 'AI recommends sponsors based on your event type and audience.',
+    example: '"Find fintech sponsors with $50k+ budgets for a 500-person tech conference"',
   },
   {
     icon: TrendUp,
-    title: 'Vendor Insights',
-    description: 'Compares vendor pricing, suitability, reviews, and availability.',
+    title: 'Vendor Comparison',
+    description: 'Compare pricing, reviews, and availability across vendors.',
+    example: '"Compare catering vendors for 300 pax under $15k in KL"',
   },
   {
     icon: CalendarCheck,
     title: 'Logistics Planner',
-    description: 'Generates checklists, tasks, dependencies, and timelines.',
+    description: 'Auto-generate task lists, dependencies, and timelines.',
+    example: '"Create a 3-day conference setup checklist with deadlines"',
   },
   {
     icon: FileText,
-    title: 'Outcome Reports',
-    description: 'Creates sponsor-ready post-event reports + analytics instantly.',
+    title: 'Sponsor Reports',
+    description: 'Generate post-event reports with real engagement metrics.',
+    example: '"Generate ROI report for Gold sponsors with booth traffic data"',
   },
   {
     icon: Certificate,
-    title: 'Certificates Engine',
-    description: 'Issues credits and participation certificates for volunteers and attendees.',
+    title: 'Certificate Engine',
+    description: 'Issue participation certificates for volunteers and speakers.',
+    example: '"Generate volunteer certificates with hours logged"',
   },
 ]
 
@@ -34,7 +39,7 @@ export function AIAgent() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6">
+    <section className="py-24 sm:py-32 px-6 bg-muted/30">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div
@@ -45,12 +50,11 @@ export function AIAgent() {
           )}
         >
           <h2 className="font-mono text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
-            Your AI operations partner.
+            AI that actually helps.
           </h2>
 
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed">
-            Open-Event includes an AI agent designed for the real problems event
-            organizers face.
+            Not just chatbot fluff. Our AI agent solves real event operations problems.
           </p>
         </div>
 
@@ -69,11 +73,13 @@ function CapabilityCard({
   icon: IconComponent,
   title,
   description,
+  example,
   index,
 }: {
   icon: Icon
   title: string
   description: string
+  example: string
   index: number
 }) {
   const { ref, isVisible } = useScrollAnimation()
@@ -82,22 +88,22 @@ function CapabilityCard({
     <div
       ref={ref}
       className={cn(
-        'group relative p-6 rounded-lg border border-border bg-background',
+        'group relative p-6 rounded-xl border border-border bg-background',
         'transition-all duration-500 hover:-translate-y-1 hover:shadow-lg',
-        'hover:border-primary/20 hover:bg-gradient-to-br hover:from-primary/5 hover:to-transparent',
+        'hover:border-primary/20',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
       style={{ transitionDelay: `${index * 100}ms` }}
     >
-      {/* Gradient accent */}
-      <div className="absolute inset-0 rounded-lg bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+        <IconComponent size={24} weight="duotone" className="text-primary" />
+      </div>
+      <h3 className="font-mono text-lg font-semibold mb-2">{title}</h3>
+      <p className="text-sm text-muted-foreground leading-relaxed mb-4">{description}</p>
 
-      <div className="relative">
-        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-          <IconComponent size={24} weight="duotone" className="text-primary" />
-        </div>
-        <h3 className="font-mono text-lg font-semibold mb-2">{title}</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+      {/* Example prompt */}
+      <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+        <p className="text-xs font-mono text-muted-foreground italic">{example}</p>
       </div>
     </div>
   )
