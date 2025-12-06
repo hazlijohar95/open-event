@@ -174,15 +174,41 @@ export default defineSchema({
   // AI Messages within conversations
   aiMessages: defineTable({
     conversationId: v.id('aiConversations'),
-    role: v.string(), // user, assistant, system
+    role: v.string(), // user, assistant, system, tool
     content: v.string(),
+
+    // Streaming metadata
+    isStreaming: v.optional(v.boolean()),
+    streamStartedAt: v.optional(v.number()),
+
+    // Tool calls for this message
+    toolCalls: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          name: v.string(),
+          arguments: v.any(),
+          status: v.string(), // pending, confirmed, executing, completed, error
+          result: v.optional(v.any()),
+        })
+      )
+    ),
+
     metadata: v.optional(
       v.object({
         extractedFields: v.optional(v.array(v.string())),
         suggestedActions: v.optional(v.array(v.string())),
         model: v.optional(v.string()),
+        tokens: v.optional(
+          v.object({
+            input: v.number(),
+            output: v.number(),
+          })
+        ),
       })
     ),
+
     createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
   }).index('by_conversation', ['conversationId']),
 })

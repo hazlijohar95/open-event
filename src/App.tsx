@@ -23,6 +23,7 @@ import {
   DashboardOverview,
   EventsPage,
   EventCreatePage,
+  EventDetailPage,
   VendorsPage,
   SponsorsPage,
   AnalyticsPage,
@@ -77,6 +78,7 @@ function App() {
             <Route index element={<DashboardOverview />} />
             <Route path="events" element={<EventsPage />} />
             <Route path="events/new" element={<EventCreatePage />} />
+            <Route path="events/:eventId" element={<EventDetailPage />} />
             <Route path="vendors" element={<VendorsPage />} />
             <Route path="sponsors" element={<SponsorsPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
