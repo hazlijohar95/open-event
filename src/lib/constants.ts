@@ -14,16 +14,65 @@ export const EVENT_STATUS = {
 
 export type EventStatus = (typeof EVENT_STATUS)[keyof typeof EVENT_STATUS]
 
-export const eventStatusColors: Record<
+export const eventStatusConfig: Record<
   string,
-  { bg: string; text: string; label: string }
+  {
+    bg: string
+    text: string
+    label: string
+    description: string
+    nextStatus?: string
+    nextAction?: string
+    icon: 'draft' | 'planning' | 'active' | 'completed' | 'cancelled'
+  }
 > = {
-  draft: { bg: 'bg-zinc-500/10', text: 'text-zinc-500', label: 'Draft' },
-  planning: { bg: 'bg-amber-500/10', text: 'text-amber-500', label: 'Planning' },
-  active: { bg: 'bg-emerald-500/10', text: 'text-emerald-500', label: 'Active' },
-  completed: { bg: 'bg-blue-500/10', text: 'text-blue-500', label: 'Completed' },
-  cancelled: { bg: 'bg-red-500/10', text: 'text-red-500', label: 'Cancelled' },
+  draft: {
+    bg: 'bg-zinc-500/10',
+    text: 'text-zinc-500',
+    label: 'Draft',
+    description: 'Incomplete event details',
+    nextStatus: 'planning',
+    nextAction: 'Start Planning',
+    icon: 'draft',
+  },
+  planning: {
+    bg: 'bg-amber-500/10',
+    text: 'text-amber-600',
+    label: 'Planning',
+    description: 'Actively preparing for the event',
+    nextStatus: 'active',
+    nextAction: 'Go Live',
+    icon: 'planning',
+  },
+  active: {
+    bg: 'bg-emerald-500/10',
+    text: 'text-emerald-600',
+    label: 'Active',
+    description: 'Event is live and accepting participants',
+    nextStatus: 'completed',
+    nextAction: 'Mark Complete',
+    icon: 'active',
+  },
+  completed: {
+    bg: 'bg-blue-500/10',
+    text: 'text-blue-600',
+    label: 'Completed',
+    description: 'Event has ended',
+    icon: 'completed',
+  },
+  cancelled: {
+    bg: 'bg-red-500/10',
+    text: 'text-red-500',
+    label: 'Cancelled',
+    description: 'Event was cancelled',
+    nextStatus: 'draft',
+    nextAction: 'Reactivate',
+    icon: 'cancelled',
+  },
 }
+
+// For backwards compatibility
+export const eventStatusColors = eventStatusConfig
 
 export const eventStatusFilters = [
   { value: 'all', label: 'All' },
@@ -32,6 +81,9 @@ export const eventStatusFilters = [
   { value: 'active', label: 'Active' },
   { value: 'completed', label: 'Completed' },
 ]
+
+// Status workflow order for progress indicator
+export const statusWorkflowOrder = ['draft', 'planning', 'active', 'completed'] as const
 
 // Vendor status configuration
 export const VENDOR_STATUS = {

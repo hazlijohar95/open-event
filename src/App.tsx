@@ -3,15 +3,11 @@ import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
 import {
   Hero,
-  Problem,
+  LogoCloud,
   CoreConcept,
   FeaturesByUser,
   AIAgent,
-  SocialProof,
-  UseCases,
   WhyOpenSource,
-  OpenAPI,
-  ScreenPreviews,
   FAQ,
   CallToAction,
   Footer,
@@ -33,7 +29,7 @@ import {
   AnalyticsPage,
   SettingsPage,
 } from '@/pages/dashboard'
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { AppShell } from '@/components/app'
 import { AdminLayout } from '@/components/admin'
 import {
   AdminDashboard,
@@ -57,15 +53,11 @@ function LandingPage() {
     <div className="min-h-screen bg-background text-foreground">
       <main>
         <Hero />
-        <Problem />
-        <CoreConcept />
+        <LogoCloud />
         <FeaturesByUser />
+        <CoreConcept />
         <AIAgent />
-        <SocialProof />
-        <UseCases />
         <WhyOpenSource />
-        <OpenAPI />
-        <ScreenPreviews />
         <FAQ />
         <CallToAction />
       </main>
@@ -86,7 +78,7 @@ function App() {
           <Route path="/auth/redirect" element={<AuthRedirect />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/onboarding/complete" element={<OnboardingComplete />} />
-          <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<AppShell />}>
             <Route index element={<DashboardOverview />} />
             <Route path="events" element={<EventsPage />} />
             <Route path="events/new" element={<EventCreatePage />} />

@@ -16,7 +16,13 @@ import {
   MagnifyingGlass,
   UserCircle,
   ArrowRight,
+  Funnel,
 } from '@phosphor-icons/react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 
 type ActionType =
   | 'user_suspended'
@@ -120,11 +126,11 @@ const targetConfig: Record<TargetType, { icon: typeof Users; color: string }> = 
 }
 
 const actionCategories = [
-  { value: 'all', label: 'All Actions' },
-  { value: 'user', label: 'User Actions' },
-  { value: 'vendor', label: 'Vendor Actions' },
-  { value: 'sponsor', label: 'Sponsor Actions' },
-  { value: 'event', label: 'Event Actions' },
+  { value: 'all', label: 'All Actions', description: 'View all moderation activity' },
+  { value: 'user', label: 'User Actions', description: 'Suspensions, role changes, admin management' },
+  { value: 'vendor', label: 'Vendor Actions', description: 'Vendor approvals and rejections' },
+  { value: 'sponsor', label: 'Sponsor Actions', description: 'Sponsor approvals and rejections' },
+  { value: 'event', label: 'Event Actions', description: 'Event flagging and removals' },
 ]
 
 export function AdminModeration() {
@@ -175,7 +181,7 @@ export function AdminModeration() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold">Moderation Logs</h1>
+        <h1 className="text-2xl font-mono font-bold">Moderation Logs</h1>
         <p className="text-muted-foreground">
           Track all administrative actions and moderation activity
         </p>
@@ -183,42 +189,65 @@ export function AdminModeration() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-4">
-        <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card">
-          <div className="p-3 rounded-lg bg-blue-500/10">
-            <ShieldCheck size={24} weight="duotone" className="text-blue-500" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Total Actions</p>
-            <p className="text-2xl font-bold">{moderationLogs?.length || 0}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card">
-          <div className="p-3 rounded-lg bg-amber-500/10">
-            <Clock size={24} weight="duotone" className="text-amber-500" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Today</p>
-            <p className="text-2xl font-bold">{todayActions}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card">
-          <div className="p-3 rounded-lg bg-red-500/10">
-            <Warning size={24} weight="duotone" className="text-red-500" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Suspensions</p>
-            <p className="text-2xl font-bold">{suspensions}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card">
-          <div className="p-3 rounded-lg bg-green-500/10">
-            <CheckCircle size={24} weight="duotone" className="text-green-500" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">Approvals</p>
-            <p className="text-2xl font-bold">{approvals}</p>
-          </div>
-        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-blue-500/30 transition-colors cursor-default">
+              <div className="p-3 rounded-lg bg-blue-500/10">
+                <ShieldCheck size={24} weight="duotone" className="text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Total Actions</p>
+                <p className="text-2xl font-bold">{moderationLogs?.length || 0}</p>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>All recorded moderation actions</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-amber-500/30 transition-colors cursor-default">
+              <div className="p-3 rounded-lg bg-amber-500/10">
+                <Clock size={24} weight="duotone" className="text-amber-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Today</p>
+                <p className="text-2xl font-bold">{todayActions}</p>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>Actions taken today</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-red-500/30 transition-colors cursor-default">
+              <div className="p-3 rounded-lg bg-red-500/10">
+                <Warning size={24} weight="duotone" className="text-red-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Suspensions</p>
+                <p className="text-2xl font-bold">{suspensions}</p>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>Total user suspensions</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:border-green-500/30 transition-colors cursor-default">
+              <div className="p-3 rounded-lg bg-green-500/10">
+                <CheckCircle size={24} weight="duotone" className="text-green-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Approvals</p>
+                <p className="text-2xl font-bold">{approvals}</p>
+              </div>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>Vendor and sponsor approvals</TooltipContent>
+        </Tooltip>
       </div>
 
       {/* Filters */}
@@ -246,36 +275,50 @@ export function AdminModeration() {
         {/* Category Tabs */}
         <div className="flex gap-1 p-1 bg-muted rounded-lg overflow-x-auto">
           {actionCategories.map((cat) => (
-            <button
-              key={cat.value}
-              onClick={() => setCategoryFilter(cat.value)}
-              className={cn(
-                'px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap',
-                categoryFilter === cat.value
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {cat.label}
-            </button>
+            <Tooltip key={cat.value}>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setCategoryFilter(cat.value)}
+                  className={cn(
+                    'px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer',
+                    categoryFilter === cat.value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {cat.label}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{cat.description}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
 
         {/* Target Type Filter */}
-        <select
-          value={targetTypeFilter}
-          onChange={(e) => setTargetTypeFilter(e.target.value as TargetType | 'all')}
-          className={cn(
-            'px-3 py-2 rounded-lg border border-border bg-background',
-            'text-sm focus:outline-none focus:ring-2 focus:ring-primary/20'
-          )}
-        >
-          <option value="all">All Targets</option>
-          <option value="user">Users</option>
-          <option value="vendor">Vendors</option>
-          <option value="sponsor">Sponsors</option>
-          <option value="event">Events</option>
-        </select>
+        <div className="flex items-center gap-2">
+          <Funnel size={16} weight="duotone" className="text-muted-foreground" />
+          <div className="flex gap-1">
+            {(['all', 'user', 'vendor', 'sponsor', 'event'] as const).map((type) => {
+              const Icon = type === 'all' ? Users : targetConfig[type as TargetType]?.icon
+              const color = type === 'all' ? 'text-foreground' : targetConfig[type as TargetType]?.color
+              return (
+                <button
+                  key={type}
+                  onClick={() => setTargetTypeFilter(type)}
+                  className={cn(
+                    'px-3 py-1.5 text-sm font-medium rounded-md transition-colors capitalize flex items-center gap-1.5 cursor-pointer',
+                    targetTypeFilter === type
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  )}
+                >
+                  {Icon && <Icon size={14} weight="duotone" className={targetTypeFilter === type ? 'text-primary' : color} />}
+                  {type === 'all' ? 'All' : type}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Logs Timeline */}

@@ -91,6 +91,88 @@ http.route({
   }),
 })
 
+// Handle preflight for tool execution endpoint
+http.route({
+  path: '/api/chat/execute-tool',
+  method: 'OPTIONS',
+  handler: httpAction(async () => {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    })
+  }),
+})
+
+// ============================================================================
+// Direct Tool Execution Endpoint (for confirmed tools)
+// ============================================================================
+
+http.route({
+  path: '/api/chat/execute-tool',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    // Parse request body
+    const body = await request.json()
+    const { toolName, toolArguments } = body as {
+      toolName: ToolName
+      toolArguments: Record<string, unknown>
+    }
+
+    if (!toolName) {
+      return new Response(JSON.stringify({ error: 'Missing tool name' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Get user identity from the Authorization header
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Get the user from the database
+    const user = await ctx.runQuery(api.queries.auth.getCurrentUser)
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    try {
+      // Execute the tool directly
+      const result = await executeToolHandler(
+        ctx,
+        user._id,
+        `confirmed-${Date.now()}`,
+        toolName,
+        toolArguments
+      )
+
+      return new Response(JSON.stringify(result), {
+        status: result.success ? 200 : 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    } catch (error) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          summary: 'Tool execution failed',
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+  }),
+})
+
 http.route({
   path: '/api/chat/stream',
   method: 'POST',

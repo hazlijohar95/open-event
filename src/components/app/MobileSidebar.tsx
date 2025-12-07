@@ -1,4 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
+import { useQuery } from 'convex/react'
+import { api } from '../../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import {
   House,
@@ -8,8 +10,15 @@ import {
   ChartLine,
   Gear,
   Plus,
+  ShieldCheck,
   X,
 } from '@phosphor-icons/react'
+import { OrganizationSwitcher } from './OrganizationSwitcher'
+
+interface MobileSidebarProps {
+  open: boolean
+  onClose: () => void
+}
 
 const navigationItems = [
   { label: 'Overview', icon: House, path: '/dashboard' },
@@ -23,13 +32,10 @@ const bottomItems = [
   { label: 'Settings', icon: Gear, path: '/dashboard/settings' },
 ]
 
-interface DashboardMobileSidebarProps {
-  open: boolean
-  onClose: () => void
-}
-
-export function DashboardMobileSidebar({ open, onClose }: DashboardMobileSidebarProps) {
+export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
   const location = useLocation()
+  const currentUser = useQuery(api.queries.auth.getCurrentUser)
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin'
 
   const isActive = (path: string) => {
     if (path === '/dashboard') {
@@ -44,15 +50,21 @@ export function DashboardMobileSidebar({ open, onClose }: DashboardMobileSidebar
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/50 lg:hidden"
+        className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
         onClick={onClose}
       />
 
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-background border-r border-border lg:hidden">
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-border lg:hidden',
+          'transform transition-transform duration-200 ease-out',
+          open ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-          <Link to="/" className="font-mono text-lg font-bold" onClick={onClose}>
+        <div className="flex items-center justify-between h-14 px-4 border-b border-border">
+          <Link to="/" className="font-mono text-base font-bold" onClick={onClose}>
             <span className="text-foreground">open</span>
             <span className="text-primary">-</span>
             <span className="text-foreground">event</span>
@@ -65,15 +77,20 @@ export function DashboardMobileSidebar({ open, onClose }: DashboardMobileSidebar
           </button>
         </div>
 
+        {/* Organization Switcher */}
+        <div className="p-3 border-b border-border">
+          <OrganizationSwitcher />
+        </div>
+
         {/* Create Event Button */}
-        <div className="p-4">
+        <div className="p-3">
           <Link
             to="/dashboard/events/new"
             onClick={onClose}
             className={cn(
               'flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg',
               'bg-primary text-primary-foreground font-medium text-sm',
-              'hover:bg-primary/90 transition-colors cursor-pointer'
+              'hover:bg-primary/90 transition-all cursor-pointer'
             )}
           >
             <Plus size={18} weight="bold" />
@@ -82,7 +99,7 @@ export function DashboardMobileSidebar({ open, onClose }: DashboardMobileSidebar
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
           {navigationItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.path)
@@ -106,7 +123,20 @@ export function DashboardMobileSidebar({ open, onClose }: DashboardMobileSidebar
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="absolute bottom-0 left-0 right-0 px-3 py-4 border-t border-border bg-background">
+        <div className="px-2 py-3 border-t border-border space-y-1">
+          {isAdmin && (
+            <Link
+              to="/admin"
+              onClick={onClose}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
+              )}
+            >
+              <ShieldCheck size={20} weight="duotone" />
+              Admin Panel
+            </Link>
+          )}
           {bottomItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.path)

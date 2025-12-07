@@ -5,36 +5,36 @@ import { CaretDown } from '@phosphor-icons/react'
 
 const faqs = [
   {
-    question: 'is this thing really free?',
-    answer: 'yep. the core platform is open-source and free forever. self-host it, fork it, do whatever you want with it. we also have managed hosting if you\'d rather not deal with servers (we get it).',
+    question: 'wait, is this actually free?',
+    answer: 'yep. 100% open-source, MIT licensed. use it, fork it, self-host it, remix it into something cooler. we\'re just getting started and want people to actually use this thing.',
   },
   {
-    question: 'help, i need to talk to a human!',
-    answer: 'send us an email at hello@open-event.io. we actually read those. wild, we know.',
+    question: 'who is this for exactly?',
+    answer: 'three types of people: organizers who are drowning in spreadsheets, sponsors who want to know their money isn\'t vanishing into thin air, and vendors who are tired of cold outreach. if you\'ve ever planned an event and thought "there has to be a better way" — hi, that\'s us.',
   },
   {
-    question: 'how do sponsors know their money isn\'t going into a black hole?',
-    answer: 'real metrics, not vanity numbers. booth scans, lead captures, actual engagement data. we compile it into reports that don\'t require a PhD to understand. your CFO will thank you.',
+    question: 'what can the AI actually do?',
+    answer: 'real stuff. find sponsors that match your event type and budget. compare vendors by pricing and reviews. auto-generate task checklists. create post-event reports. it\'s not just a chatbot — it actually does things. revolutionary concept, we know.',
   },
   {
-    question: 'can i import my 47-tab vendor spreadsheet?',
-    answer: 'we\'ve seen worse. CSV import, API sync, or just paste it in. we\'ll figure it out. no judgment on your spreadsheet organization skills (okay, maybe a little).',
+    question: 'how do sponsors track their ROI?',
+    answer: 'real metrics, not vibes. booth visits, lead captures, engagement data — all compiled into reports your CFO won\'t need a translator for. no more "trust us, it was a great event" conversations.',
   },
   {
-    question: 'how does the AI matching actually work?',
-    answer: 'it looks at your event requirements and vendor profiles, does some math that would make your head spin, and suggests partners that actually make sense. it\'s like a dating app, but for events. and less awkward.',
+    question: 'can vendors actually get discovered here?',
+    answer: 'that\'s the whole point. instead of cold-emailing organizers, you list your services and let them find you. AI matching helps surface you to relevant events. inbound > outbound, always.',
   },
   {
-    question: 'is my data secure?',
-    answer: 'we\'re open-source, so you can literally audit the code yourself. for managed hosting: encryption, backups, the works. or self-host and keep everything on your own servers. your paranoia, your choice.',
+    question: 'is my data safe?',
+    answer: 'open-source means you can audit every line of code. for our hosted version: encrypted, backed up, the usual security checklist. or self-host and keep everything on your own servers. your call.',
   },
   {
-    question: 'will open-event make my events better?',
-    answer: 'legally we cannot guarantee that, but... yes. obviously yes.',
+    question: 'you just launched — should I trust this?',
+    answer: 'fair question. we\'re new, but the code is open and the roadmap is public. worst case, you try it, hate it, and export your data. best case, you\'re one of our first users and we\'ll love you forever.',
   },
   {
-    question: 'do you ship internationally?',
-    answer: 'we\'re software, we ship everywhere the internet exists. if you\'re reading this from a submarine or the ISS, please let us know. that would be cool.',
+    question: 'how do I get help?',
+    answer: 'github issues for bugs, email for everything else. we actually read and reply to messages. shocking in 2024, we know.',
   },
 ]
 

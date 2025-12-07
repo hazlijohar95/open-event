@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
@@ -14,23 +14,38 @@ import {
   Globe,
   User,
   CurrencyDollar,
+  Clock,
 } from '@phosphor-icons/react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { AddSponsorModal } from '@/components/admin'
 
 type SponsorStatus = 'pending' | 'approved' | 'rejected'
 
-const statusTabs: { value: SponsorStatus | 'all'; label: string }[] = [
+const statusConfig: Record<SponsorStatus, { bg: string; text: string; label: string; description: string }> = {
+  pending: { bg: 'bg-amber-500/10', text: 'text-amber-600', label: 'Pending', description: 'Awaiting review' },
+  approved: { bg: 'bg-green-500/10', text: 'text-green-600', label: 'Approved', description: 'Active in marketplace' },
+  rejected: { bg: 'bg-red-500/10', text: 'text-red-600', label: 'Rejected', description: 'Application declined' },
+}
+
+const statusFilters = [
   { value: 'all', label: 'All' },
   { value: 'pending', label: 'Pending' },
   { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
-]
-
-const statusColors: Record<SponsorStatus, { bg: string; text: string; label: string }> = {
-  pending: { bg: 'bg-amber-500/10', text: 'text-amber-600', label: 'Pending Review' },
-  approved: { bg: 'bg-green-500/10', text: 'text-green-600', label: 'Approved' },
-  rejected: { bg: 'bg-red-500/10', text: 'text-red-600', label: 'Rejected' },
-}
+] as const
 
 export function AdminSponsors() {
   const [statusFilter, setStatusFilter] = useState<SponsorStatus | 'all'>('pending')
@@ -40,12 +55,23 @@ export function AdminSponsors() {
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
 
+  // Get all sponsors to calculate counts
+  const allSponsors = useQuery(api.sponsors.listForAdmin, {})
   const sponsors = useQuery(api.sponsors.listForAdmin, {
     status: statusFilter === 'all' ? undefined : statusFilter,
   })
 
   const approveSponsor = useMutation(api.sponsors.approve)
   const rejectSponsor = useMutation(api.sponsors.reject)
+
+  // Calculate status counts
+  const statusCounts = useMemo(() => {
+    if (!allSponsors) return {}
+    return allSponsors.reduce((acc, sponsor) => {
+      acc[sponsor.status] = (acc[sponsor.status] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+  }, [allSponsors])
 
   const filteredSponsors = sponsors?.filter((s) => {
     if (!searchQuery.trim()) return true
@@ -108,13 +134,15 @@ export function AdminSponsors() {
     return null
   }
 
+  const totalCount = allSponsors?.length || 0
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Sponsor Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold font-mono">Sponsor Management</h1>
+          <p className="text-muted-foreground mt-1">
             Review and manage sponsor applications
           </p>
         </div>
@@ -123,7 +151,7 @@ export function AdminSponsors() {
           className={cn(
             'flex items-center gap-2 px-4 py-2 rounded-lg',
             'bg-primary text-primary-foreground font-medium text-sm',
-            'hover:bg-primary/90 transition-colors'
+            'hover:bg-primary/90 transition-colors cursor-pointer'
           )}
         >
           <Plus size={18} weight="bold" />
@@ -133,22 +161,50 @@ export function AdminSponsors() {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
-        {/* Status Tabs */}
-        <div className="flex gap-1 p-1 bg-muted rounded-lg">
-          {statusTabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setStatusFilter(tab.value)}
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-md transition-colors',
-                statusFilter === tab.value
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Status Filter Tabs with Counts */}
+        <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-border sm:border-0 sm:pb-0">
+          {statusFilters.map((filter) => {
+            const count = filter.value === 'all'
+              ? totalCount
+              : (statusCounts[filter.value] || 0)
+            const config = filter.value !== 'all' ? statusConfig[filter.value] : null
+            const isActive = statusFilter === filter.value
+
+            return (
+              <TooltipProvider key={filter.value} delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setStatusFilter(filter.value)}
+                      className={cn(
+                        'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer',
+                        isActive
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
+                    >
+                      <span>{filter.label}</span>
+                      <span
+                        className={cn(
+                          'px-1.5 py-0.5 rounded text-xs font-semibold min-w-[1.25rem] text-center',
+                          isActive
+                            ? 'bg-primary-foreground/20 text-primary-foreground'
+                            : 'bg-muted text-muted-foreground'
+                        )}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  {config && (
+                    <TooltipContent side="bottom">
+                      <p>{config.description}</p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            )
+          })}
         </div>
 
         {/* Search */}
@@ -173,210 +229,247 @@ export function AdminSponsors() {
       </div>
 
       {/* Sponsors List */}
-      <div className="rounded-xl border border-border bg-card overflow-hidden">
+      <div className="space-y-3">
         {!sponsors ? (
-          <div className="p-8 text-center text-muted-foreground">
-            Loading sponsors...
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-border bg-card p-5 animate-pulse">
+                <div className="h-6 bg-muted rounded w-1/3 mb-3" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+              </div>
+            ))}
           </div>
         ) : filteredSponsors?.length === 0 ? (
-          <div className="p-8 text-center">
-            <Handshake size={48} weight="duotone" className="mx-auto mb-4 text-muted-foreground/50" />
-            <p className="text-muted-foreground">No sponsors found</p>
+          <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
+            <Handshake size={64} weight="duotone" className="mx-auto text-muted-foreground/30 mb-6" />
+            <h3 className="text-lg font-semibold mb-2">
+              {statusFilter === 'all' ? 'No sponsors yet' : `No ${statusConfig[statusFilter]?.label.toLowerCase()} sponsors`}
+            </h3>
+            <p className="text-muted-foreground max-w-sm mx-auto">
+              {searchQuery
+                ? `No sponsors match "${searchQuery}"`
+                : `No sponsors in this category`}
+            </p>
           </div>
         ) : (
-          <div className="divide-y divide-border">
-            {filteredSponsors?.map((sponsor) => {
-              const status = statusColors[sponsor.status]
-              const budgetRange = formatBudget(sponsor.budgetMin, sponsor.budgetMax)
+          filteredSponsors?.map((sponsor) => {
+            const status = statusConfig[sponsor.status]
+            const budgetRange = formatBudget(sponsor.budgetMin, sponsor.budgetMax)
 
-              return (
-                <div
-                  key={sponsor._id}
-                  className="p-4 hover:bg-muted/30 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    {/* Sponsor Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
-                          {sponsor.logoUrl ? (
-                            <img
-                              src={sponsor.logoUrl}
-                              alt={sponsor.name}
-                              className="w-full h-full rounded-lg object-cover"
-                            />
-                          ) : (
-                            <Handshake size={20} weight="duotone" className="text-purple-500" />
+            return (
+              <div
+                key={sponsor._id}
+                className="rounded-xl border border-border bg-card p-5 hover:border-primary/20 hover:bg-muted/30 transition-colors group"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  {/* Sponsor Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {sponsor.logoUrl ? (
+                          <img
+                            src={sponsor.logoUrl}
+                            alt={sponsor.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <Handshake size={24} weight="duotone" className="text-purple-600" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
+                            {sponsor.name}
+                          </h3>
+                          <span
+                            className={cn(
+                              'px-2 py-0.5 text-xs font-medium rounded-full',
+                              status.bg,
+                              status.text
+                            )}
+                          >
+                            {status.label}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span className="capitalize">{sponsor.industry}</span>
+                          {sponsor.sponsorshipTiers && sponsor.sponsorshipTiers.length > 0 && (
+                            <>
+                              <span>•</span>
+                              <span className="capitalize">
+                                {sponsor.sponsorshipTiers.join(', ')}
+                              </span>
+                            </>
                           )}
                         </div>
-                        <div className="min-w-0">
-                          <h3 className="font-semibold truncate">{sponsor.name}</h3>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span className="capitalize">{sponsor.industry}</span>
-                            {sponsor.sponsorshipTiers && sponsor.sponsorshipTiers.length > 0 && (
-                              <>
-                                <span>•</span>
-                                <span className="capitalize">
-                                  {sponsor.sponsorshipTiers.join(', ')}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
                       </div>
-
-                      {sponsor.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                          {sponsor.description}
-                        </p>
-                      )}
-
-                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                        {budgetRange && (
-                          <span className="flex items-center gap-1">
-                            <CurrencyDollar size={14} weight="duotone" />
-                            {budgetRange}
-                          </span>
-                        )}
-                        {sponsor.contactName && (
-                          <span className="flex items-center gap-1">
-                            <User size={14} weight="duotone" />
-                            {sponsor.contactName}
-                          </span>
-                        )}
-                        {sponsor.contactEmail && (
-                          <span className="flex items-center gap-1">
-                            <EnvelopeSimple size={14} weight="duotone" />
-                            {sponsor.contactEmail}
-                          </span>
-                        )}
-                        {sponsor.website && (
-                          <a
-                            href={sponsor.website}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1 hover:text-foreground"
-                          >
-                            <Globe size={14} weight="duotone" />
-                            Website
-                          </a>
-                        )}
-                      </div>
-
-                      {sponsor.targetEventTypes && sponsor.targetEventTypes.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mt-3">
-                          {sponsor.targetEventTypes.map((type) => (
-                            <span
-                              key={type}
-                              className="px-2 py-0.5 text-xs bg-muted rounded-md"
-                            >
-                              {type}
-                            </span>
-                          ))}
-                        </div>
-                      )}
                     </div>
 
-                    {/* Status & Actions */}
-                    <div className="flex flex-col items-end gap-3">
-                      <span
-                        className={cn(
-                          'px-3 py-1 text-xs font-medium rounded-full',
-                          status.bg,
-                          status.text
-                        )}
-                      >
-                        {status.label}
-                      </span>
-
-                      <p className="text-xs text-muted-foreground">
-                        Applied {formatDate(sponsor.createdAt)}
+                    {sponsor.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3 ml-15">
+                        {sponsor.description}
                       </p>
+                    )}
 
-                      {sponsor.status === 'pending' && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleApprove(sponsor._id)}
-                            className={cn(
-                              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium',
-                              'bg-green-500/10 text-green-600 hover:bg-green-500/20 transition-colors'
-                            )}
-                          >
-                            <CheckCircle size={16} weight="bold" />
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => openRejectModal(sponsor._id)}
-                            className={cn(
-                              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium',
-                              'bg-red-500/10 text-red-600 hover:bg-red-500/20 transition-colors'
-                            )}
-                          >
-                            <XCircle size={16} weight="bold" />
-                            Reject
-                          </button>
-                        </div>
+                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground ml-15">
+                      {budgetRange && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <CurrencyDollar size={14} weight="duotone" />
+                          {budgetRange}
+                        </span>
                       )}
-
-                      {sponsor.status === 'rejected' && sponsor.rejectionReason && (
-                        <p className="text-xs text-red-500 max-w-[200px] text-right">
-                          Reason: {sponsor.rejectionReason}
-                        </p>
+                      {sponsor.contactName && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <User size={14} weight="duotone" />
+                          {sponsor.contactName}
+                        </span>
                       )}
+                      {sponsor.contactEmail && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <EnvelopeSimple size={14} weight="duotone" />
+                          {sponsor.contactEmail}
+                        </span>
+                      )}
+                      {sponsor.website && (
+                        <a
+                          href={sponsor.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 hover:text-foreground"
+                        >
+                          <Globe size={14} weight="duotone" />
+                          Website
+                        </a>
+                      )}
+                      <span className="inline-flex items-center gap-1.5 text-muted-foreground/70">
+                        <Clock size={14} weight="duotone" />
+                        Applied {formatDate(sponsor.createdAt)}
+                      </span>
                     </div>
+
+                    {sponsor.targetEventTypes && sponsor.targetEventTypes.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-3 ml-15">
+                        {sponsor.targetEventTypes.map((type) => (
+                          <span
+                            key={type}
+                            className="px-2 py-0.5 text-xs bg-muted rounded-md"
+                          >
+                            {type}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                    {sponsor.status === 'pending' && (
+                      <div className="flex items-center gap-2">
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleApprove(sponsor._id)}
+                                className={cn(
+                                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium',
+                                  'bg-green-500/10 text-green-600 hover:bg-green-500 hover:text-white transition-all cursor-pointer'
+                                )}
+                              >
+                                <CheckCircle size={16} weight="bold" />
+                                Approve
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Approve sponsor application</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <TooltipProvider delayDuration={0}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => openRejectModal(sponsor._id)}
+                                className={cn(
+                                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium',
+                                  'bg-red-500/10 text-red-600 hover:bg-red-500 hover:text-white transition-all cursor-pointer'
+                                )}
+                              >
+                                <XCircle size={16} weight="bold" />
+                                Reject
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Reject sponsor application</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )
-            })}
-          </div>
+
+                {/* Rejection Reason */}
+                {sponsor.status === 'rejected' && sponsor.rejectionReason && (
+                  <div className="mt-3 pt-3 border-t border-border ml-15">
+                    <p className="text-xs text-red-600">
+                      <span className="font-medium">Rejection reason:</span> {sponsor.rejectionReason}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )
+          })
         )}
       </div>
 
       {/* Reject Modal */}
-      {showRejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowRejectModal(false)}
-          />
-          <div className="relative bg-background rounded-xl border border-border p-6 w-full max-w-md mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold mb-4">Reject Sponsor</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Please provide a reason for rejecting this sponsor application.
-            </p>
-            <textarea
-              value={rejectReason}
-              onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Rejection reason..."
-              rows={4}
-              className={cn(
-                'w-full px-3 py-2 rounded-lg border border-border bg-background',
-                'text-sm placeholder:text-muted-foreground resize-none',
-                'focus:outline-none focus:ring-2 focus:ring-primary/20'
-              )}
-            />
-            <div className="flex justify-end gap-3 mt-4">
-              <button
-                onClick={() => setShowRejectModal(false)}
-                className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleReject}
-                disabled={!rejectReason.trim()}
-                className={cn(
-                  'px-4 py-2 rounded-lg text-sm font-medium',
-                  'bg-red-500 text-white hover:bg-red-600 transition-colors',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
-              >
-                Reject Sponsor
-              </button>
+      <Dialog open={showRejectModal} onOpenChange={setShowRejectModal}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-red-500/10">
+                <XCircle size={20} weight="duotone" className="text-red-600" />
+              </div>
+              <DialogTitle>Reject Sponsor</DialogTitle>
             </div>
-          </div>
-        </div>
-      )}
+            <DialogDescription>
+              Please provide a reason for rejecting this sponsor application.
+            </DialogDescription>
+          </DialogHeader>
+
+          <textarea
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Rejection reason..."
+            rows={4}
+            className={cn(
+              'w-full px-3 py-2 rounded-lg border border-border bg-background',
+              'text-sm placeholder:text-muted-foreground resize-none',
+              'focus:outline-none focus:ring-2 focus:ring-primary/20'
+            )}
+          />
+
+          <DialogFooter>
+            <button
+              onClick={() => setShowRejectModal(false)}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleReject}
+              disabled={!rejectReason.trim()}
+              className={cn(
+                'px-4 py-2 rounded-lg text-sm font-medium',
+                'bg-red-500 text-white hover:bg-red-600 transition-colors',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
+              )}
+            >
+              Reject Sponsor
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Sponsor Modal */}
       <AddSponsorModal open={showAddModal} onOpenChange={setShowAddModal} />

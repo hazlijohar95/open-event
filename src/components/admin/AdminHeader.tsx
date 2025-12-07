@@ -3,7 +3,7 @@ import { useAuthActions } from '@convex-dev/auth/react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { Bell, List, SignOut, User, CaretDown, ShieldCheck } from '@phosphor-icons/react'
+import { Bell, SidebarSimple, SignOut, User, CaretDown, ShieldCheck } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useState, useRef, useEffect } from 'react'
 
@@ -44,8 +44,9 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           <button
             onClick={onMenuClick}
             className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            aria-label="Toggle sidebar"
           >
-            <List size={24} weight="bold" />
+            <SidebarSimple size={22} weight="duotone" />
           </button>
           <Link to="/admin" className="lg:hidden font-mono text-lg font-bold flex items-center gap-2">
             <span className="text-foreground">open</span>

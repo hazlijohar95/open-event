@@ -34,38 +34,91 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* ================================================
+     TYPEFORM-INSPIRED DESIGN TOKENS
+     ================================================ */
+
+  /* Spacing Scale (8px base) */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.5rem;    /* 24px */
+  --space-6: 2rem;      /* 32px */
+  --space-8: 3rem;      /* 48px */
+  --space-10: 4rem;     /* 64px */
+  --space-12: 6rem;     /* 96px */
+  --space-16: 8rem;     /* 128px */
+
+  /* Border Radius */
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  /* ================================================
+     COLOR SYSTEM - Purple Accent (Typeform-style)
+     ================================================ */
+
+  /* Paper (backgrounds) */
+  --background: oklch(0.995 0 0);
+  --foreground: oklch(0.13 0 0);
+
+  /* Cards & Surfaces */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.13 0 0);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
+  --popover-foreground: oklch(0.13 0 0);
+
+  /* Primary - Purple Accent (Typeform signature) */
+  --primary: oklch(0.55 0.2 300);
+  --primary-foreground: oklch(0.99 0 0);
+
+  /* Secondary */
+  --secondary: oklch(0.965 0 0);
   --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+
+  /* Muted */
+  --muted: oklch(0.965 0.005 300);
+  --muted-foreground: oklch(0.45 0 0);
+
+  /* Accent - Light purple tint */
+  --accent: oklch(0.95 0.03 300);
+  --accent-foreground: oklch(0.45 0.15 300);
+
+  /* Destructive */
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
+
+  /* Borders & Input */
+  --border: oklch(0.91 0 0);
+  --input: oklch(0.91 0 0);
+  --ring: oklch(0.55 0.2 300);
+
+  /* Chart Colors */
+  --chart-1: oklch(0.55 0.2 300);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  /* Sidebar (collapsible) */
+  --sidebar: oklch(0.99 0 0);
+  --sidebar-foreground: oklch(0.13 0 0);
+  --sidebar-primary: oklch(0.55 0.2 300);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.965 0.01 300);
+  --sidebar-accent-foreground: oklch(0.35 0.1 300);
+  --sidebar-border: oklch(0.93 0 0);
+  --sidebar-ring: oklch(0.55 0.2 300);
+
+  /* Additional Typeform tokens */
+  --purple: oklch(0.55 0.2 300);
+  --purple-light: oklch(0.85 0.1 300);
+  --purple-dark: oklch(0.45 0.22 300);
+  --purple-muted: oklch(0.95 0.03 300);
 }
 
 body {
@@ -82,12 +135,18 @@ body {
 }
 
 @theme inline {
+  /* Typography */
   --font-sans: "Geist", system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  /* Colors mapped to Tailwind */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -119,40 +178,66 @@ body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Purple accent colors for Tailwind */
+  --color-purple: var(--purple);
+  --color-purple-light: var(--purple-light);
+  --color-purple-dark: var(--purple-dark);
+  --color-purple-muted: var(--purple-muted);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  /* Dark theme with purple accent */
+  --background: oklch(0.12 0.005 300);
+  --foreground: oklch(0.97 0 0);
+
+  --card: oklch(0.16 0.008 300);
+  --card-foreground: oklch(0.97 0 0);
+
+  --popover: oklch(0.18 0.008 300);
+  --popover-foreground: oklch(0.97 0 0);
+
+  /* Primary - Brighter purple for dark mode */
+  --primary: oklch(0.7 0.18 300);
+  --primary-foreground: oklch(0.12 0.02 300);
+
+  --secondary: oklch(0.22 0.01 300);
+  --secondary-foreground: oklch(0.97 0 0);
+
+  --muted: oklch(0.22 0.01 300);
+  --muted-foreground: oklch(0.65 0 0);
+
+  --accent: oklch(0.25 0.04 300);
+  --accent-foreground: oklch(0.85 0.1 300);
+
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+
+  --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
+  --ring: oklch(0.7 0.18 300);
+
+  /* Chart colors - purple-tinted */
+  --chart-1: oklch(0.7 0.18 300);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-4: oklch(0.627 0.2 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
+
+  /* Sidebar */
+  --sidebar: oklch(0.14 0.008 300);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.7 0.18 300);
+  --sidebar-primary-foreground: oklch(0.12 0.02 300);
+  --sidebar-accent: oklch(0.22 0.015 300);
+  --sidebar-accent-foreground: oklch(0.85 0.1 300);
   --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-ring: oklch(0.7 0.18 300);
+
+  /* Dark mode purple tokens */
+  --purple: oklch(0.7 0.18 300);
+  --purple-light: oklch(0.8 0.12 300);
+  --purple-dark: oklch(0.55 0.2 300);
+  --purple-muted: oklch(0.25 0.04 300);
 }
 
 @layer base {
@@ -985,4 +1070,361 @@ body {
 
 .typeform-scroll::-webkit-scrollbar-thumb:hover {
   background: oklch(var(--muted-foreground) / 0.3);
+}
+
+/* ================================================
+   AGENTIC CHAT UI - Premium UX System
+   Smooth animations, no layout jumps, rich content
+   ================================================ */
+
+/* Container - Full height flex layout */
+.agentic-chat-container {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 10rem);
+}
+
+/* Main Layout - CSS Grid for stability */
+.agentic-chat-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  width: 100%;
+  max-width: 42rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* Header - Smooth text transitions */
+.agentic-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  transition: all 500ms var(--ease-out);
+}
+
+/* Conversation Wrapper - Animated height for no jumping */
+.agentic-conversation-wrapper {
+  width: 100%;
+  overflow: hidden;
+  transition: height 500ms var(--ease-out), opacity 300ms var(--ease-out);
+  margin-bottom: 1rem;
+  contain: layout style;
+}
+
+/* Conversation Container */
+.agentic-conversation {
+  width: 100%;
+  border-radius: 1.25rem;
+  border: 1px solid var(--border);
+  background: var(--card);
+  overflow: hidden;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.05);
+}
+
+/* Message entrance animation */
+@keyframes agentic-message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.agentic-message {
+  animation: agentic-message-enter 400ms var(--ease-spring) both;
+}
+
+/* Input Area - Always visible, stable position */
+.agentic-input-area {
+  width: 100%;
+  position: relative;
+  z-index: 10;
+}
+
+/* Input Glow - Animated gradient border */
+.agentic-input-glow {
+  position: relative;
+  border-radius: 1rem;
+  padding: 2px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.55 0.2 300 / 0.5),
+    oklch(0.7 0.15 280 / 0.3),
+    oklch(0.55 0.2 300 / 0.5)
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 4s ease infinite;
+  box-shadow:
+    0 0 20px -5px oklch(0.55 0.2 300 / 0.15),
+    0 4px 20px -10px oklch(0 0 0 / 0.1);
+  transition: box-shadow 300ms var(--ease-out);
+}
+
+.agentic-input-glow:focus-within {
+  box-shadow:
+    0 0 30px -5px oklch(0.55 0.2 300 / 0.25),
+    0 4px 30px -10px oklch(0 0 0 / 0.15);
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Input Inner Container */
+.agentic-input-inner {
+  background: var(--card);
+  border-radius: calc(1rem - 2px);
+  overflow: hidden;
+}
+
+/* Textarea Styling */
+.agentic-textarea {
+  width: 100%;
+  resize: none;
+  background: transparent;
+  padding: 1rem 1.25rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--foreground);
+  border: none;
+  outline: none;
+}
+
+.agentic-textarea::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.4;
+}
+
+.agentic-textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Suggestions Area */
+.agentic-suggestions {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+/* Suggestion chip stagger animation */
+.suggestion-chip {
+  opacity: 0;
+  animation: chip-enter 400ms var(--ease-spring) forwards;
+}
+
+.suggestion-chip:nth-child(1) { animation-delay: 0ms; }
+.suggestion-chip:nth-child(2) { animation-delay: 75ms; }
+.suggestion-chip:nth-child(3) { animation-delay: 150ms; }
+.suggestion-chip:nth-child(4) { animation-delay: 225ms; }
+.suggestion-chip:nth-child(5) { animation-delay: 300ms; }
+
+/* Activity pulse */
+@keyframes activity-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.activity-pulse {
+  animation: activity-pulse 2s ease-in-out infinite;
+}
+
+/* Smooth scrollbar for conversation */
+.agentic-conversation .space-y-4 {
+  max-height: 50vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: oklch(var(--muted-foreground) / 0.15) transparent;
+}
+
+.agentic-conversation .space-y-4::-webkit-scrollbar {
+  width: 4px;
+}
+
+.agentic-conversation .space-y-4::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agentic-conversation .space-y-4::-webkit-scrollbar-thumb {
+  background: oklch(var(--muted-foreground) / 0.15);
+  border-radius: 2px;
+}
+
+.agentic-conversation .space-y-4::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--muted-foreground) / 0.25);
+}
+
+/* Custom scrollbar utility */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(var(--muted-foreground) / 0.2) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(var(--muted-foreground) / 0.2);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--muted-foreground) / 0.4);
+}
+
+/* Streaming cursor animation */
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: currentColor;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Avatar streaming pulse */
+.avatar-streaming {
+  animation: avatar-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes avatar-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.55 0.2 300 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px oklch(0.55 0.2 300 / 0);
+  }
+}
+
+.dark .avatar-streaming {
+  animation: avatar-pulse-dark 1.5s ease-in-out infinite;
+}
+
+@keyframes avatar-pulse-dark {
+  0%, 100% {
+    box-shadow: 0 0 0 0 oklch(0.7 0.18 300 / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px oklch(0.7 0.18 300 / 0);
+  }
+}
+
+/* Quick reply buttons */
+.quick-replies {
+  animation: quick-replies-enter 300ms var(--ease-out) both;
+}
+
+.quick-reply-btn {
+  animation: quick-reply-btn-enter 400ms var(--ease-spring) both;
+}
+
+@keyframes quick-replies-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes quick-reply-btn-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Inline confirmation card animation */
+.agentic-confirmation-inline {
+  animation: confirmation-enter 500ms var(--ease-spring) both;
+}
+
+@keyframes confirmation-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Message counter header - collapsible accordion style */
+.agentic-message-counter {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 200ms ease;
+}
+
+.agentic-message-counter:hover {
+  background-color: var(--muted);
+}
+
+.agentic-message-counter svg {
+  transition: transform 200ms ease;
+}
+
+.agentic-message-counter[data-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* Dark mode adjustments */
+.dark .agentic-input-glow {
+  background: linear-gradient(
+    135deg,
+    oklch(0.7 0.18 300 / 0.4),
+    oklch(0.6 0.15 280 / 0.25),
+    oklch(0.7 0.18 300 / 0.4)
+  );
+  box-shadow:
+    0 0 25px -5px oklch(0.7 0.18 300 / 0.2),
+    0 4px 20px -10px oklch(0 0 0 / 0.3);
+}
+
+.dark .agentic-input-glow:focus-within {
+  box-shadow:
+    0 0 35px -5px oklch(0.7 0.18 300 / 0.3),
+    0 4px 30px -10px oklch(0 0 0 / 0.4);
 }

@@ -1,24 +1,43 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { Bell, List, SignOut, User, CaretDown, ShieldCheck } from '@phosphor-icons/react'
+import {
+  Bell,
+  SidebarSimple,
+  SignOut,
+  User,
+  CaretDown,
+  ShieldCheck,
+} from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useState, useRef, useEffect } from 'react'
 
-interface DashboardHeaderProps {
+interface TopBarProps {
   onMenuClick?: () => void
+  sidebarCollapsed?: boolean
 }
 
-export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
+const mainNavItems = [
+  { label: 'Events', path: '/dashboard/events' },
+  { label: 'Vendors', path: '/dashboard/vendors' },
+  { label: 'Sponsors', path: '/dashboard/sponsors' },
+  { label: 'Analytics', path: '/dashboard/analytics' },
+]
+
+export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
   const { signOut } = useAuthActions()
   const navigate = useNavigate()
+  const location = useLocation()
   const user = useQuery(api.queries.auth.getCurrentUser)
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Close menu when clicking outside
+  const isActive = (path: string) => {
+    return location.pathname.startsWith(path)
+  }
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -35,42 +54,66 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center justify-between h-full px-4 lg:px-6">
-        {/* Mobile menu button + Logo */}
+    <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center h-full px-4">
+        {/* Left: Menu toggle + Logo */}
         <div className="flex items-center gap-3">
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="p-2 -ml-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all cursor-pointer"
+            aria-label="Toggle sidebar"
           >
-            <List size={24} weight="bold" />
+            <SidebarSimple size={20} weight="duotone" />
           </button>
-          <Link to="/" className="lg:hidden font-mono text-lg font-bold">
+
+          {/* Logo - always visible on mobile, visible when collapsed on desktop */}
+          <Link
+            to="/dashboard"
+            className={cn(
+              'font-mono text-base font-bold transition-opacity',
+              'lg:transition-all lg:duration-200',
+              sidebarCollapsed ? 'lg:opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
+            )}
+          >
             <span className="text-foreground">open</span>
             <span className="text-primary">-</span>
             <span className="text-foreground">event</span>
           </Link>
         </div>
 
-        {/* Welcome message - desktop only */}
-        <div className="hidden lg:block">
-          <h1 className="text-lg font-semibold">
-            Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
-          </h1>
-        </div>
+        {/* Center: Main Navigation - Desktop only */}
+        <nav className="hidden lg:flex items-center gap-1 ml-6">
+          {mainNavItems.map((item) => {
+            const active = isActive(item.path)
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                  active
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >
+                {item.label}
+              </Link>
+            )
+          })}
+        </nav>
 
         {/* Right side */}
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-1 sm:gap-2 ml-auto">
           {/* Notifications */}
           <button
             className={cn(
               'relative p-2 rounded-lg text-muted-foreground',
               'hover:text-foreground hover:bg-muted transition-colors cursor-pointer'
             )}
+            title="Notifications"
           >
-            <Bell size={20} weight="duotone" />
-            {/* Notification dot */}
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full" />
+            <Bell size={18} weight="duotone" />
+            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
           </button>
 
           <ThemeToggle />
@@ -80,7 +123,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className={cn(
-                'flex items-center gap-2 p-1.5 rounded-lg transition-colors',
+                'flex items-center gap-2 p-1 rounded-lg transition-colors',
                 'hover:bg-muted cursor-pointer',
                 menuOpen && 'bg-muted'
               )}
@@ -89,15 +132,17 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                 <img
                   src={user.image}
                   alt={user.name || 'User'}
-                  className="w-8 h-8 rounded-full object-cover"
+                  className="w-7 h-7 rounded-full object-cover ring-2 ring-border"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User size={16} weight="duotone" className="text-primary" />
+                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-border">
+                  <span className="text-xs font-medium text-primary">
+                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  </span>
                 </div>
               )}
               <CaretDown
-                size={14}
+                size={12}
                 weight="bold"
                 className={cn(
                   'text-muted-foreground transition-transform hidden sm:block',
@@ -108,7 +153,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
 
             {/* Dropdown menu */}
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-popover border border-border rounded-lg shadow-lg py-1 z-50">
+              <div className="absolute right-0 top-full mt-2 w-56 bg-popover border border-border rounded-xl shadow-lg py-1 z-50 animate-in fade-in-0 zoom-in-95 duration-100">
                 {/* User info */}
                 <div className="px-3 py-2 border-b border-border">
                   <p className="font-medium text-sm truncate">
@@ -129,7 +174,7 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                   Profile Settings
                 </Link>
 
-                {/* Admin Panel Link - only for admins */}
+                {/* Admin Panel Link */}
                 {(user?.role === 'admin' || user?.role === 'superadmin') && (
                   <Link
                     to="/admin"
@@ -141,9 +186,11 @@ export function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                   </Link>
                 )}
 
+                <div className="h-px bg-border my-1" />
+
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
                 >
                   <SignOut size={16} weight="duotone" />
                   Sign Out

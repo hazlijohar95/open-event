@@ -250,10 +250,14 @@ open-event/
 ├── src/
 │   ├── components/
 │   │   ├── ui/            # ShadCN UI components
-│   │   ├── dashboard/     # Dashboard components
-│   │   ├── landing/       # Landing page sections
+│   │   ├── app/           # App shell, sidebar, topbar
+│   │   ├── landing/       # Landing page sections (9 components)
 │   │   ├── admin/         # Admin components
-│   │   └── agent/         # AI assistant components
+│   │   ├── agentic/       # AI chat assistant
+│   │   ├── chat/          # Chat UI components
+│   │   ├── auth/          # Authentication components
+│   │   ├── demo/          # Demo modal and scenes
+│   │   └── onboarding/    # User onboarding flow
 │   │
 │   ├── pages/
 │   │   ├── dashboard/     # Dashboard pages
@@ -500,7 +504,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  Made with ❤️ by the Open Event community
+  Made with ❤️ by an accountant
 </p>
 
 <p align="center">
