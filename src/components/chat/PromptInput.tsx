@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback, useEffect, type KeyboardEvent, type ChangeEvent } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo, type KeyboardEvent, type ChangeEvent } from 'react'
 import { PaperPlaneTilt, Stop, CircleNotch } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
+import { SlashCommandMenu, createDefaultCommands, type SlashCommand } from './SlashCommandMenu'
 
 // ============================================================================
 // Types
@@ -17,6 +18,12 @@ export interface PromptInputProps {
   maxLength?: number
   minRows?: number
   maxRows?: number
+  // Slash command handlers
+  onNewChat?: () => void
+  onClearChat?: () => void
+  onShowHelp?: () => void
+  onShowSettings?: () => void
+  onRetry?: () => void
 }
 
 // ============================================================================
@@ -34,10 +41,36 @@ export function PromptInput({
   maxLength = 4000,
   minRows = 1,
   maxRows = 6,
+  // Slash command handlers
+  onNewChat,
+  onClearChat,
+  onShowHelp,
+  onShowSettings,
+  onRetry,
 }: PromptInputProps) {
   const [value, setValue] = useState('')
   const [isFocused, setIsFocused] = useState(false)
+  const [showSlashMenu, setShowSlashMenu] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  // Create slash commands with handlers
+  const slashCommands = useMemo(
+    () =>
+      createDefaultCommands({
+        onNewChat,
+        onClearChat,
+        onShowHelp,
+        onShowSettings,
+        onRetry,
+      }),
+    [onNewChat, onClearChat, onShowHelp, onShowSettings, onRetry]
+  )
+
+  // Detect slash command input
+  useEffect(() => {
+    const shouldShow = value.startsWith('/') && value.length < 20 && !value.includes(' ')
+    setShowSlashMenu(shouldShow)
+  }, [value])
 
   // Auto-resize textarea
   const adjustHeight = useCallback(() => {
@@ -89,13 +122,19 @@ export function PromptInput({
   // Handle key down
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLTextAreaElement>) => {
+      // If slash menu is open, let it handle navigation
+      if (showSlashMenu && ['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
+        // SlashCommandMenu handles these via window event listener
+        return
+      }
+
       // Enter without shift submits
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
         handleSubmit()
       }
     },
-    [handleSubmit]
+    [handleSubmit, showSlashMenu]
   )
 
   // Handle abort
@@ -103,20 +142,42 @@ export function PromptInput({
     onAbort?.()
   }, [onAbort])
 
-  const canSubmit = value.trim().length > 0 && !isLoading && !disabled
+  // Handle slash command selection
+  const handleSlashCommandSelect = useCallback((command: SlashCommand) => {
+    setValue('')
+    setShowSlashMenu(false)
+    command.action()
+  }, [])
+
+  // Handle slash menu close
+  const handleSlashMenuClose = useCallback(() => {
+    setShowSlashMenu(false)
+  }, [])
+
+  const canSubmit = value.trim().length > 0 && !isLoading && !disabled && !showSlashMenu
   const showAbort = isStreaming && onAbort
   const charactersRemaining = maxLength - value.length
   const showCharacterCount = value.length > maxLength * 0.8
 
   return (
     <div className={cn('relative', className)}>
-      {/* Input container */}
+      {/* Slash Command Menu */}
+      <SlashCommandMenu
+        isOpen={showSlashMenu}
+        searchQuery={value}
+        commands={slashCommands}
+        onSelect={handleSlashCommandSelect}
+        onClose={handleSlashMenuClose}
+      />
+
+      {/* Input container with premium focus glow */}
       <div
         className={cn(
           'flex items-end gap-2 p-2 sm:p-3 rounded-2xl',
           'bg-muted/50 border border-border/50',
-          'transition-all duration-200',
-          isFocused && 'bg-background border-border shadow-sm',
+          'transition-all duration-[var(--duration-normal)]',
+          'input-glow', // Premium focus glow effect
+          isFocused && 'bg-background border-border',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
@@ -151,7 +212,7 @@ export function PromptInput({
                 'p-2.5 rounded-xl',
                 'bg-destructive text-destructive-foreground',
                 'hover:bg-destructive/90',
-                'transition-all duration-200 active:scale-95',
+                'transition-all duration-[var(--duration-normal)] spring-press',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
               )}
               aria-label="Stop generating"
@@ -176,10 +237,10 @@ export function PromptInput({
               disabled={!canSubmit}
               className={cn(
                 'p-2.5 rounded-xl',
-                'transition-all duration-200 active:scale-95',
+                'transition-all duration-[var(--duration-normal)]',
                 'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                 canSubmit
-                  ? 'bg-foreground text-background hover:bg-foreground/90 shadow-sm'
+                  ? 'bg-foreground text-background hover:bg-foreground/90 shadow-sm spring-press'
                   : 'bg-foreground/10 text-foreground/30 cursor-not-allowed'
               )}
               aria-label="Send message"
@@ -214,7 +275,9 @@ export function PromptInput({
           <kbd className="px-1.5 py-0.5 rounded bg-muted/50 font-mono text-[10px]">Enter</kbd>
           {' '}to send · {' '}
           <kbd className="px-1.5 py-0.5 rounded bg-muted/50 font-mono text-[10px]">Shift + Enter</kbd>
-          {' '}for new line
+          {' '}for new line · {' '}
+          <kbd className="px-1.5 py-0.5 rounded bg-muted/50 font-mono text-[10px]">/</kbd>
+          {' '}for commands
         </span>
       </div>
     </div>

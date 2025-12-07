@@ -37,6 +37,10 @@ const handlers: Record<ToolName, ToolHandler> = {
   searchSponsors: handleSearchSponsors,
   addSponsorToEvent: handleAddSponsorToEvent,
   getUserProfile: handleGetUserProfile,
+  getRecommendedVendors: handleGetRecommendedVendors,
+  getRecommendedSponsors: handleGetRecommendedSponsors,
+  getEventVendors: handleGetEventVendors,
+  getEventSponsors: handleGetEventSponsors,
 }
 
 /**
@@ -298,34 +302,55 @@ async function handleAddVendorToEvent(
   const proposedBudget = args.proposedBudget as number | undefined
   const notes = args.notes as string | undefined
 
-  // Get vendor details for the summary
-  const vendor = await ctx.runQuery(api.vendors.get, { id: vendorId as Id<'vendors'> })
+  try {
+    // Actually create the event-vendor relationship
+    const result = await ctx.runMutation(api.eventVendors.addToEvent, {
+      eventId: eventId as Id<'events'>,
+      vendorId: vendorId as Id<'vendors'>,
+      proposedBudget,
+      notes,
+    })
 
-  if (!vendor) {
+    if (result.existed) {
+      return {
+        toolCallId: '',
+        name: 'addVendorToEvent',
+        success: true,
+        data: {
+          eventId,
+          vendorId,
+          vendorName: result.vendorName,
+          status: result.status,
+          alreadyAdded: true,
+        },
+        summary: `${result.vendorName} is already added to this event (status: ${result.status})`,
+      }
+    }
+
+    return {
+      toolCallId: '',
+      name: 'addVendorToEvent',
+      success: true,
+      data: {
+        eventVendorId: result.id,
+        eventId,
+        vendorId,
+        vendorName: result.vendorName,
+        proposedBudget,
+        notes,
+        status: 'inquiry',
+      },
+      summary: `Added ${result.vendorName} to the event${proposedBudget ? ` with a proposed budget of $${proposedBudget.toLocaleString()}` : ''}. Status: inquiry`,
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to add vendor'
     return {
       toolCallId: '',
       name: 'addVendorToEvent',
       success: false,
-      error: 'Vendor not found',
-      summary: 'Could not find the specified vendor',
+      error: errorMessage,
+      summary: `Could not add vendor to event: ${errorMessage}`,
     }
-  }
-
-  // In a real implementation, we'd create an eventVendor record
-  // For now, return success with the vendor info
-  return {
-    toolCallId: '',
-    name: 'addVendorToEvent',
-    success: true,
-    data: {
-      eventId,
-      vendorId,
-      vendorName: vendor.name,
-      proposedBudget,
-      notes,
-      status: 'inquiry',
-    },
-    summary: `Added ${vendor.name} to the event${proposedBudget ? ` with a proposed budget of $${proposedBudget}` : ''}`,
   }
 }
 
@@ -389,33 +414,59 @@ async function handleAddSponsorToEvent(
   const sponsorId = args.sponsorId as string
   const tier = args.tier as string | undefined
   const proposedAmount = args.proposedAmount as number | undefined
+  const notes = args.notes as string | undefined
 
-  // Get sponsor details for the summary
-  const sponsor = await ctx.runQuery(api.sponsors.get, { id: sponsorId as Id<'sponsors'> })
+  try {
+    // Actually create the event-sponsor relationship
+    const result = await ctx.runMutation(api.eventSponsors.addToEvent, {
+      eventId: eventId as Id<'events'>,
+      sponsorId: sponsorId as Id<'sponsors'>,
+      tier,
+      proposedAmount,
+      notes,
+    })
 
-  if (!sponsor) {
+    if (result.existed) {
+      return {
+        toolCallId: '',
+        name: 'addSponsorToEvent',
+        success: true,
+        data: {
+          eventId,
+          sponsorId,
+          sponsorName: result.sponsorName,
+          status: result.status,
+          tier: result.tier,
+          alreadyAdded: true,
+        },
+        summary: `${result.sponsorName} is already added to this event (status: ${result.status})`,
+      }
+    }
+
+    return {
+      toolCallId: '',
+      name: 'addSponsorToEvent',
+      success: true,
+      data: {
+        eventSponsorId: result.id,
+        eventId,
+        sponsorId,
+        sponsorName: result.sponsorName,
+        tier,
+        proposedAmount,
+        status: 'inquiry',
+      },
+      summary: `Created sponsorship inquiry with ${result.sponsorName}${tier ? ` for ${tier} tier` : ''}${proposedAmount ? ` ($${proposedAmount.toLocaleString()})` : ''}. Status: inquiry`,
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to add sponsor'
     return {
       toolCallId: '',
       name: 'addSponsorToEvent',
       success: false,
-      error: 'Sponsor not found',
-      summary: 'Could not find the specified sponsor',
+      error: errorMessage,
+      summary: `Could not add sponsor to event: ${errorMessage}`,
     }
-  }
-
-  return {
-    toolCallId: '',
-    name: 'addSponsorToEvent',
-    success: true,
-    data: {
-      eventId,
-      sponsorId,
-      sponsorName: sponsor.name,
-      tier,
-      proposedAmount,
-      status: 'inquiry',
-    },
-    summary: `Created sponsorship inquiry with ${sponsor.name}${tier ? ` for ${tier} tier` : ''}`,
   }
 }
 
@@ -452,5 +503,260 @@ async function handleGetUserProfile(
       experienceLevel: profile.experienceLevel,
     },
     summary: `Found profile for ${profile.organizationName || 'user'}`,
+  }
+}
+
+// ============================================================================
+// Recommendation/Matching Handlers
+// ============================================================================
+
+async function handleGetRecommendedVendors(
+  ctx: ActionCtx,
+  _userId: string,
+  args: Record<string, unknown>
+): Promise<ToolResult> {
+  const eventId = args.eventId as string
+  const category = args.category as string | undefined
+  const limit = (args.limit as number) || 5
+
+  // Get event details for matching
+  const event = await ctx.runQuery(api.events.get, { id: eventId as Id<'events'> })
+  if (!event) {
+    return {
+      toolCallId: '',
+      name: 'getRecommendedVendors',
+      success: false,
+      error: 'Event not found',
+      summary: 'Could not find the specified event',
+    }
+  }
+
+  // Get vendors (filtered by category if provided)
+  const vendors = await ctx.runQuery(api.vendors.list, { category })
+
+  // Score and sort vendors based on event fit
+  const scoredVendors = vendors.map((vendor) => {
+    let score = 0
+
+    // Rating bonus
+    if (vendor.rating) score += vendor.rating * 10
+
+    // Verified bonus
+    if (vendor.verified) score += 20
+
+    // Price range match (based on event budget if available)
+    if (event.budget && vendor.priceRange) {
+      const budgetPerVendor = event.budget / 5 // rough estimate
+      if (budgetPerVendor < 5000 && vendor.priceRange === 'budget') score += 15
+      else if (budgetPerVendor < 20000 && vendor.priceRange === 'mid-range') score += 15
+      else if (budgetPerVendor < 50000 && vendor.priceRange === 'premium') score += 15
+      else if (vendor.priceRange === 'luxury') score += 15
+    }
+
+    return { vendor, score }
+  })
+
+  // Sort by score and take top N
+  const topVendors = scoredVendors
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(({ vendor, score }) => ({
+      id: vendor._id,
+      name: vendor.name,
+      category: vendor.category,
+      description: vendor.description,
+      rating: vendor.rating,
+      priceRange: vendor.priceRange,
+      verified: vendor.verified,
+      matchScore: score,
+      matchReason: score > 40 ? 'Highly recommended' : score > 20 ? 'Good match' : 'Potential match',
+    }))
+
+  if (topVendors.length === 0) {
+    return {
+      toolCallId: '',
+      name: 'getRecommendedVendors',
+      success: true,
+      data: [],
+      summary: `No ${category ? `${category} ` : ''}vendors found for "${event.title}"`,
+    }
+  }
+
+  return {
+    toolCallId: '',
+    name: 'getRecommendedVendors',
+    success: true,
+    data: {
+      eventTitle: event.title,
+      recommendations: topVendors,
+    },
+    summary: `Found ${topVendors.length} recommended ${category ? `${category} ` : ''}vendor${topVendors.length !== 1 ? 's' : ''} for "${event.title}"`,
+  }
+}
+
+async function handleGetRecommendedSponsors(
+  ctx: ActionCtx,
+  _userId: string,
+  args: Record<string, unknown>
+): Promise<ToolResult> {
+  const eventId = args.eventId as string
+  const tier = args.tier as string | undefined
+  const limit = (args.limit as number) || 5
+
+  // Get event details for matching
+  const event = await ctx.runQuery(api.events.get, { id: eventId as Id<'events'> })
+  if (!event) {
+    return {
+      toolCallId: '',
+      name: 'getRecommendedSponsors',
+      success: false,
+      error: 'Event not found',
+      summary: 'Could not find the specified event',
+    }
+  }
+
+  // Get sponsors
+  const sponsors = await ctx.runQuery(api.sponsors.list, {})
+
+  // Score and sort sponsors based on event fit
+  const scoredSponsors = sponsors.map((sponsor) => {
+    let score = 0
+
+    // Verified bonus
+    if (sponsor.verified) score += 20
+
+    // Event type match
+    if (sponsor.targetEventTypes?.includes(event.eventType || '')) score += 30
+
+    // Budget alignment with event size
+    if (event.expectedAttendees && sponsor.budgetMin) {
+      // Larger events attract bigger sponsors
+      if (event.expectedAttendees > 500 && sponsor.budgetMin > 10000) score += 20
+      else if (event.expectedAttendees > 100 && sponsor.budgetMin > 5000) score += 15
+      else if (sponsor.budgetMin < 5000) score += 10
+    }
+
+    // Tier filter if specified
+    if (tier && sponsor.sponsorshipTiers) {
+      if (sponsor.sponsorshipTiers.includes(tier)) score += 25
+    }
+
+    return { sponsor, score }
+  })
+
+  // Sort by score and take top N
+  const topSponsors = scoredSponsors
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(({ sponsor, score }) => ({
+      id: sponsor._id,
+      name: sponsor.name,
+      industry: sponsor.industry,
+      description: sponsor.description,
+      budgetRange: sponsor.budgetMin && sponsor.budgetMax
+        ? `$${sponsor.budgetMin.toLocaleString()} - $${sponsor.budgetMax.toLocaleString()}`
+        : undefined,
+      sponsorshipTiers: sponsor.sponsorshipTiers,
+      verified: sponsor.verified,
+      matchScore: score,
+      matchReason: score > 50 ? 'Highly interested' : score > 30 ? 'Good fit' : 'Potential interest',
+    }))
+
+  if (topSponsors.length === 0) {
+    return {
+      toolCallId: '',
+      name: 'getRecommendedSponsors',
+      success: true,
+      data: [],
+      summary: `No sponsors found for "${event.title}"`,
+    }
+  }
+
+  return {
+    toolCallId: '',
+    name: 'getRecommendedSponsors',
+    success: true,
+    data: {
+      eventTitle: event.title,
+      recommendations: topSponsors,
+    },
+    summary: `Found ${topSponsors.length} recommended sponsor${topSponsors.length !== 1 ? 's' : ''} for "${event.title}"`,
+  }
+}
+
+async function handleGetEventVendors(
+  ctx: ActionCtx,
+  _userId: string,
+  args: Record<string, unknown>
+): Promise<ToolResult> {
+  const eventId = args.eventId as string
+
+  const vendors = await ctx.runQuery(api.eventVendors.listForEvent, {
+    eventId: eventId as Id<'events'>,
+  })
+
+  if (vendors.length === 0) {
+    return {
+      toolCallId: '',
+      name: 'getEventVendors',
+      success: true,
+      data: [],
+      summary: 'No vendors have been added to this event yet',
+    }
+  }
+
+  return {
+    toolCallId: '',
+    name: 'getEventVendors',
+    success: true,
+    data: vendors.map((v) => ({
+      id: v._id,
+      vendorId: v.vendorId,
+      vendorName: v.vendor?.name,
+      category: v.vendor?.category,
+      status: v.status,
+      proposedBudget: v.proposedBudget,
+      notes: v.notes,
+    })),
+    summary: `Found ${vendors.length} vendor${vendors.length !== 1 ? 's' : ''} linked to this event`,
+  }
+}
+
+async function handleGetEventSponsors(
+  ctx: ActionCtx,
+  _userId: string,
+  args: Record<string, unknown>
+): Promise<ToolResult> {
+  const eventId = args.eventId as string
+
+  const sponsors = await ctx.runQuery(api.eventSponsors.listForEvent, {
+    eventId: eventId as Id<'events'>,
+  })
+
+  if (sponsors.length === 0) {
+    return {
+      toolCallId: '',
+      name: 'getEventSponsors',
+      success: true,
+      data: [],
+      summary: 'No sponsors have been added to this event yet',
+    }
+  }
+
+  return {
+    toolCallId: '',
+    name: 'getEventSponsors',
+    success: true,
+    data: sponsors.map((s) => ({
+      id: s._id,
+      sponsorId: s.sponsorId,
+      sponsorName: s.sponsor?.name,
+      industry: s.sponsor?.industry,
+      status: s.status,
+      tier: s.tier,
+      amount: s.amount,
+      notes: s.notes,
+    })),
+    summary: `Found ${sponsors.length} sponsor${sponsors.length !== 1 ? 's' : ''} linked to this event`,
   }
 }

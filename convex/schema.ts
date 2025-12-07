@@ -133,7 +133,9 @@ export default defineSchema({
     reviewCount: v.optional(v.number()),
     contactEmail: v.optional(v.string()),
     contactPhone: v.optional(v.string()),
+    contactName: v.optional(v.string()),
     website: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
     verified: v.boolean(),
     status: v.union(v.literal('pending'), v.literal('approved'), v.literal('rejected')),
 
@@ -146,6 +148,78 @@ export default defineSchema({
     reviewedAt: v.optional(v.number()),
     rejectionReason: v.optional(v.string()),
     reviewNotes: v.optional(v.string()), // Internal notes from reviewer
+
+    // === ENTERPRISE FIELDS ===
+
+    // Company Info
+    companySize: v.optional(v.string()), // solo, small, medium, large
+    yearFounded: v.optional(v.number()),
+    headquarters: v.optional(v.string()),
+
+    // Portfolio
+    portfolio: v.optional(
+      v.array(
+        v.object({
+          eventName: v.string(),
+          year: v.number(),
+          description: v.optional(v.string()),
+          imageUrl: v.optional(v.string()),
+        })
+      )
+    ),
+
+    // Insurance & Legal
+    insuranceInfo: v.optional(
+      v.object({
+        provider: v.optional(v.string()),
+        policyNumber: v.optional(v.string()),
+        coverageAmount: v.optional(v.number()),
+        expirationDate: v.optional(v.number()),
+        certificateUrl: v.optional(v.string()),
+      })
+    ),
+    legalDocs: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          url: v.string(),
+          type: v.string(), // license, insurance, liability, other
+          uploadedAt: v.number(),
+        })
+      )
+    ),
+
+    // Payment Terms
+    paymentTerms: v.optional(
+      v.object({
+        acceptedMethods: v.optional(v.array(v.string())), // card, bank, cash, invoice
+        requiresDeposit: v.optional(v.boolean()),
+        depositPercentage: v.optional(v.number()),
+        netDays: v.optional(v.number()), // NET 30, NET 60
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Capacity
+    capacity: v.optional(
+      v.object({
+        maxEventsPerMonth: v.optional(v.number()),
+        teamSize: v.optional(v.number()),
+        serviceArea: v.optional(v.string()), // local, regional, national, international
+      })
+    ),
+
+    // Certifications
+    certifications: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          issuingBody: v.optional(v.string()),
+          expirationDate: v.optional(v.number()),
+          certificateUrl: v.optional(v.string()),
+        })
+      )
+    ),
 
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
@@ -165,6 +239,7 @@ export default defineSchema({
     targetAudience: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
     contactName: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
     website: v.optional(v.string()),
     logoUrl: v.optional(v.string()),
     verified: v.boolean(),
@@ -179,6 +254,70 @@ export default defineSchema({
     reviewedAt: v.optional(v.number()),
     rejectionReason: v.optional(v.string()),
     reviewNotes: v.optional(v.string()), // Internal notes from reviewer
+
+    // === ENTERPRISE FIELDS ===
+
+    // Company Info
+    companySize: v.optional(v.string()), // startup, small, medium, large, enterprise
+    yearFounded: v.optional(v.number()),
+    headquarters: v.optional(v.string()),
+
+    // Past Experience
+    pastSponsorships: v.optional(
+      v.array(
+        v.object({
+          eventName: v.string(),
+          year: v.number(),
+          tier: v.optional(v.string()),
+          amount: v.optional(v.number()),
+        })
+      )
+    ),
+    deliverablesOffered: v.optional(v.array(v.string())), // Logo placement, Booth space, Speaking slot, etc.
+
+    // Contracts & Legal
+    contractTemplateUrl: v.optional(v.string()),
+    legalDocs: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          url: v.string(),
+          type: v.string(), // insurance, liability, nda, other
+          uploadedAt: v.number(),
+        })
+      )
+    ),
+
+    // Payment Terms
+    paymentTerms: v.optional(
+      v.object({
+        preferredMethod: v.optional(v.string()), // wire, ach, card, invoice
+        netDays: v.optional(v.number()), // NET 30, NET 60
+        requiresInvoice: v.optional(v.boolean()),
+        currency: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Exclusivity Requirements
+    exclusivityRequirements: v.optional(
+      v.object({
+        requiresExclusivity: v.boolean(),
+        competitorRestrictions: v.optional(v.array(v.string())),
+        territorialScope: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Brand Guidelines
+    brandGuidelines: v.optional(
+      v.object({
+        guidelinesUrl: v.optional(v.string()),
+        logoUsageNotes: v.optional(v.string()),
+        colorCodes: v.optional(v.array(v.string())),
+        prohibitedUsages: v.optional(v.array(v.string())),
+      })
+    ),
 
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
@@ -454,7 +593,11 @@ export default defineSchema({
       // Event moderation
       v.literal('event_flagged'),
       v.literal('event_unflagged'),
-      v.literal('event_removed')
+      v.literal('event_removed'),
+      // Public applications
+      v.literal('application_reviewed'),
+      v.literal('application_converted'),
+      v.literal('application_rejected')
     ),
 
     // Target of the action (polymorphic)
@@ -462,7 +605,8 @@ export default defineSchema({
       v.literal('user'),
       v.literal('vendor'),
       v.literal('sponsor'),
-      v.literal('event')
+      v.literal('event'),
+      v.literal('application')
     ),
     targetId: v.string(), // ID of the target entity
 
@@ -476,4 +620,61 @@ export default defineSchema({
     .index('by_target', ['targetType', 'targetId'])
     .index('by_action', ['action'])
     .index('by_date', ['createdAt']),
+
+  // Public Applications - Vendor/Sponsor applications from public forms (no auth required)
+  publicApplications: defineTable({
+    applicationType: v.union(v.literal('vendor'), v.literal('sponsor')),
+    status: v.union(
+      v.literal('submitted'),
+      v.literal('under_review'),
+      v.literal('approved'),
+      v.literal('rejected'),
+      v.literal('converted')
+    ),
+
+    // Common fields
+    companyName: v.string(),
+    description: v.optional(v.string()),
+    contactName: v.string(),
+    contactEmail: v.string(),
+    contactPhone: v.optional(v.string()),
+    website: v.optional(v.string()),
+
+    // Vendor-specific fields
+    vendorCategory: v.optional(v.string()),
+    vendorServices: v.optional(v.array(v.string())),
+    vendorLocation: v.optional(v.string()),
+    vendorPriceRange: v.optional(v.string()),
+
+    // Sponsor-specific fields
+    sponsorIndustry: v.optional(v.string()),
+    sponsorTiers: v.optional(v.array(v.string())),
+    sponsorBudgetMin: v.optional(v.number()),
+    sponsorBudgetMax: v.optional(v.number()),
+    sponsorTargetEventTypes: v.optional(v.array(v.string())),
+    sponsorTargetAudience: v.optional(v.string()),
+
+    // Enterprise capture (collected during application)
+    pastExperience: v.optional(v.string()), // Free text about their experience
+    additionalNotes: v.optional(v.string()),
+    referralSource: v.optional(v.string()), // How did they hear about us
+
+    // Conversion tracking
+    convertedToId: v.optional(v.string()), // ID of created vendor/sponsor
+    convertedAt: v.optional(v.number()),
+    convertedBy: v.optional(v.id('users')),
+
+    // Review workflow
+    reviewedBy: v.optional(v.id('users')),
+    reviewedAt: v.optional(v.number()),
+    rejectionReason: v.optional(v.string()),
+    reviewNotes: v.optional(v.string()),
+
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_status', ['status'])
+    .index('by_type', ['applicationType'])
+    .index('by_type_status', ['applicationType', 'status'])
+    .index('by_email', ['contactEmail']),
 })

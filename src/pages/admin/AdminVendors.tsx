@@ -15,6 +15,7 @@ import {
   Globe,
   MapPin,
 } from '@phosphor-icons/react'
+import { AddVendorModal } from '@/components/admin'
 
 type VendorStatus = 'pending' | 'approved' | 'rejected'
 
@@ -37,6 +38,7 @@ export function AdminVendors() {
   const [selectedVendor, setSelectedVendor] = useState<Id<'vendors'> | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [showRejectModal, setShowRejectModal] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
 
   const vendors = useQuery(api.vendors.listForAdmin, {
     status: statusFilter === 'all' ? undefined : statusFilter,
@@ -106,6 +108,7 @@ export function AdminVendors() {
           </p>
         </div>
         <button
+          onClick={() => setShowAddModal(true)}
           className={cn(
             'flex items-center gap-2 px-4 py-2 rounded-lg',
             'bg-primary text-primary-foreground font-medium text-sm',
@@ -338,6 +341,9 @@ export function AdminVendors() {
           </div>
         </div>
       )}
+
+      {/* Add Vendor Modal */}
+      <AddVendorModal open={showAddModal} onOpenChange={setShowAddModal} />
     </div>
   )
 }

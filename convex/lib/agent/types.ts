@@ -21,6 +21,10 @@ export type ToolName =
   | 'addSponsorToEvent'
   | 'getUserProfile'
   | 'getUpcomingEvents'
+  | 'getRecommendedVendors'
+  | 'getRecommendedSponsors'
+  | 'getEventVendors'
+  | 'getEventSponsors'
 
 export interface ToolDefinition {
   name: ToolName

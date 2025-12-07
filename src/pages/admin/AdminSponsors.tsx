@@ -15,6 +15,7 @@ import {
   User,
   CurrencyDollar,
 } from '@phosphor-icons/react'
+import { AddSponsorModal } from '@/components/admin'
 
 type SponsorStatus = 'pending' | 'approved' | 'rejected'
 
@@ -37,6 +38,7 @@ export function AdminSponsors() {
   const [selectedSponsor, setSelectedSponsor] = useState<Id<'sponsors'> | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [showRejectModal, setShowRejectModal] = useState(false)
+  const [showAddModal, setShowAddModal] = useState(false)
 
   const sponsors = useQuery(api.sponsors.listForAdmin, {
     status: statusFilter === 'all' ? undefined : statusFilter,
@@ -117,6 +119,7 @@ export function AdminSponsors() {
           </p>
         </div>
         <button
+          onClick={() => setShowAddModal(true)}
           className={cn(
             'flex items-center gap-2 px-4 py-2 rounded-lg',
             'bg-primary text-primary-foreground font-medium text-sm',
@@ -374,6 +377,9 @@ export function AdminSponsors() {
           </div>
         </div>
       )}
+
+      {/* Add Sponsor Modal */}
+      <AddSponsorModal open={showAddModal} onOpenChange={setShowAddModal} />
     </div>
   )
 }

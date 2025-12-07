@@ -233,13 +233,19 @@ open-event/
 │   ├── events.ts          # Event queries & mutations
 │   ├── vendors.ts         # Vendor management
 │   ├── sponsors.ts        # Sponsor management
+│   ├── eventVendors.ts    # Event-vendor relationships
+│   ├── eventSponsors.ts   # Event-sponsor relationships
 │   ├── eventTasks.ts      # Task management
 │   ├── budgetItems.ts     # Budget tracking
 │   ├── inquiries.ts       # Communication system
 │   ├── eventApplications.ts # Application workflow
 │   ├── auth.ts            # Auth configuration
-│   └── lib/               # Shared utilities
-│       └── auth.ts        # Auth helpers
+│   └── lib/
+│       ├── auth.ts        # Auth helpers
+│       └── agent/         # AI Agent System
+│           ├── types.ts   # Tool & message types
+│           ├── tools.ts   # Tool definitions (13 tools)
+│           └── handlers.ts # Tool execution handlers
 │
 ├── src/
 │   ├── components/
@@ -343,21 +349,44 @@ See [`.env.example`](.env.example) for all available configuration options.
 
 ## AI Agent System
 
-The AI assistant uses OpenAI's function calling to provide an agentic experience:
+The AI assistant uses OpenAI's function calling to provide a truly **agentic experience**. It can perform real actions on your behalf, not just answer questions.
 
-### Available Tools
+### Available Tools (13 Tools)
 
+#### Event Management
 | Tool | Description | Confirmation |
 |------|-------------|--------------|
-| `createEvent` | Create a new event | Required |
+| `createEvent` | Create a new event with full details | Required |
 | `updateEvent` | Update event details | Required |
 | `getEventDetails` | Get event information | Auto |
 | `getUpcomingEvents` | List upcoming events | Auto |
-| `searchVendors` | Search for vendors | Auto |
-| `addVendorToEvent` | Add vendor to event | Required |
-| `searchSponsors` | Search for sponsors | Auto |
-| `addSponsorToEvent` | Add sponsor to event | Required |
-| `getUserProfile` | Get user preferences | Auto |
+
+#### Vendor Management
+| Tool | Description | Confirmation |
+|------|-------------|--------------|
+| `searchVendors` | Search for vendors by category | Auto |
+| `addVendorToEvent` | Add vendor to event (creates inquiry) | Required |
+| `getRecommendedVendors` | Get AI-matched vendor recommendations | Auto |
+| `getEventVendors` | List vendors linked to an event | Auto |
+
+#### Sponsor Management
+| Tool | Description | Confirmation |
+|------|-------------|--------------|
+| `searchSponsors` | Search for sponsors by industry | Auto |
+| `addSponsorToEvent` | Add sponsor to event (creates inquiry) | Required |
+| `getRecommendedSponsors` | Get AI-matched sponsor recommendations | Auto |
+| `getEventSponsors` | List sponsors linked to an event | Auto |
+
+#### Profile
+| Tool | Description | Confirmation |
+|------|-------------|--------------|
+| `getUserProfile` | Get user preferences for personalization | Auto |
+
+### Intelligent Matching
+
+The agent includes smart recommendation tools that score vendors and sponsors based on:
+- **Vendors**: Rating, verification status, price range vs. event budget
+- **Sponsors**: Verification, target event types, budget alignment with event size
 
 ### How It Works
 
@@ -375,8 +404,16 @@ User Message → AI Agent → Tool Selection → Execution → Response
          Yes → Show confirmation dialog
          No  → Execute immediately
                   ↓
-         Return results to user
+         Persist to database → Return results to user
 ```
+
+### Security
+
+All agent actions are:
+- **Authenticated**: Requires valid user session
+- **Authorized**: Verifies resource ownership before modifications
+- **Validated**: Input validation and status whitelisting
+- **Auditable**: All changes are timestamped
 
 ---
 

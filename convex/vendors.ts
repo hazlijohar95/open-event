@@ -271,6 +271,7 @@ export const reject = mutation({
 // Admin create vendor (manual onboarding)
 export const adminCreate = mutation({
   args: {
+    // Basic Info
     name: v.string(),
     description: v.optional(v.string()),
     category: v.string(),
@@ -279,10 +280,82 @@ export const adminCreate = mutation({
     priceRange: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
     contactPhone: v.optional(v.string()),
+    contactName: v.optional(v.string()),
     website: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
     applicationSource: v.optional(v.string()),
     applicationNotes: v.optional(v.string()),
     autoApprove: v.optional(v.boolean()),
+
+    // Enterprise Fields - Company Info
+    companySize: v.optional(v.string()),
+    yearFounded: v.optional(v.number()),
+    headquarters: v.optional(v.string()),
+
+    // Portfolio
+    portfolio: v.optional(
+      v.array(
+        v.object({
+          eventName: v.string(),
+          year: v.number(),
+          description: v.optional(v.string()),
+          imageUrl: v.optional(v.string()),
+        })
+      )
+    ),
+
+    // Insurance & Legal
+    insuranceInfo: v.optional(
+      v.object({
+        provider: v.optional(v.string()),
+        policyNumber: v.optional(v.string()),
+        coverageAmount: v.optional(v.number()),
+        expirationDate: v.optional(v.number()),
+        certificateUrl: v.optional(v.string()),
+      })
+    ),
+    legalDocs: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          url: v.string(),
+          type: v.string(),
+          uploadedAt: v.number(),
+        })
+      )
+    ),
+
+    // Payment Terms
+    paymentTerms: v.optional(
+      v.object({
+        acceptedMethods: v.optional(v.array(v.string())),
+        requiresDeposit: v.optional(v.boolean()),
+        depositPercentage: v.optional(v.number()),
+        netDays: v.optional(v.number()),
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Capacity
+    capacity: v.optional(
+      v.object({
+        maxEventsPerMonth: v.optional(v.number()),
+        teamSize: v.optional(v.number()),
+        serviceArea: v.optional(v.string()),
+      })
+    ),
+
+    // Certifications
+    certifications: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          issuingBody: v.optional(v.string()),
+          expirationDate: v.optional(v.number()),
+          certificateUrl: v.optional(v.string()),
+        })
+      )
+    ),
   },
   handler: async (ctx, args) => {
     const admin = await assertRole(ctx, 'admin')
@@ -291,6 +364,7 @@ export const adminCreate = mutation({
     const status = args.autoApprove ? 'approved' : 'pending'
 
     const vendorId = await ctx.db.insert('vendors', {
+      // Basic Info
       name: args.name,
       description: args.description,
       category: args.category,
@@ -299,7 +373,9 @@ export const adminCreate = mutation({
       priceRange: args.priceRange,
       contactEmail: args.contactEmail,
       contactPhone: args.contactPhone,
+      contactName: args.contactName,
       website: args.website,
+      logoUrl: args.logoUrl,
       rating: 0,
       reviewCount: 0,
       verified: args.autoApprove || false,
@@ -308,6 +384,18 @@ export const adminCreate = mutation({
       applicationNotes: args.applicationNotes,
       reviewedBy: args.autoApprove ? admin._id : undefined,
       reviewedAt: args.autoApprove ? now : undefined,
+
+      // Enterprise Fields
+      companySize: args.companySize,
+      yearFounded: args.yearFounded,
+      headquarters: args.headquarters,
+      portfolio: args.portfolio,
+      insuranceInfo: args.insuranceInfo,
+      legalDocs: args.legalDocs,
+      paymentTerms: args.paymentTerms,
+      capacity: args.capacity,
+      certifications: args.certifications,
+
       createdAt: now,
     })
 
@@ -336,6 +424,8 @@ export const adminCreate = mutation({
 export const adminUpdate = mutation({
   args: {
     vendorId: v.id('vendors'),
+
+    // Basic Info
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     category: v.optional(v.string()),
@@ -344,8 +434,80 @@ export const adminUpdate = mutation({
     priceRange: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
     contactPhone: v.optional(v.string()),
+    contactName: v.optional(v.string()),
     website: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
     applicationNotes: v.optional(v.string()),
+
+    // Enterprise Fields - Company Info
+    companySize: v.optional(v.string()),
+    yearFounded: v.optional(v.number()),
+    headquarters: v.optional(v.string()),
+
+    // Portfolio
+    portfolio: v.optional(
+      v.array(
+        v.object({
+          eventName: v.string(),
+          year: v.number(),
+          description: v.optional(v.string()),
+          imageUrl: v.optional(v.string()),
+        })
+      )
+    ),
+
+    // Insurance & Legal
+    insuranceInfo: v.optional(
+      v.object({
+        provider: v.optional(v.string()),
+        policyNumber: v.optional(v.string()),
+        coverageAmount: v.optional(v.number()),
+        expirationDate: v.optional(v.number()),
+        certificateUrl: v.optional(v.string()),
+      })
+    ),
+    legalDocs: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          url: v.string(),
+          type: v.string(),
+          uploadedAt: v.number(),
+        })
+      )
+    ),
+
+    // Payment Terms
+    paymentTerms: v.optional(
+      v.object({
+        acceptedMethods: v.optional(v.array(v.string())),
+        requiresDeposit: v.optional(v.boolean()),
+        depositPercentage: v.optional(v.number()),
+        netDays: v.optional(v.number()),
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Capacity
+    capacity: v.optional(
+      v.object({
+        maxEventsPerMonth: v.optional(v.number()),
+        teamSize: v.optional(v.number()),
+        serviceArea: v.optional(v.string()),
+      })
+    ),
+
+    // Certifications
+    certifications: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          issuingBody: v.optional(v.string()),
+          expirationDate: v.optional(v.number()),
+          certificateUrl: v.optional(v.string()),
+        })
+      )
+    ),
   },
   handler: async (ctx, args) => {
     await assertRole(ctx, 'admin')

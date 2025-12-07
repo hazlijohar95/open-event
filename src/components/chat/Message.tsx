@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { User, Robot } from '@phosphor-icons/react'
+import { User, Robot, Check, Checks, CircleNotch } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
 // ============================================================================
@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 // ============================================================================
 
 export type MessageRole = 'user' | 'assistant' | 'system'
+export type MessageStatus = 'sending' | 'sent' | 'delivered' | 'error'
 
 export interface MessageProps {
   role: MessageRole
@@ -14,6 +15,8 @@ export interface MessageProps {
   avatar?: ReactNode
   isStreaming?: boolean
   isNew?: boolean
+  status?: MessageStatus
+  timestamp?: Date | number
   className?: string
   actions?: ReactNode
 }
@@ -28,11 +31,14 @@ export function Message({
   avatar,
   isStreaming = false,
   isNew: _isNew = false,
+  status,
+  timestamp,
   className,
   actions,
 }: MessageProps) {
   const isUser = role === 'user'
   const isAssistant = role === 'assistant'
+  const isSending = status === 'sending'
 
   // Default avatars
   const defaultAvatar = isUser ? (
@@ -45,23 +51,50 @@ export function Message({
     </div>
   ) : null
 
+  // Status indicator for user messages
+  const statusIndicator = isUser && status && (
+    <div className="flex items-center gap-1 mt-1">
+      {status === 'sending' && (
+        <CircleNotch size={12} weight="bold" className="text-muted-foreground/60 animate-spin" />
+      )}
+      {status === 'sent' && (
+        <Check size={12} weight="bold" className="text-muted-foreground/60" />
+      )}
+      {status === 'delivered' && (
+        <Checks size={12} weight="bold" className="text-primary/70" />
+      )}
+      {timestamp && (
+        <span className="text-[10px] text-muted-foreground/50">
+          {formatMessageTime(timestamp)}
+        </span>
+      )}
+    </div>
+  )
+
   return (
     <div
       className={cn(
         'group flex gap-3',
         isUser && 'flex-row-reverse',
-        // Smooth entrance animation
-        'animate-in fade-in-0 slide-in-from-bottom-2 duration-300 ease-out',
+        // Spring entrance animation with scale + slide
+        'message-entrance',
+        // Subtle opacity for sending state
+        isSending && 'opacity-80',
         className
       )}
     >
-      {/* Avatar */}
-      <div className="flex-shrink-0 mt-0.5">{avatar || defaultAvatar}</div>
+      {/* Avatar with streaming glow */}
+      <div className={cn(
+        'flex-shrink-0 mt-0.5',
+        isStreaming && 'avatar-streaming'
+      )}>
+        {avatar || defaultAvatar}
+      </div>
 
       {/* Content wrapper */}
       <div
         className={cn(
-          'flex-1 flex flex-col gap-1 min-w-0',
+          'flex-1 flex flex-col gap-0.5 min-w-0',
           isUser && 'items-end'
         )}
       >
@@ -74,7 +107,9 @@ export function Message({
               ? 'bg-foreground text-background rounded-br-sm'
               : 'bg-muted text-foreground rounded-bl-sm',
             // Subtle shadow for depth
-            'shadow-sm'
+            'shadow-sm',
+            // Press feedback effect
+            'active:scale-[0.98] active:shadow-none'
           )}
         >
           {children}
@@ -82,11 +117,14 @@ export function Message({
           {/* Streaming cursor */}
           {isStreaming && (
             <span
-              className="inline-block ml-0.5 w-0.5 h-4 bg-current animate-pulse rounded-full align-middle"
+              className="streaming-cursor"
               aria-hidden="true"
             />
           )}
         </div>
+
+        {/* Status indicator */}
+        {statusIndicator}
 
         {/* Actions (copy, retry, etc.) */}
         {actions && (
@@ -104,6 +142,12 @@ export function Message({
       </div>
     </div>
   )
+}
+
+// Helper to format message time
+function formatMessageTime(timestamp: Date | number): string {
+  const date = typeof timestamp === 'number' ? new Date(timestamp) : timestamp
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 
 // ============================================================================
@@ -137,22 +181,23 @@ export function ThinkingIndicator({ className, text }: ThinkingIndicatorProps) {
     <div
       className={cn(
         'flex gap-3',
-        'animate-in fade-in-0 slide-in-from-bottom-2 duration-300',
+        'message-entrance',
         className
       )}
     >
-      <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shadow-sm">
-        <Robot size={16} weight="fill" className="text-background" />
+      {/* Pulsing thinking orb */}
+      <div className="thinking-orb-container">
+        <div className="thinking-orb" />
       </div>
-      <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce [animation-delay:-0.3s]" />
-            <span className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce [animation-delay:-0.15s]" />
-            <span className="w-2 h-2 rounded-full bg-foreground/40 animate-bounce" />
+      <div className="thinking-bubble">
+        <div className="flex items-center gap-3">
+          <div className="thinking-dots">
+            <span style={{ animationDelay: '0ms' }} />
+            <span style={{ animationDelay: '150ms' }} />
+            <span style={{ animationDelay: '300ms' }} />
           </div>
           {text && (
-            <span className="text-sm text-muted-foreground ml-2">{text}</span>
+            <span className="thinking-text">{text}</span>
           )}
         </div>
       </div>
@@ -172,13 +217,15 @@ export function TypingIndicator({ className }: TypingIndicatorProps) {
   return (
     <div
       className={cn(
-        'flex gap-3',
-        'animate-in fade-in-0 duration-200',
+        'flex gap-3 items-center',
+        'message-entrance',
         className
       )}
     >
-      <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shadow-sm">
-        <Robot size={16} weight="fill" className="text-background animate-pulse" />
+      <div className="avatar-streaming">
+        <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shadow-sm">
+          <Robot size={16} weight="fill" className="text-background" />
+        </div>
       </div>
       <div className="flex items-center">
         <span className="text-sm text-muted-foreground">Thinking</span>

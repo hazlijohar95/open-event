@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Gear,
   ArrowLeft,
+  ClipboardText,
 } from '@phosphor-icons/react'
 
 const navigationItems = [
@@ -17,6 +18,7 @@ const navigationItems = [
   { label: 'Users', icon: Users, path: '/admin/users' },
   { label: 'Vendors', icon: Storefront, path: '/admin/vendors' },
   { label: 'Sponsors', icon: Handshake, path: '/admin/sponsors' },
+  { label: 'Applications', icon: ClipboardText, path: '/admin/applications' },
   { label: 'Moderation', icon: ShieldCheck, path: '/admin/moderation' },
 ]
 

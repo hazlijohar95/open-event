@@ -3,8 +3,18 @@ export { ChatContainer, type ChatContainerProps } from './ChatContainer'
 export { Conversation, ConversationEmptyState, type ConversationProps, type ConversationEmptyStateProps } from './Conversation'
 export { PromptInput, type PromptInputProps } from './PromptInput'
 
+// Chat Components - Premium Input UX
+export { SlashCommandMenu, createDefaultCommands, type SlashCommand, type SlashCommandMenuProps } from './SlashCommandMenu'
+export { SuggestionChips, CompactSuggestionChips, type SuggestionChip, type SuggestionChipsProps, type CompactSuggestionChipsProps } from './SuggestionChips'
+
+// Chat Components - Streaming & Animation
+export { StreamingText, TypewriterText, StreamingMarkdown, type StreamingTextProps, type TypewriterTextProps, type StreamingMarkdownProps } from './StreamingText'
+
+// Chat Components - Artifacts
+export { InlineArtifact, CompactArtifact, ArtifactBadge, type ArtifactType, type InlineArtifactProps, type CompactArtifactProps, type ArtifactBadgeProps } from './InlineArtifact'
+
 // Chat Components - Messages
-export { Message, MessageGroup, ThinkingIndicator, TypingIndicator, type MessageProps, type MessageRole, type MessageGroupProps, type ThinkingIndicatorProps, type TypingIndicatorProps } from './Message'
+export { Message, MessageGroup, ThinkingIndicator, TypingIndicator, type MessageProps, type MessageRole, type MessageStatus, type MessageGroupProps, type ThinkingIndicatorProps, type TypingIndicatorProps } from './Message'
 export { MessageContent, type MessageContentProps } from './MessageContent'
 export { MessageActions, type MessageActionsProps } from './MessageActions'
 

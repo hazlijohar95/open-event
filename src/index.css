@@ -368,3 +368,427 @@ body {
 .dark .glow-subtle {
   box-shadow: 0 0 60px -15px oklch(0.7 0.15 260 / 15%);
 }
+
+/* ================================================
+   CHAT UI ANIMATION SYSTEM
+   Premium feel with spring physics & micro-interactions
+   ================================================ */
+
+/* Animation Duration Tokens */
+:root {
+  --duration-instant: 100ms;
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 400ms;
+}
+
+/* Easing Curves - Spring Physics */
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+}
+
+/* ------------------------------------------------
+   Message Animations
+   ------------------------------------------------ */
+
+/* Message entrance with spring physics */
+@keyframes message-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.message-entrance {
+  animation: message-enter var(--duration-slower) var(--ease-spring);
+}
+
+/* Streaming cursor blink */
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  background: currentColor;
+  margin-left: 2px;
+  border-radius: 1px;
+  vertical-align: text-bottom;
+  animation: cursor-blink 1s ease-in-out infinite;
+}
+
+/* Word-by-word streaming appearance */
+@keyframes word-appear {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.streaming-word {
+  display: inline;
+  animation: word-appear var(--duration-normal) ease-out forwards;
+  opacity: 0;
+}
+
+/* ------------------------------------------------
+   Avatar Animations
+   ------------------------------------------------ */
+
+/* Avatar glow during streaming */
+@keyframes avatar-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px oklch(var(--primary) / 0.2),
+                0 0 12px -2px oklch(var(--primary) / 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 3px oklch(var(--primary) / 0.3),
+                0 0 20px -2px oklch(var(--primary) / 0.4);
+  }
+}
+
+.avatar-streaming {
+  animation: avatar-pulse 2s ease-in-out infinite;
+}
+
+/* ------------------------------------------------
+   Thinking Indicator
+   ------------------------------------------------ */
+
+/* Thinking orb pulse */
+@keyframes think-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.thinking-orb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, oklch(var(--primary)), oklch(var(--primary) / 0.5));
+  animation: think-pulse 1.5s ease-in-out infinite;
+}
+
+/* Thinking dots bounce */
+@keyframes dot-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.thinking-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: oklch(var(--foreground) / 0.4);
+  animation: dot-bounce 1s ease-in-out infinite;
+}
+
+/* ------------------------------------------------
+   Input Focus & Press States
+   ------------------------------------------------ */
+
+/* Input focus glow effect */
+.input-glow {
+  transition: box-shadow var(--duration-normal) var(--ease-out),
+              border-color var(--duration-normal) var(--ease-out);
+}
+
+.input-glow:focus-within {
+  box-shadow: 0 0 0 2px oklch(var(--ring) / 0.3),
+              0 0 20px -5px oklch(var(--primary) / 0.15);
+  border-color: oklch(var(--ring) / 0.5);
+}
+
+/* Spring press effect for buttons */
+.spring-press {
+  transition: transform var(--duration-slow) var(--ease-spring);
+}
+
+.spring-press:active {
+  transform: scale(0.92);
+  transition: transform var(--duration-instant);
+}
+
+/* ------------------------------------------------
+   Tool Execution Animations
+   ------------------------------------------------ */
+
+/* Tool success pop */
+@keyframes success-pop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.tool-success {
+  animation: success-pop var(--duration-slower) var(--ease-spring);
+}
+
+/* Tool error shake */
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-3px); }
+  40%, 80% { transform: translateX(3px); }
+}
+
+.tool-error {
+  animation: error-shake var(--duration-slower) ease-out;
+}
+
+/* Progress ring for executing state */
+@keyframes progress-spin {
+  to { stroke-dashoffset: 0; }
+}
+
+.tool-progress-ring {
+  stroke-dasharray: 44;
+  stroke-dashoffset: 44;
+  animation: progress-spin 1.5s linear infinite;
+  stroke: oklch(var(--primary) / 0.3);
+}
+
+/* Indeterminate progress bar */
+@keyframes progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(200%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ------------------------------------------------
+   Menu & Popover Animations
+   ------------------------------------------------ */
+
+/* Menu entrance */
+@keyframes menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.menu-entrance {
+  animation: menu-enter var(--duration-fast) var(--ease-out);
+}
+
+/* Menu exit */
+@keyframes menu-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+}
+
+.menu-exit {
+  animation: menu-exit var(--duration-fast) var(--ease-out);
+}
+
+/* ------------------------------------------------
+   Suggestion Chips
+   ------------------------------------------------ */
+
+/* Chip hover lift */
+.chip-hover {
+  transition: transform var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.chip-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px -4px oklch(0 0 0 / 0.1);
+}
+
+/* Chip press */
+.chip-hover:active {
+  transform: translateY(0) scale(0.97);
+  transition: transform var(--duration-instant);
+}
+
+/* Staggered chip entrance */
+@keyframes chip-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.chip-entrance {
+  animation: chip-enter var(--duration-slow) var(--ease-spring) forwards;
+  opacity: 0;
+}
+
+/* ------------------------------------------------
+   Code Block Enhancements
+   ------------------------------------------------ */
+
+/* Code block header */
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: oklch(0.15 0 0);
+  border-bottom: 1px solid oklch(1 0 0 / 0.1);
+  border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.code-language {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: oklch(0.6 0 0);
+}
+
+/* Code action buttons */
+.code-action-btn {
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  color: oklch(0.6 0 0);
+  transition: all var(--duration-fast);
+}
+
+.code-action-btn:hover {
+  color: oklch(0.85 0 0);
+  background: oklch(1 0 0 / 0.1);
+}
+
+.code-action-btn:active {
+  transform: scale(0.92);
+}
+
+/* Code fade overlay for collapsed */
+.code-fade-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4rem;
+  background: linear-gradient(to top, oklch(0.12 0 0), transparent);
+  pointer-events: none;
+  border-radius: 0 0 0.5rem 0.5rem;
+}
+
+/* ------------------------------------------------
+   Scroll Enhancements
+   ------------------------------------------------ */
+
+/* Conversation scroll container */
+.conversation-scroll {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Custom scrollbar */
+.conversation-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.conversation-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.conversation-scroll::-webkit-scrollbar-thumb {
+  background: oklch(var(--border) / 0.5);
+  border-radius: 3px;
+}
+
+.conversation-scroll::-webkit-scrollbar-thumb:hover {
+  background: oklch(var(--border));
+}
+
+/* ------------------------------------------------
+   Fullscreen Transition
+   ------------------------------------------------ */
+
+@keyframes fullscreen-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.fullscreen-enter {
+  animation: fullscreen-enter var(--duration-slow) var(--ease-out);
+}
+
+/* ------------------------------------------------
+   Utility Classes
+   ------------------------------------------------ */
+
+/* Icon button standard */
+.icon-btn {
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  color: oklch(var(--muted-foreground));
+  transition: all var(--duration-fast);
+}
+
+.icon-btn:hover {
+  color: oklch(var(--foreground));
+  background: oklch(var(--muted) / 0.8);
+}
+
+.icon-btn:active {
+  transform: scale(0.9);
+  transition: transform var(--duration-instant);
+}
+
+/* Action button (smaller) */
+.action-btn {
+  padding: 0.375rem;
+  border-radius: 0.375rem;
+  color: oklch(var(--muted-foreground));
+  transition: all var(--duration-fast);
+}
+
+.action-btn:hover {
+  color: oklch(var(--foreground));
+  background: oklch(var(--muted));
+}
+
+.action-btn:active {
+  transform: scale(0.9);
+}

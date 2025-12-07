@@ -364,7 +364,7 @@ What would you like to do today?`}
 
           {/* Pending user message (optimistic) */}
           {pendingMessageContent && (
-            <Message role="user">
+            <Message role="user" status="sending">
               <MessageContent content={pendingMessageContent} isUser />
             </Message>
           )}

@@ -42,9 +42,15 @@ import {
   AdminUsers,
   AdminModeration,
   AdminSettings,
+  AdminPublicApplications,
 } from '@/pages/admin'
 import { PrivacyPolicy, TermsOfService } from '@/pages/legal'
-import { EventDirectory } from '@/pages/public'
+import { EventDirectory, EventDetailPublic } from '@/pages/public'
+import {
+  VendorApplicationPage,
+  SponsorApplicationPage,
+  ApplicationSuccess,
+} from '@/pages/apply'
 
 function LandingPage() {
   return (
@@ -100,13 +106,19 @@ function App() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="vendors" element={<AdminVendors />} />
             <Route path="sponsors" element={<AdminSponsors />} />
+            <Route path="applications" element={<AdminPublicApplications />} />
             <Route path="moderation" element={<AdminModeration />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
           {/* Public Routes */}
           <Route path="/events" element={<EventDirectory />} />
+          <Route path="/events/:eventId" element={<EventDetailPublic />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
+          {/* Apply Routes (Public - No Auth Required) */}
+          <Route path="/apply/vendor" element={<VendorApplicationPage />} />
+          <Route path="/apply/sponsor" element={<SponsorApplicationPage />} />
+          <Route path="/apply/success" element={<ApplicationSuccess />} />
         </Routes>
         <Toaster />
       </BrowserRouter>

@@ -95,35 +95,59 @@ export function Tool({
   const Icon = getToolIcon(name)
   const displayName = getToolDisplayName(name)
 
-  // Status indicator
+  // Status indicator with animations
   const StatusIndicator = () => {
     switch (status) {
       case 'executing':
-        return <CircleNotch size={16} weight="bold" className="animate-spin text-primary" />
+        return (
+          <div className="tool-executing">
+            <CircleNotch size={16} weight="bold" className="animate-spin text-primary" />
+          </div>
+        )
       case 'success':
-        return <CheckCircle size={16} weight="fill" className="text-green-500" />
+        return (
+          <div className="tool-success">
+            <CheckCircle size={16} weight="fill" className="text-emerald-500" />
+          </div>
+        )
       case 'error':
-        return <XCircle size={16} weight="fill" className="text-destructive" />
+        return (
+          <div className="tool-error">
+            <XCircle size={16} weight="fill" className="text-destructive" />
+          </div>
+        )
       default:
-        return <CircleNotch size={16} weight="duotone" className="text-muted-foreground" />
+        return (
+          <CircleNotch size={16} weight="duotone" className="text-muted-foreground" />
+        )
     }
   }
 
   return (
     <div
       className={cn(
-        'rounded-lg border border-border bg-card/50 overflow-hidden',
-        status === 'executing' && 'border-primary/50',
-        status === 'error' && 'border-destructive/50',
+        'rounded-xl border border-border/50 bg-card/50 overflow-hidden',
+        'transition-all duration-[var(--duration-normal)]',
+        'message-entrance',
+        status === 'executing' && 'border-primary/30 shadow-sm shadow-primary/10',
+        status === 'success' && 'border-emerald-500/30',
+        status === 'error' && 'border-destructive/30',
         className
       )}
     >
+      {/* Progress bar for executing state */}
+      {status === 'executing' && (
+        <div className="h-0.5 bg-primary/20 overflow-hidden">
+          <div className="h-full w-1/3 bg-primary animate-[progress-indeterminate_1.5s_infinite_ease-in-out]" />
+        </div>
+      )}
+
       {/* Header */}
       <button
         onClick={toggleExpanded}
         className={cn(
           'w-full flex items-center gap-3 px-3 py-2.5 text-left',
-          'hover:bg-muted/50 transition-colors'
+          'hover:bg-muted/50 transition-colors duration-[var(--duration-fast)]'
         )}
       >
         {/* Expand/collapse icon */}

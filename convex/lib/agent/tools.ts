@@ -300,6 +300,97 @@ export const AGENT_TOOLS: ToolDefinition[] = [
   },
 
   // ============================================================================
+  // Matching/Recommendation Tools
+  // ============================================================================
+  {
+    name: 'getRecommendedVendors',
+    description:
+      'Get intelligently matched vendor recommendations for a specific event. This tool analyzes event requirements, budget, and attendee count to find the best fitting vendors. Use this instead of searchVendors when you have an event context.',
+    parameters: {
+      type: 'object',
+      properties: {
+        eventId: {
+          type: 'string',
+          description: 'The ID of the event to match vendors for',
+        },
+        category: {
+          type: 'string',
+          description: 'Optionally filter by vendor category',
+          enum: ['catering', 'av', 'photography', 'decoration', 'security', 'transportation', 'entertainment', 'staffing'],
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of recommendations (default: 5)',
+        },
+      },
+      required: ['eventId'],
+    },
+    requiresConfirmation: false,
+    category: 'vendors',
+  },
+
+  {
+    name: 'getRecommendedSponsors',
+    description:
+      'Get intelligently matched sponsor recommendations for a specific event. This tool analyzes event type, audience, and expected reach to find sponsors likely to be interested. Use this instead of searchSponsors when you have an event context.',
+    parameters: {
+      type: 'object',
+      properties: {
+        eventId: {
+          type: 'string',
+          description: 'The ID of the event to match sponsors for',
+        },
+        tier: {
+          type: 'string',
+          description: 'Optionally filter by sponsorship tier',
+          enum: ['platinum', 'gold', 'silver', 'bronze'],
+        },
+        limit: {
+          type: 'number',
+          description: 'Maximum number of recommendations (default: 5)',
+        },
+      },
+      required: ['eventId'],
+    },
+    requiresConfirmation: false,
+    category: 'sponsors',
+  },
+
+  {
+    name: 'getEventVendors',
+    description: 'Get all vendors currently added to an event with their status',
+    parameters: {
+      type: 'object',
+      properties: {
+        eventId: {
+          type: 'string',
+          description: 'The ID of the event',
+        },
+      },
+      required: ['eventId'],
+    },
+    requiresConfirmation: false,
+    category: 'vendors',
+  },
+
+  {
+    name: 'getEventSponsors',
+    description: 'Get all sponsors currently added to an event with their status',
+    parameters: {
+      type: 'object',
+      properties: {
+        eventId: {
+          type: 'string',
+          description: 'The ID of the event',
+        },
+      },
+      required: ['eventId'],
+    },
+    requiresConfirmation: false,
+    category: 'sponsors',
+  },
+
+  // ============================================================================
   // Profile Tools
   // ============================================================================
   {

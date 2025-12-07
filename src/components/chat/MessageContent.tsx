@@ -1,7 +1,8 @@
-import { memo, type ReactNode } from 'react'
+import { memo, useState, useCallback, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { Highlight, themes } from 'prism-react-renderer'
+import { Copy, Check, CaretDown, CaretUp } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
 // ============================================================================
@@ -15,6 +16,12 @@ export interface MessageContentProps {
 }
 
 // ============================================================================
+// Constants
+// ============================================================================
+
+const MAX_COLLAPSED_LINES = 15
+
+// ============================================================================
 // Code Block Component
 // ============================================================================
 
@@ -24,37 +31,123 @@ interface CodeBlockProps {
   isUser?: boolean
 }
 
-function CodeBlock({ language, code, isUser }: CodeBlockProps) {
+function CodeBlock({ language, code, isUser: _isUser }: CodeBlockProps) {
+  const [copied, setCopied] = useState(false)
+  const [expanded, setExpanded] = useState(true)
+
+  const trimmedCode = code.trim()
+  const lineCount = trimmedCode.split('\n').length
+  const isLongCode = lineCount > MAX_COLLAPSED_LINES
+  const shouldCollapse = isLongCode && !expanded
+
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(trimmedCode)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+    }
+  }, [trimmedCode])
+
+  const toggleExpand = useCallback(() => {
+    setExpanded((prev) => !prev)
+  }, [])
+
   return (
-    <Highlight theme={themes.nightOwl} code={code.trim()} language={language || 'text'}>
+    <Highlight theme={themes.nightOwl} code={trimmedCode} language={language || 'text'}>
       {({ className, style, tokens, getLineProps, getTokenProps }) => (
-        <div className="relative group my-2">
-          {/* Language badge */}
-          {language && (
-            <div className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-mono bg-white/10 text-white/70">
-              {language}
+        <div className="code-block my-3">
+          {/* Header bar */}
+          <div className="code-header">
+            {/* Language badge */}
+            <span className="code-language">
+              {language || 'text'}
+            </span>
+
+            {/* Actions */}
+            <div className="code-actions">
+              {isLongCode && (
+                <button
+                  onClick={toggleExpand}
+                  className="icon-btn"
+                  aria-label={expanded ? 'Collapse code' : 'Expand code'}
+                >
+                  {expanded ? (
+                    <CaretUp size={14} weight="bold" />
+                  ) : (
+                    <CaretDown size={14} weight="bold" />
+                  )}
+                  <span className="text-[10px] ml-1">
+                    {expanded ? 'Collapse' : `${lineCount} lines`}
+                  </span>
+                </button>
+              )}
+              <button
+                onClick={handleCopy}
+                className={cn(
+                  'icon-btn',
+                  copied && 'text-emerald-400'
+                )}
+                aria-label={copied ? 'Copied!' : 'Copy code'}
+              >
+                {copied ? (
+                  <>
+                    <Check size={14} weight="bold" />
+                    <span className="text-[10px] ml-1">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={14} weight="duotone" />
+                    <span className="text-[10px] ml-1">Copy</span>
+                  </>
+                )}
+              </button>
             </div>
-          )}
-          <pre
-            className={cn(
-              className,
-              'p-4 rounded-lg overflow-x-auto text-sm',
-              isUser ? 'bg-black/20' : 'bg-zinc-900'
+          </div>
+
+          {/* Code content */}
+          <div className={cn('code-content', shouldCollapse && 'code-collapsed')}>
+            <pre
+              className={cn(
+                className,
+                'p-4 overflow-x-auto text-sm font-mono',
+                'custom-scrollbar'
+              )}
+              style={style}
+            >
+              {tokens.map((line, i) => {
+                const lineProps = getLineProps({ line, key: i })
+                return (
+                  <div key={i} {...lineProps} className="code-line">
+                    <span className="code-line-number">{i + 1}</span>
+                    <span className="code-line-content">
+                      {line.map((token, tokenIdx) => {
+                        const tokenProps = getTokenProps({ token, key: tokenIdx })
+                        return <span key={tokenIdx} {...tokenProps} />
+                      })}
+                    </span>
+                  </div>
+                )
+              })}
+            </pre>
+
+            {/* Gradient fade overlay for collapsed state */}
+            {shouldCollapse && (
+              <div className="code-fade-overlay" />
             )}
-            style={style}
-          >
-            {tokens.map((line, i) => {
-              const lineProps = getLineProps({ line, key: i })
-              return (
-                <div key={i} {...lineProps}>
-                  {line.map((token, tokenIdx) => {
-                    const tokenProps = getTokenProps({ token, key: tokenIdx })
-                    return <span key={tokenIdx} {...tokenProps} />
-                  })}
-                </div>
-              )
-            })}
-          </pre>
+          </div>
+
+          {/* Expand button at bottom for collapsed state */}
+          {shouldCollapse && (
+            <button
+              onClick={toggleExpand}
+              className="code-expand-btn"
+            >
+              <CaretDown size={14} weight="bold" />
+              <span>Show all {lineCount} lines</span>
+            </button>
+          )}
         </div>
       )}
     </Highlight>

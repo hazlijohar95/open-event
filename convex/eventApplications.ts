@@ -472,3 +472,164 @@ export const getMyPendingCount = query({
     return pendingCount
   },
 })
+
+// ============================================================================
+// Self-Service Mutations (for approved vendors/sponsors)
+// ============================================================================
+
+/**
+ * Self-service application submission by an approved vendor or sponsor.
+ * The user must be linked to an approved vendor/sponsor account.
+ */
+export const selfServiceSubmit = mutation({
+  args: {
+    eventId: v.id('events'),
+    applicantType: v.union(v.literal('vendor'), v.literal('sponsor')),
+    applicantId: v.string(),
+    message: v.optional(v.string()),
+    proposedServices: v.optional(v.array(v.string())),
+    proposedBudget: v.optional(v.number()),
+    proposedTier: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required')
+    }
+
+    // Verify event exists and is public
+    const event = await ctx.db.get(args.eventId)
+    if (!event) {
+      throw new Error('Event not found')
+    }
+    if (!event.isPublic) {
+      throw new Error('This event is not accepting public applications')
+    }
+
+    // Verify applicant exists and is approved
+    let applicantName = ''
+    let applicantEmail = ''
+
+    if (args.applicantType === 'vendor') {
+      const vendorId = parseApplicantId(args.applicantId, 'vendors')
+      if (!vendorId) {
+        throw new Error('Invalid vendor ID format')
+      }
+      const vendor = await ctx.db.get(vendorId)
+      if (!vendor) {
+        throw new Error('Vendor not found')
+      }
+      if (vendor.status !== 'approved') {
+        throw new Error('Only approved vendors can apply to events. Please wait for your application to be approved.')
+      }
+      applicantName = vendor.contactName || vendor.name
+      applicantEmail = vendor.contactEmail || ''
+
+      // Check if seeking vendors
+      if (!event.seekingVendors) {
+        throw new Error('This event is not seeking vendors')
+      }
+    } else {
+      const sponsorId = parseApplicantId(args.applicantId, 'sponsors')
+      if (!sponsorId) {
+        throw new Error('Invalid sponsor ID format')
+      }
+      const sponsor = await ctx.db.get(sponsorId)
+      if (!sponsor) {
+        throw new Error('Sponsor not found')
+      }
+      if (sponsor.status !== 'approved') {
+        throw new Error('Only approved sponsors can apply to events. Please wait for your application to be approved.')
+      }
+      applicantName = sponsor.contactName || sponsor.name
+      applicantEmail = sponsor.contactEmail || ''
+
+      // Check if seeking sponsors
+      if (!event.seekingSponsors) {
+        throw new Error('This event is not seeking sponsors')
+      }
+    }
+
+    // Check for duplicate application
+    const existing = await ctx.db
+      .query('eventApplications')
+      .withIndex('by_applicant', (q) =>
+        q.eq('applicantType', args.applicantType).eq('applicantId', args.applicantId)
+      )
+      .filter((q) => q.eq(q.field('eventId'), args.eventId))
+      .first()
+
+    if (existing) {
+      if (existing.status === 'pending' || existing.status === 'under_review') {
+        throw new Error('You already have a pending application for this event')
+      }
+      if (existing.status === 'accepted') {
+        throw new Error('You are already confirmed for this event')
+      }
+    }
+
+    const applicationId = await ctx.db.insert('eventApplications', {
+      eventId: args.eventId,
+      applicantType: args.applicantType,
+      applicantId: args.applicantId,
+      status: 'pending',
+      message: args.message,
+      proposedServices: args.proposedServices,
+      proposedBudget: args.proposedBudget,
+      proposedTier: args.proposedTier,
+      contactName: applicantName,
+      contactEmail: applicantEmail,
+      submittedBy: user._id,
+      createdAt: Date.now(),
+    })
+
+    return { applicationId, success: true }
+  },
+})
+
+/**
+ * Get all applications submitted by vendors/sponsors linked to the current user.
+ * Allows self-service users to track their application status.
+ */
+export const listMyApplications = query({
+  args: {
+    applicantType: v.union(v.literal('vendor'), v.literal('sponsor')),
+    applicantId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) return []
+
+    // Get applications for this applicant
+    const applications = await ctx.db
+      .query('eventApplications')
+      .withIndex('by_applicant', (q) =>
+        q.eq('applicantType', args.applicantType).eq('applicantId', args.applicantId)
+      )
+      .order('desc')
+      .collect()
+
+    // Enrich with event details
+    const eventIds = [...new Set(applications.map((a) => a.eventId))]
+    const eventPromises = eventIds.map((id) => ctx.db.get(id))
+    const events = await Promise.all(eventPromises)
+    const eventMap = new Map(events.filter(Boolean).map((e) => [e!._id, e!]))
+
+    return applications.map((app) => {
+      const event = eventMap.get(app.eventId)
+      return {
+        ...app,
+        eventDetails: event
+          ? {
+              title: event.title,
+              startDate: event.startDate,
+              endDate: event.endDate,
+              venueName: event.venueName,
+              locationType: event.locationType,
+              status: event.status,
+            }
+          : null,
+      }
+    })
+  },
+})

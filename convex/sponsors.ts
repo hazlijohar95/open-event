@@ -272,6 +272,7 @@ export const reject = mutation({
 // Admin create sponsor (manual onboarding)
 export const adminCreate = mutation({
   args: {
+    // Basic Info
     name: v.string(),
     description: v.optional(v.string()),
     industry: v.string(),
@@ -282,10 +283,74 @@ export const adminCreate = mutation({
     targetAudience: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
     contactName: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
     website: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
     applicationSource: v.optional(v.string()),
     applicationNotes: v.optional(v.string()),
     autoApprove: v.optional(v.boolean()),
+
+    // Enterprise Fields - Company Info
+    companySize: v.optional(v.string()),
+    yearFounded: v.optional(v.number()),
+    headquarters: v.optional(v.string()),
+
+    // Past Experience
+    pastSponsorships: v.optional(
+      v.array(
+        v.object({
+          eventName: v.string(),
+          year: v.number(),
+          tier: v.optional(v.string()),
+          amount: v.optional(v.number()),
+        })
+      )
+    ),
+    deliverablesOffered: v.optional(v.array(v.string())),
+
+    // Contracts & Legal
+    contractTemplateUrl: v.optional(v.string()),
+    legalDocs: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          url: v.string(),
+          type: v.string(),
+          uploadedAt: v.number(),
+        })
+      )
+    ),
+
+    // Payment Terms
+    paymentTerms: v.optional(
+      v.object({
+        preferredMethod: v.optional(v.string()),
+        netDays: v.optional(v.number()),
+        requiresInvoice: v.optional(v.boolean()),
+        currency: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Exclusivity Requirements
+    exclusivityRequirements: v.optional(
+      v.object({
+        requiresExclusivity: v.boolean(),
+        competitorRestrictions: v.optional(v.array(v.string())),
+        territorialScope: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Brand Guidelines
+    brandGuidelines: v.optional(
+      v.object({
+        guidelinesUrl: v.optional(v.string()),
+        logoUsageNotes: v.optional(v.string()),
+        colorCodes: v.optional(v.array(v.string())),
+        prohibitedUsages: v.optional(v.array(v.string())),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const admin = await assertRole(ctx, 'admin')
@@ -294,6 +359,7 @@ export const adminCreate = mutation({
     const status = args.autoApprove ? 'approved' : 'pending'
 
     const sponsorId = await ctx.db.insert('sponsors', {
+      // Basic Info
       name: args.name,
       description: args.description,
       industry: args.industry,
@@ -304,13 +370,28 @@ export const adminCreate = mutation({
       targetAudience: args.targetAudience,
       contactEmail: args.contactEmail,
       contactName: args.contactName,
+      contactPhone: args.contactPhone,
       website: args.website,
+      logoUrl: args.logoUrl,
       verified: args.autoApprove || false,
       status,
       applicationSource: args.applicationSource || 'manual',
       applicationNotes: args.applicationNotes,
       reviewedBy: args.autoApprove ? admin._id : undefined,
       reviewedAt: args.autoApprove ? now : undefined,
+
+      // Enterprise Fields
+      companySize: args.companySize,
+      yearFounded: args.yearFounded,
+      headquarters: args.headquarters,
+      pastSponsorships: args.pastSponsorships,
+      deliverablesOffered: args.deliverablesOffered,
+      contractTemplateUrl: args.contractTemplateUrl,
+      legalDocs: args.legalDocs,
+      paymentTerms: args.paymentTerms,
+      exclusivityRequirements: args.exclusivityRequirements,
+      brandGuidelines: args.brandGuidelines,
+
       createdAt: now,
     })
 
@@ -339,6 +420,8 @@ export const adminCreate = mutation({
 export const adminUpdate = mutation({
   args: {
     sponsorId: v.id('sponsors'),
+
+    // Basic Info
     name: v.optional(v.string()),
     description: v.optional(v.string()),
     industry: v.optional(v.string()),
@@ -349,8 +432,72 @@ export const adminUpdate = mutation({
     targetAudience: v.optional(v.string()),
     contactEmail: v.optional(v.string()),
     contactName: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
     website: v.optional(v.string()),
+    logoUrl: v.optional(v.string()),
     applicationNotes: v.optional(v.string()),
+
+    // Enterprise Fields - Company Info
+    companySize: v.optional(v.string()),
+    yearFounded: v.optional(v.number()),
+    headquarters: v.optional(v.string()),
+
+    // Past Experience
+    pastSponsorships: v.optional(
+      v.array(
+        v.object({
+          eventName: v.string(),
+          year: v.number(),
+          tier: v.optional(v.string()),
+          amount: v.optional(v.number()),
+        })
+      )
+    ),
+    deliverablesOffered: v.optional(v.array(v.string())),
+
+    // Contracts & Legal
+    contractTemplateUrl: v.optional(v.string()),
+    legalDocs: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          url: v.string(),
+          type: v.string(),
+          uploadedAt: v.number(),
+        })
+      )
+    ),
+
+    // Payment Terms
+    paymentTerms: v.optional(
+      v.object({
+        preferredMethod: v.optional(v.string()),
+        netDays: v.optional(v.number()),
+        requiresInvoice: v.optional(v.boolean()),
+        currency: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Exclusivity Requirements
+    exclusivityRequirements: v.optional(
+      v.object({
+        requiresExclusivity: v.boolean(),
+        competitorRestrictions: v.optional(v.array(v.string())),
+        territorialScope: v.optional(v.string()),
+        notes: v.optional(v.string()),
+      })
+    ),
+
+    // Brand Guidelines
+    brandGuidelines: v.optional(
+      v.object({
+        guidelinesUrl: v.optional(v.string()),
+        logoUsageNotes: v.optional(v.string()),
+        colorCodes: v.optional(v.array(v.string())),
+        prohibitedUsages: v.optional(v.array(v.string())),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     await assertRole(ctx, 'admin')
