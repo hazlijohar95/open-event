@@ -2,6 +2,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
+import { usePWA } from '@/hooks/use-pwa'
 import {
   User,
   Buildings,
@@ -14,6 +15,9 @@ import {
   Target,
   Briefcase,
   SignOut,
+  DeviceMobile,
+  WifiHigh,
+  CheckSquare,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
@@ -72,6 +76,7 @@ export function SettingsPage() {
   const user = useQuery(api.queries.auth.getCurrentUser)
   const profile = useQuery(api.organizerProfiles.getMyProfile)
   const saveProfile = useMutation(api.organizerProfiles.saveProfile)
+  const { isInstalled, isInstallable, isOnline, promptInstall, getPlatform } = usePWA()
 
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
@@ -339,6 +344,99 @@ export function SettingsPage() {
                   </div>
                 </div>
               </button>
+            </div>
+          </div>
+
+          {/* App Section */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h3 className="font-semibold mb-6 flex items-center gap-2">
+              <DeviceMobile size={18} weight="duotone" className="text-primary" />
+              App
+            </h3>
+
+            <div className="space-y-4">
+              {/* Network Status */}
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    'w-10 h-10 rounded-lg flex items-center justify-center',
+                    isOnline ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+                  )}>
+                    <WifiHigh size={20} weight="duotone" className={isOnline ? 'text-emerald-500' : 'text-amber-500'} />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Network Status</p>
+                    <p className="text-xs text-muted-foreground">
+                      {isOnline ? 'Connected to the internet' : 'Currently offline'}
+                    </p>
+                  </div>
+                </div>
+                <div className={cn(
+                  'px-2.5 py-1 rounded-full text-xs font-medium',
+                  isOnline ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
+                )}>
+                  {isOnline ? 'Online' : 'Offline'}
+                </div>
+              </div>
+
+              {/* Install App */}
+              {isInstalled ? (
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-emerald-500/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                      <CheckSquare size={20} weight="duotone" className="text-emerald-500" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">App Installed</p>
+                      <p className="text-xs text-muted-foreground">
+                        You're using the installed version
+                      </p>
+                    </div>
+                  </div>
+                  <div className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
+                    Installed
+                  </div>
+                </div>
+              ) : isInstallable ? (
+                <button
+                  onClick={() => promptInstall()}
+                  className={cn(
+                    'w-full flex items-center justify-between p-4 rounded-lg border border-emerald-500/20',
+                    'hover:bg-emerald-500/5 transition-colors cursor-pointer text-left'
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                      <DeviceMobile size={20} weight="fill" className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Install App</p>
+                      <p className="text-xs text-muted-foreground">
+                        Get faster access and offline support
+                      </p>
+                    </div>
+                  </div>
+                  <div className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-medium">
+                    Install
+                  </div>
+                </button>
+              ) : (
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                      <DeviceMobile size={20} weight="duotone" className="text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">Install App</p>
+                      <p className="text-xs text-muted-foreground">
+                        {getPlatform() === 'ios'
+                          ? 'Tap Share → Add to Home Screen in Safari'
+                          : 'Install option not available in this browser'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </TabsContent>

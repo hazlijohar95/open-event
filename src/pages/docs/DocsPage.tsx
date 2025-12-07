@@ -19,6 +19,7 @@ import {
   MagnifyingGlass,
   List,
   X,
+  DeviceMobile,
 } from '@phosphor-icons/react'
 
 const sections = [
@@ -28,6 +29,7 @@ const sections = [
   { id: 'for-vendors', title: 'For Vendors', icon: Storefront },
   { id: 'ai-features', title: 'AI Features', icon: Sparkle },
   { id: 'integrations', title: 'Integrations', icon: Plugs },
+  { id: 'install-app', title: 'Install App', icon: DeviceMobile },
   { id: 'self-hosting', title: 'Self-Hosting', icon: CloudArrowUp },
   { id: 'api-reference', title: 'API Reference', icon: Code },
   { id: 'contributing', title: 'Contributing', icon: GitPullRequest },
@@ -396,7 +398,44 @@ export function DocsPage() {
               </div>
             </section>
 
-            {/* Section 7: Self-Hosting */}
+            {/* Section 7: Install App (PWA) */}
+            <section id="install-app" className="scroll-mt-24">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <DeviceMobile size={16} className="text-emerald-600 dark:text-emerald-400" weight="duotone" />
+                </div>
+                <h2 className="text-lg font-semibold">Install App</h2>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Open Event is a Progressive Web App (PWA). Install it on your device for a native app experience with offline support.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                {[
+                  { title: 'Desktop', desc: 'Click the install icon in Chrome/Edge address bar, or use the install banner.' },
+                  { title: 'Android', desc: 'Tap the install banner or use Chrome menu → "Add to Home Screen".' },
+                  { title: 'iOS', desc: 'In Safari, tap Share → "Add to Home Screen".' },
+                ].map((item) => (
+                  <div key={item.title} className="p-4 rounded-lg border border-border/40">
+                    <p className="text-sm font-medium text-foreground mb-1">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                {['Works offline', 'Auto-updates', 'Native feel', 'Fast loading'].map((feature) => (
+                  <div key={feature} className="p-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 text-center">
+                    <p className="text-sm text-emerald-700 dark:text-emerald-400">{feature}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="p-3 rounded-lg bg-muted/30 border border-border/40">
+                <p className="text-xs text-muted-foreground">
+                  <strong className="text-foreground">Tip:</strong> You can also install from Dashboard → Settings → App section.
+                </p>
+              </div>
+            </section>
+
+            {/* Section 8: Self-Hosting */}
             <section id="self-hosting" className="scroll-mt-24">
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">

@@ -1,0 +1,15 @@
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: en-US
+reviews:
+  auto_review:
+    enabled: true
+    drafts: false
+  path_instructions:
+    - path: "convex/**"
+      instructions: "This is the Convex backend. Check for proper authentication, input validation, and database query efficiency."
+    - path: "src/components/**"
+      instructions: "React components using TypeScript, TailwindCSS, and Phosphor Icons. Check for accessibility and performance."
+chat:
+  auto_reply: true

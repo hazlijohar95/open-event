@@ -1,6 +1,8 @@
+import { useState, useEffect, useCallback } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { ThemeProvider } from 'next-themes'
 import { Toaster } from '@/components/ui/sonner'
+import { InstallPrompt, UpdatePrompt } from '@/components/pwa'
 import {
   Hero,
   LogoCloud,
@@ -69,6 +71,28 @@ function LandingPage() {
 }
 
 function App() {
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false)
+
+  // Listen for service worker update events
+  useEffect(() => {
+    const handleSwUpdate = () => {
+      setShowUpdatePrompt(true)
+    }
+
+    window.addEventListener('sw-update-available', handleSwUpdate)
+    return () => window.removeEventListener('sw-update-available', handleSwUpdate)
+  }, [])
+
+  const handleUpdate = useCallback(() => {
+    // Call the global updateSW function
+    if (window.__updateSW) {
+      window.__updateSW(true)
+    } else {
+      // Fallback: reload the page
+      window.location.reload()
+    }
+  }, [])
+
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <BrowserRouter>
@@ -118,6 +142,10 @@ function App() {
           <Route path="/apply/success" element={<ApplicationSuccess />} />
         </Routes>
         <Toaster />
+
+        {/* PWA Components */}
+        <InstallPrompt />
+        {showUpdatePrompt && <UpdatePrompt onUpdate={handleUpdate} />}
       </BrowserRouter>
     </ThemeProvider>
   )
