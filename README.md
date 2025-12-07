@@ -29,6 +29,7 @@
   <img src="https://img.shields.io/badge/TypeScript-5.0-blue.svg" alt="TypeScript">
   <img src="https://img.shields.io/badge/React-19-61dafb.svg" alt="React">
   <img src="https://img.shields.io/badge/Convex-Backend-ff6b6b.svg" alt="Convex">
+  <img src="https://img.shields.io/badge/PWA-Ready-5A0FC8.svg?logo=pwa" alt="PWA Ready">
   <a href="https://coderabbit.ai">
     <img src="https://img.shields.io/coderabbit/prs/github/hazlijohar95/open-event?utm_source=oss&utm_medium=github&utm_campaign=hazlijohar95%2Fopen-event&labelColor=171717&color=FF570A&label=CodeRabbit+Reviews" alt="CodeRabbit Pull Request Reviews">
   </a>
@@ -144,6 +145,7 @@ Open Event is a comprehensive event management platform that connects **organize
 
 ### Platform Features
 
+- **Progressive Web App** — Install on any device, works offline, auto-updates
 - **Real-time Updates** — Powered by Convex for instant data synchronization
 - **Role-based Access** — Secure, granular permissions for all user types
 - **Dark Mode** — Full theme support with system preference detection
