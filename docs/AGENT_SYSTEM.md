@@ -130,13 +130,15 @@ The AI Agent System enables natural language event creation through an intellige
 │   │                                                                      │
 │   ├── lib/agent/                   # Agent library                       │
 │   │   ├── types.ts                 # TypeScript definitions              │
-│   │   ├── tools.ts                 # 9 tool schemas                      │
+│   │   ├── tools.ts                 # 13 tool schemas                     │
 │   │   └── handlers.ts              # Execution handlers                  │
 │   │                                                                      │
 │   ├── aiConversations.ts           # Conversation CRUD                   │
 │   ├── events.ts                    # Event mutations                     │
 │   ├── vendors.ts                   # Vendor queries                      │
 │   ├── sponsors.ts                  # Sponsor queries                     │
+│   ├── eventVendors.ts              # Event-vendor relationships          │
+│   ├── eventSponsors.ts             # Event-sponsor relationships         │
 │   └── organizerProfiles.ts         # User profiles                       │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -297,34 +299,53 @@ Execute a user-confirmed tool.
 
 ---
 
-## Available Tools
+## Available Tools (13 Total)
 
 ### Tool Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                         CONFIRMATION REQUIRED                            │
+│                         CONFIRMATION REQUIRED (4)                        │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  Tool              │  Description                    │  Icon            │
 ├────────────────────┼─────────────────────────────────┼──────────────────┤
 │  createEvent       │  Create a new event             │  CalendarPlus    │
 │  updateEvent       │  Update event details           │  PencilSimple    │
-│  addVendorToEvent  │  Add vendor to event            │  Buildings       │
-│  addSponsorToEvent │  Add sponsor to event           │  Handshake       │
+│  addVendorToEvent  │  Add vendor to event (persist)  │  Buildings       │
+│  addSponsorToEvent │  Add sponsor to event (persist) │  Handshake       │
 └─────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────┐
-│                          AUTO-EXECUTE                                    │
+│                          AUTO-EXECUTE (9)                                │
 ├─────────────────────────────────────────────────────────────────────────┤
-│  Tool              │  Description                    │  Icon            │
-├────────────────────┼─────────────────────────────────┼──────────────────┤
-│  getEventDetails   │  Get event information          │  Calendar        │
-│  getUpcomingEvents │  List upcoming events           │  CalendarBlank   │
-│  searchVendors     │  Search for vendors             │  MagnifyingGlass │
-│  searchSponsors    │  Search for sponsors            │  MagnifyingGlass │
-│  getUserProfile    │  Get organizer profile          │  User            │
+│  Tool                  │  Description                    │  Category    │
+├────────────────────────┼─────────────────────────────────┼──────────────┤
+│  getEventDetails       │  Get event information          │  Events      │
+│  getUpcomingEvents     │  List upcoming events           │  Events      │
+│  searchVendors         │  Search vendors by category     │  Vendors     │
+│  getRecommendedVendors │  AI-matched vendor suggestions  │  Vendors     │
+│  getEventVendors       │  List vendors linked to event   │  Vendors     │
+│  searchSponsors        │  Search sponsors by industry    │  Sponsors    │
+│  getRecommendedSponsors│  AI-matched sponsor suggestions │  Sponsors    │
+│  getEventSponsors      │  List sponsors linked to event  │  Sponsors    │
+│  getUserProfile        │  Get organizer profile          │  Profile     │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
+
+### Intelligent Matching Tools
+
+The recommendation tools use scoring algorithms to find the best matches:
+
+**getRecommendedVendors** scores based on:
+- Vendor rating (0-50 points)
+- Verified status (+20 points)
+- Price range alignment with event budget (+15 points)
+
+**getRecommendedSponsors** scores based on:
+- Verified status (+20 points)
+- Target event type match (+30 points)
+- Budget alignment with event size (+10-20 points)
+- Requested tier availability (+25 points)
 
 ### Tool Schemas
 
@@ -415,6 +436,65 @@ Execute a user-confirmed tool.
       },
       minBudget: { type: 'number' }
     }
+  }
+}
+```
+
+#### getRecommendedVendors
+
+```typescript
+{
+  name: 'getRecommendedVendors',
+  description: 'Get AI-matched vendor recommendations for an event',
+  parameters: {
+    type: 'object',
+    properties: {
+      eventId: { type: 'string', description: 'Event ID to match vendors for' },
+      category: {
+        type: 'string',
+        enum: ['catering', 'av', 'photography', 'decoration',
+               'security', 'transportation', 'entertainment', 'staffing']
+      },
+      limit: { type: 'number', description: 'Max results (default: 5)' }
+    },
+    required: ['eventId']
+  }
+}
+```
+
+#### getRecommendedSponsors
+
+```typescript
+{
+  name: 'getRecommendedSponsors',
+  description: 'Get AI-matched sponsor recommendations for an event',
+  parameters: {
+    type: 'object',
+    properties: {
+      eventId: { type: 'string', description: 'Event ID to match sponsors for' },
+      tier: {
+        type: 'string',
+        enum: ['platinum', 'gold', 'silver', 'bronze']
+      },
+      limit: { type: 'number', description: 'Max results (default: 5)' }
+    },
+    required: ['eventId']
+  }
+}
+```
+
+#### getEventVendors / getEventSponsors
+
+```typescript
+{
+  name: 'getEventVendors', // or 'getEventSponsors'
+  description: 'Get all vendors/sponsors linked to an event with status',
+  parameters: {
+    type: 'object',
+    properties: {
+      eventId: { type: 'string', description: 'Event ID' }
+    },
+    required: ['eventId']
   }
 }
 ```
@@ -775,6 +855,34 @@ npm run test:coverage
 
 ---
 
+## Security
+
+All agent tool executions are protected with multiple layers of security:
+
+### Authentication
+- All mutations require a valid authenticated user via `getCurrentUser(ctx)`
+- Unauthenticated requests are rejected with "Not authenticated" error
+- User identity is derived from the session, never from client input
+
+### Authorization
+- **Event ownership**: Only the event organizer can modify their events
+- **Resource verification**: Before adding vendors/sponsors, the system verifies:
+  - The event exists and belongs to the current user
+  - The vendor/sponsor exists in the database
+- **Duplicate prevention**: Attempts to add the same vendor/sponsor twice are handled gracefully
+
+### Input Validation
+- All inputs are validated using Convex validators (`v.id()`, `v.string()`, `v.number()`, etc.)
+- Status values are whitelisted: only valid statuses like `'inquiry'`, `'negotiating'`, `'confirmed'`, `'declined'` are accepted
+- Invalid status transitions are rejected with clear error messages
+
+### Audit Trail
+- All database records include `createdAt` timestamps
+- Updates include `updatedAt` timestamps
+- Relationships track status history through status field changes
+
+---
+
 ## Troubleshooting
 
 ### Common Issues
@@ -824,4 +932,5 @@ const rateLimiter = new RateLimiter(RATE_LIMIT)
 - [ ] Email notifications for confirmations
 - [ ] Voice input for event creation
 - [ ] Calendar integration (Google, Outlook)
-- [ ] Vendor/sponsor recommendation engine
+- [x] Vendor/sponsor recommendation engine (implemented via `getRecommendedVendors` and `getRecommendedSponsors`)
+- [x] Event-vendor/sponsor relationship persistence (implemented via `eventVendors` and `eventSponsors` tables)
