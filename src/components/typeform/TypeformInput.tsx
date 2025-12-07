@@ -14,24 +14,28 @@ export interface TypeformInputProps
 export const TypeformInput = forwardRef<HTMLInputElement, TypeformInputProps>(
   ({ className, label, error, ...props }, ref) => {
     return (
-      <div className="space-y-2">
+      <div className="space-y-1.5 sm:space-y-2">
         {label && (
-          <label className="text-sm font-medium text-muted-foreground">
+          <label className="text-xs sm:text-sm font-medium text-muted-foreground">
             {label}
           </label>
         )}
         <input
           ref={ref}
           className={cn(
-            'typeform-input w-full',
-            'placeholder:text-muted-foreground/50',
-            'focus:outline-none',
+            'w-full bg-transparent',
+            'text-base sm:text-lg lg:text-xl',
+            'py-2.5 sm:py-3 px-0',
+            'border-b-2 border-border/60 rounded-none',
+            'placeholder:text-muted-foreground/40',
+            'focus:outline-none focus:border-primary',
+            'transition-colors duration-200',
             error && 'border-destructive focus:border-destructive',
             className
           )}
           {...props}
         />
-        {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && <p className="text-xs sm:text-sm text-destructive mt-1">{error}</p>}
       </div>
     )
   }

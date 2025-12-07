@@ -23,14 +23,14 @@ export function OrganizationStep({ onNext, onBack, currentData }: StepProps) {
   const canContinue = name.trim().length > 0 && type
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10">
       <TypeformQuestion
         stepNumber={2}
-        question="Tell me about your organization"
+        question="Tell us about your organization"
         description="This helps us tailor the experience for you."
       />
 
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <TypeformInput
           placeholder="Your organization name"
           value={name}
@@ -39,8 +39,8 @@ export function OrganizationStep({ onNext, onBack, currentData }: StepProps) {
         />
 
         <div className="space-y-3">
-          <p className="text-sm font-medium text-muted-foreground mb-4">Organization Type</p>
-          <div className="grid grid-cols-2 gap-3">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground">Organization type</p>
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {orgTypes.map((org, index) => (
               <OptionCard
                 key={org.value}
@@ -48,7 +48,8 @@ export function OrganizationStep({ onNext, onBack, currentData }: StepProps) {
                 icon={org.icon}
                 isSelected={type === org.value}
                 onClick={() => setType(org.value)}
-                delay={(index + 1) * 100}
+                delay={(index + 1) * 75}
+                compact
               />
             ))}
           </div>

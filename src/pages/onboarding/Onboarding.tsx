@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQuery } from 'convex/react'
+import { useConvexAuth, useMutation, useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { TypeformLayout, TypeformTransition } from '@/components/typeform'
 import { useOnboarding } from '@/hooks/use-onboarding'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import {
   RoleStep,
   OrganizationStep,
@@ -27,10 +28,16 @@ const steps = [
 
 export function Onboarding() {
   const navigate = useNavigate()
+  const { isLoading: authLoading, isAuthenticated } = useConvexAuth()
   const saveProfile = useMutation(api.organizerProfiles.saveProfile)
-  const existingProfile = useQuery(api.organizerProfiles.getMyProfile)
+  
+  // Only query profile if authenticated
+  const existingProfile = useQuery(
+    api.organizerProfiles.getMyProfile,
+    isAuthenticated ? {} : 'skip'
+  )
+  
   const hasSavedRef = useRef(false)
-  const hasCheckedProfile = useRef(false)
 
   const {
     currentStep,
@@ -43,17 +50,23 @@ export function Onboarding() {
     skipOnboarding,
   } = useOnboarding()
 
-  // Check if user already completed onboarding - redirect to dashboard
+  // Redirect unauthenticated users to sign-in
   useEffect(() => {
-    if (existingProfile && !hasCheckedProfile.current) {
-      hasCheckedProfile.current = true
+    if (!authLoading && !isAuthenticated) {
+      navigate('/sign-in', { replace: true })
+    }
+  }, [authLoading, isAuthenticated, navigate])
+
+  // Redirect users who already have a profile to dashboard
+  useEffect(() => {
+    if (existingProfile) {
       navigate('/dashboard', { replace: true })
     }
   }, [existingProfile, navigate])
 
   // Save onboarding data and navigate to completion when done
   useEffect(() => {
-    if (isComplete && !hasSavedRef.current) {
+    if (isComplete && !hasSavedRef.current && isAuthenticated) {
       hasSavedRef.current = true
 
       // Save profile to Convex
@@ -74,18 +87,23 @@ export function Onboarding() {
           navigate('/onboarding/complete', { replace: true })
         })
     }
-  }, [isComplete, answers, saveProfile, navigate])
+  }, [isComplete, answers, saveProfile, navigate, isAuthenticated])
 
   const CurrentStepComponent = steps[currentStep - 1]
 
+  // Show loading while checking auth state
+  if (authLoading) {
+    return <LoadingSpinner message="Loading..." fullScreen />
+  }
+
+  // Not authenticated - will redirect
+  if (!isAuthenticated) {
+    return <LoadingSpinner message="Redirecting..." fullScreen />
+  }
+
   // Show loading while checking if user already completed onboarding
-  // existingProfile is undefined while loading, null if no profile exists
   if (existingProfile === undefined) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
-      </div>
-    )
+    return <LoadingSpinner message="Setting up..." fullScreen />
   }
 
   const handleNext = (data: Partial<OnboardingAnswers>) => {

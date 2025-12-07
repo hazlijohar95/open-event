@@ -1,517 +1,445 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/hazlijohar95/open-event/main/.github/assets/logo.svg" alt="Open Event Logo" width="120" height="120">
-</p>
+<div align="center">
 
-<h1 align="center">Open Event</h1>
+<!-- Hero Section -->
+<img src="https://raw.githubusercontent.com/hazlijohar95/open-event/main/.github/assets/logo.svg" alt="Open Event" width="80" height="80" />
 
-<p align="center">
-  <strong>The open-source event management platform for modern teams</strong>
-</p>
+# Open Event
 
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#quick-start">Quick Start</a> •
-  <a href="#tech-stack">Tech Stack</a> •
-  <a href="#documentation">Documentation</a> •
-  <a href="#contributing">Contributing</a>
-</p>
+### The Open-Source Event Operations Platform
 
-<p align="center">
-  <a href="https://github.com/hazlijohar95/open-event/blob/main/LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">
-  </a>
-  <a href="https://github.com/hazlijohar95/open-event/stargazers">
-    <img src="https://img.shields.io/github/stars/hazlijohar95/open-event" alt="Stars">
-  </a>
-  <a href="https://github.com/hazlijohar95/open-event/issues">
-    <img src="https://img.shields.io/github/issues/hazlijohar95/open-event" alt="Issues">
-  </a>
-  <img src="https://img.shields.io/badge/TypeScript-5.0-blue.svg" alt="TypeScript">
-  <img src="https://img.shields.io/badge/React-19-61dafb.svg" alt="React">
-  <img src="https://img.shields.io/badge/Convex-Backend-ff6b6b.svg" alt="Convex">
-  <img src="https://img.shields.io/badge/PWA-Ready-5A0FC8.svg?logo=pwa" alt="PWA Ready">
-  <a href="https://coderabbit.ai">
-    <img src="https://img.shields.io/coderabbit/prs/github/hazlijohar95/open-event?utm_source=oss&utm_medium=github&utm_campaign=hazlijohar95%2Fopen-event&labelColor=171717&color=FF570A&label=CodeRabbit+Reviews" alt="CodeRabbit Pull Request Reviews">
-  </a>
-</p>
+**Create • Manage • Connect** — All in one place
+
+[![MIT License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178c6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![Convex](https://img.shields.io/badge/Convex-Backend-f97316?style=flat-square)](https://convex.dev/)
+[![PWA](https://img.shields.io/badge/PWA-Ready-8b5cf6?style=flat-square&logo=pwa&logoColor=white)](https://web.dev/progressive-web-apps/)
+[![Stars](https://img.shields.io/github/stars/hazlijohar95/open-event?style=flat-square&color=fbbf24)](https://github.com/hazlijohar95/open-event/stargazers)
+
+[Live Demo](https://openevent.my) · [Report Bug](https://github.com/hazlijohar95/open-event/issues) · [Request Feature](https://github.com/hazlijohar95/open-event/issues)
 
 ---
 
-## Overview
+<img src="https://raw.githubusercontent.com/hazlijohar95/open-event/main/.github/assets/dashboard-preview.png" alt="Dashboard Preview" width="100%" style="border-radius: 12px; margin: 20px 0;" />
 
-Open Event is a comprehensive event management platform that connects **organizers**, **vendors**, and **sponsors** in one unified ecosystem. Built with modern technologies and designed for scalability, it provides everything you need to plan, manage, and execute successful events.
+</div>
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Open Event                              │
-├─────────────────┬─────────────────┬─────────────────────────────┤
-│   Organizers    │     Vendors     │         Sponsors            │
-├─────────────────┼─────────────────┼─────────────────────────────┤
-│ • Create Events │ • Browse Events │ • Discover Opportunities    │
-│ • Manage Tasks  │ • Apply to Join │ • Support Events            │
-│ • Track Budget  │ • Get Hired     │ • Track Partnerships        │
-│ • Find Partners │ • Build Profile │ • Manage Investments        │
-└─────────────────┴─────────────────┴─────────────────────────────┘
-```
+## 🎯 What is Open Event?
 
----
+Open Event is a **comprehensive event management platform** that connects three key players in the event ecosystem:
 
-## Screenshots
+<table>
+<tr>
+<td align="center" width="33%">
 
-### Dashboard Overview
-```
-┌─────────────────────────────────────────────────────────────┐
-│  open-event                    Welcome back, User      🌙   │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐                                            │
-│  │ + Create    │   Overview Dashboard                       │
-│  │   Event     │   ─────────────────────────                │
-│  ├─────────────┤                                            │
-│  │ Overview    │   ┌────────┐  ┌────────┐  ┌────────┐       │
-│  │ Events    ◀ │   │ Total  │  │ Active │  │ Budget │       │
-│  │ Vendors     │   │  12    │  │   4    │  │ $45K   │       │
-│  │ Sponsors    │   └────────┘  └────────┘  └────────┘       │
-│  │ Tasks       │                                            │
-│  │ Budget      │   Recent Events                            │
-│  │ Analytics   │   ┌──────────────────────────────────┐     │
-│  └─────────────┘   │ Tech Conference 2024   [Active]  │     │
-│                    │ Jan 15, 2024 • Convention Center │     │
-│                    └──────────────────────────────────┘     │
-└─────────────────────────────────────────────────────────────┘
-```
+### 🎪 Organizers
+Create and manage events with AI assistance, track budgets, coordinate vendors, and find sponsors.
 
-### AI Event Assistant
-```
-┌─────────────────────────────────────────────────────────────┐
-│  ← AI Event Assistant                    ⚡ Agentic         │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  🤖  Hi! I'm your AI event planning assistant.              │
-│      I can help you:                                        │
-│      • Create events - describe and I'll set it up          │
-│      • Find vendors - catering, AV, photography             │
-│      • Discover sponsors - find interested companies        │
-│                                                             │
-│                         I want to create a tech conference  │
-│                         for 200 people next month      👤   │
-│                                                             │
-│  🤖  Great! Let me create that for you...                   │
-│                                                             │
-│      ┌─────────────────────────────────────┐                │
-│      │ 🔧 Creating Event...                │                │
-│      │    ✓ Tech Conference                │                │
-│      │    ✓ 200 attendees                  │                │
-│      │    [Confirm] [Cancel]               │                │
-│      └─────────────────────────────────────┘                │
-│                                                             │
-├─────────────────────────────────────────────────────────────┤
-│  [Tell me about your event...]                      [Send]  │
-└─────────────────────────────────────────────────────────────┘
-```
+</td>
+<td align="center" width="33%">
 
----
+### 🛠️ Vendors
+Showcase your services, discover event opportunities, and get hired by organizers.
 
-## Features
+</td>
+<td align="center" width="33%">
 
-### For Event Organizers
+### 💎 Sponsors
+Find events to support, manage sponsorship tiers, and track your brand investments.
 
-| Feature | Description |
-|---------|-------------|
-| **Event Dashboard** | Comprehensive overview with analytics, quick actions, and real-time updates |
-| **AI Event Assistant** | Create events through natural conversation with AI |
-| **Task Management** | Kanban-style task boards with categories, priorities, and due dates |
-| **Budget Tracking** | Track expenses, manage budget items, and monitor spending |
-| **Vendor Management** | Discover, invite, and manage vendors for your events |
-| **Sponsor Outreach** | Find sponsors, send inquiries, and track partnerships |
-| **Team Collaboration** | Invite team members and manage roles |
+</td>
+</tr>
+</table>
 
-### For Vendors
+<br />
 
-| Feature | Description |
-|---------|-------------|
-| **Profile Showcase** | Build a professional profile with portfolio and services |
-| **Event Discovery** | Browse public events looking for vendors |
-| **Application System** | Apply to events with proposals and quotes |
-| **Verified Status** | Get verified to build trust with organizers |
+## ✨ Features
 
-### For Sponsors
+<details open>
+<summary><b>🤖 AI Event Assistant</b> — Create events through natural conversation</summary>
+<br />
 
-| Feature | Description |
-|---------|-------------|
-| **Sponsor Directory** | Showcase your brand and sponsorship offerings |
-| **Event Matching** | Find events that align with your target audience |
-| **Tier Options** | Offer different sponsorship tiers and benefits |
-| **ROI Tracking** | Track your sponsorship investments |
+> *"I want to create a tech conference for 200 developers next month"*
 
-### Platform Features
+The AI assistant understands your intent and creates events, finds vendors, and discovers sponsors automatically.
 
-- **Progressive Web App** — Install on any device, works offline, auto-updates
-- **Real-time Updates** — Powered by Convex for instant data synchronization
-- **Role-based Access** — Secure, granular permissions for all user types
-- **Dark Mode** — Full theme support with system preference detection
-- **Responsive Design** — Works beautifully on desktop, tablet, and mobile
-- **Type Safety** — End-to-end TypeScript for reliability
+- 🔧 **13 integrated tools** for event management
+- ✅ **Confirmation dialogs** for important actions
+- 🎯 **Smart recommendations** based on your event profile
 
----
+</details>
 
-## Quick Start
+<details>
+<summary><b>📊 Event Dashboard</b> — Everything at a glance</summary>
+<br />
+
+- Real-time event analytics and metrics
+- Quick actions for common tasks
+- Status workflow: `Draft` → `Planning` → `Active` → `Completed`
+- Budget tracking with visual breakdowns
+
+</details>
+
+<details>
+<summary><b>✅ Task Management</b> — Kanban-style task boards</summary>
+<br />
+
+- Organize tasks by category (Venue, Marketing, Logistics)
+- Priority levels: `Low` → `Medium` → `High` → `Urgent`
+- Due date tracking with visual indicators
+- Link tasks to vendors and budget items
+
+</details>
+
+<details>
+<summary><b>💰 Budget Tracking</b> — Full financial control</summary>
+<br />
+
+- Track estimated vs actual expenses
+- Categorize spending by type
+- Visual budget progress indicators
+- Export reports for stakeholders
+
+</details>
+
+<details>
+<summary><b>🔍 Vendor & Sponsor Discovery</b> — Find the right partners</summary>
+<br />
+
+- Search by category, location, price range
+- AI-powered matching and recommendations
+- Verification badges for trusted partners
+- Direct inquiry system
+
+</details>
+
+<details>
+<summary><b>📱 Progressive Web App</b> — Works everywhere</summary>
+<br />
+
+- Install on any device (iOS, Android, Desktop)
+- Works offline with smart caching
+- Push notification ready
+- Auto-updates in background
+
+</details>
+
+<br />
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- **Node.js** 18+
+- **Node.js** 18+ 
 - **npm** 9+ or **pnpm**
-- A [Convex](https://convex.dev) account (free tier available)
+- [Convex](https://convex.dev) account (free)
 
 ### Installation
 
 ```bash
-# Clone the repository
+# 1. Clone the repository
 git clone https://github.com/hazlijohar95/open-event.git
 cd open-event
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Set up environment variables
+# 3. Set up environment
 cp .env.example .env
-# Edit .env with your Convex URL
+# Add your VITE_CONVEX_URL from Convex dashboard
 
-# Start the development servers
+# 4. Start development servers
 npm run dev:all
 ```
 
-This starts:
-- **Frontend** at `http://localhost:5173`
-- **Convex backend** in development mode
+**That's it!** Open [localhost:5173](http://localhost:5173) 🎉
 
-### Convex Setup
+<br />
 
-1. Create a free account at [convex.dev](https://convex.dev)
-2. Create a new project
-3. Copy your deployment URL to `.env`
-4. Run `npx convex dev` to sync your schema
+## 🏗️ Tech Stack
 
----
-
-## Tech Stack
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Frontend                                  │
-├─────────────────────────────────────────────────────────────────┤
-│  React 19  │  TypeScript  │  Vite  │  TailwindCSS  │  ShadCN   │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                        Backend                                   │
-├─────────────────────────────────────────────────────────────────┤
-│  Convex (Database + Serverless Functions + Real-time Sync)     │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                     Authentication                               │
-├─────────────────────────────────────────────────────────────────┤
-│  Convex Auth  │  Google OAuth  │  Email/Pass                    │
-└─────────────────────────────────────────────────────────────────┘
-```
+<table>
+<tr>
+<td align="center" width="100">
+<img src="https://skillicons.dev/icons?i=react" width="48" height="48" alt="React" />
+<br /><sub><b>React 19</b></sub>
+</td>
+<td align="center" width="100">
+<img src="https://skillicons.dev/icons?i=ts" width="48" height="48" alt="TypeScript" />
+<br /><sub><b>TypeScript</b></sub>
+</td>
+<td align="center" width="100">
+<img src="https://skillicons.dev/icons?i=vite" width="48" height="48" alt="Vite" />
+<br /><sub><b>Vite 7</b></sub>
+</td>
+<td align="center" width="100">
+<img src="https://skillicons.dev/icons?i=tailwind" width="48" height="48" alt="Tailwind" />
+<br /><sub><b>Tailwind 4</b></sub>
+</td>
+<td align="center" width="100">
+<img src="https://avatars.githubusercontent.com/u/108468352?s=200&v=4" width="48" height="48" alt="Convex" style="border-radius: 8px;" />
+<br /><sub><b>Convex</b></sub>
+</td>
+<td align="center" width="100">
+<img src="https://skillicons.dev/icons?i=openai" width="48" height="48" alt="OpenAI" style="border-radius: 8px;" />
+<br /><sub><b>OpenAI</b></sub>
+</td>
+</tr>
+</table>
 
 | Layer | Technologies |
 |-------|-------------|
-| **Frontend** | React 19, TypeScript, Vite 7, TailwindCSS 4, ShadCN UI |
-| **Backend** | Convex (queries, mutations, real-time subscriptions) |
-| **Auth** | Convex Auth with Google OAuth, Email/Password |
-| **Icons** | Phosphor Icons (duotone weight) |
-| **Fonts** | Geist Sans & Geist Mono |
+| **Frontend** | React 19, TypeScript, Vite 7, TailwindCSS 4, ShadCN UI, Radix UI |
+| **Backend** | Convex (real-time database + serverless functions) |
+| **Auth** | Convex Auth (Google OAuth, Email/Password) |
+| **AI** | OpenAI GPT-4o-mini with function calling |
 | **Testing** | Vitest, React Testing Library, Playwright |
-| **AI** | OpenAI GPT-4o-mini (AI assistant) |
+| **Icons** | Phosphor Icons (duotone) |
+| **Fonts** | Geist Sans & Geist Mono |
 
----
+<br />
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 open-event/
-├── convex/                 # Backend (Convex functions)
-│   ├── schema.ts          # Database schema
-│   ├── events.ts          # Event queries & mutations
-│   ├── vendors.ts         # Vendor management
-│   ├── sponsors.ts        # Sponsor management
-│   ├── eventVendors.ts    # Event-vendor relationships
-│   ├── eventSponsors.ts   # Event-sponsor relationships
-│   ├── eventTasks.ts      # Task management
-│   ├── budgetItems.ts     # Budget tracking
-│   ├── inquiries.ts       # Communication system
-│   ├── eventApplications.ts # Application workflow
-│   ├── auth.ts            # Auth configuration
-│   └── lib/
-│       ├── auth.ts        # Auth helpers
-│       └── agent/         # AI Agent System
-│           ├── types.ts   # Tool & message types
-│           ├── tools.ts   # Tool definitions (13 tools)
-│           └── handlers.ts # Tool execution handlers
+├── 📂 convex/                    # Backend
+│   ├── schema.ts                # Database schema
+│   ├── events.ts                # Event management
+│   ├── vendors.ts               # Vendor operations  
+│   ├── sponsors.ts              # Sponsor operations
+│   ├── eventTasks.ts            # Task management
+│   ├── budgetItems.ts           # Budget tracking
+│   ├── auth.ts                  # Authentication
+│   └── lib/agent/               # AI Agent System
+│       ├── tools.ts             # 13 AI tools
+│       └── handlers.ts          # Tool execution
 │
-├── src/
-│   ├── components/
-│   │   ├── ui/            # ShadCN UI components
-│   │   ├── app/           # App shell, sidebar, topbar
-│   │   ├── landing/       # Landing page sections (9 components)
-│   │   ├── admin/         # Admin components
-│   │   ├── agentic/       # AI chat assistant
-│   │   ├── chat/          # Chat UI components
-│   │   ├── auth/          # Authentication components
-│   │   ├── demo/          # Demo modal and scenes
-│   │   └── onboarding/    # User onboarding flow
+├── 📂 src/
+│   ├── 📂 components/
+│   │   ├── ui/                  # ShadCN components
+│   │   ├── app/                 # App shell & navigation
+│   │   ├── agentic/             # AI chat interface
+│   │   ├── landing/             # Marketing pages
+│   │   └── admin/               # Admin panel
 │   │
-│   ├── pages/
-│   │   ├── dashboard/     # Dashboard pages
-│   │   ├── auth/          # Authentication pages
-│   │   ├── admin/         # Admin pages
-│   │   └── public/        # Public pages
+│   ├── 📂 pages/
+│   │   ├── dashboard/           # Main app pages
+│   │   ├── admin/               # Admin pages
+│   │   ├── auth/                # Auth pages
+│   │   ├── onboarding/          # User onboarding
+│   │   └── public/              # Public pages
 │   │
-│   ├── hooks/             # Custom React hooks
-│   ├── lib/               # Utility functions
-│   └── types/             # TypeScript types
+│   ├── 📂 hooks/                # Custom hooks
+│   ├── 📂 lib/                  # Utilities
+│   └── 📂 types/                # TypeScript types
 │
-├── e2e/                   # End-to-end tests (Playwright)
-└── public/                # Static assets
+└── 📂 e2e/                      # E2E tests
 ```
 
----
+<br />
 
-## Scripts
+## 🤖 AI Agent System
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start frontend development server |
-| `npm run dev:backend` | Start Convex development server |
-| `npm run dev:all` | Start both frontend and backend |
-| `npm run build` | Build for production |
-| `npm run lint` | Run ESLint |
-| `npm run test` | Run unit tests (watch mode) |
-| `npm run test:run` | Run unit tests once |
-| `npm run test:coverage` | Run tests with coverage report |
-| `npm run test:e2e` | Run end-to-end tests |
-
----
-
-## Environment Variables
-
-See [`.env.example`](.env.example) for all available configuration options.
-
-### Required Variables
-
-| Variable | Description |
-|----------|-------------|
-| `VITE_CONVEX_URL` | Your Convex deployment URL |
-
-### Optional Variables (Convex Dashboard)
-
-| Variable | Description |
-|----------|-------------|
-| `SITE_URL` | Your production URL (for OAuth redirects) |
-| `AUTH_GOOGLE_ID` | Google OAuth client ID |
-| `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
-| `OPENAI_API_KEY` | OpenAI API key (for AI features) |
-
----
-
-## Database Schema
+The AI assistant uses **OpenAI function calling** for a truly agentic experience:
 
 ```
-┌──────────────┐     ┌───────────────┐     ┌────────────────┐
-│    users     │────▶│    events     │◀────│  eventTasks    │
-└──────────────┘     └───────────────┘     └────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│  User: "Create a hackathon for 100 people in March"        │
+└─────────────────────────────────────────────────────────────┘
                             │
-         ┌──────────────────┼──────────────────┐
-         │                  │                  │
-         ▼                  ▼                  ▼
-┌──────────────┐   ┌───────────────┐   ┌───────────────┐
-│ eventVendors │   │eventSponsors  │   │  budgetItems  │
-└──────────────┘   └───────────────┘   └───────────────┘
-         │                  │
-         ▼                  ▼
-┌──────────────┐   ┌───────────────┐
-│   vendors    │   │   sponsors    │
-└──────────────┘   └───────────────┘
+                            ▼
+              ┌─────────────────────────┐
+              │   🧠 AI Agent           │
+              │   (GPT-4o-mini)         │
+              │                         │
+              │   Analyzes intent →     │
+              │   Selects tools →       │
+              │   Prepares action       │
+              └─────────────────────────┘
+                            │
+                            ▼
+              ┌─────────────────────────┐
+              │   ⚡ Tool Execution     │
+              │                         │
+              │   createEvent {         │
+              │     title: "Hackathon"  │
+              │     attendees: 100      │
+              │     date: "March 2025"  │
+              │   }                     │
+              └─────────────────────────┘
+                            │
+                            ▼
+              ┌─────────────────────────┐
+              │   ✅ Confirmation       │
+              │                         │
+              │   [Create Event]        │
+              │   [Cancel]              │
+              └─────────────────────────┘
 ```
 
-### Core Tables
+### Available Tools (13)
 
-| Table | Description |
-|-------|-------------|
-| `users` | User accounts with roles (organizer, admin, superadmin) |
-| `events` | Events with status workflow (draft → planning → active → completed) |
-| `vendors` | Vendor profiles and verification status |
-| `sponsors` | Sponsor profiles and offerings |
-| `eventVendors` | Event-vendor relationships |
-| `eventSponsors` | Event-sponsor relationships |
-| `eventTasks` | Task management for events |
-| `budgetItems` | Budget tracking and expenses |
-| `inquiries` | Communication between organizers and vendors/sponsors |
-| `eventApplications` | Vendor/sponsor applications to events |
+| Category | Tools |
+|----------|-------|
+| **Events** | `createEvent` · `updateEvent` · `getEventDetails` · `getUpcomingEvents` |
+| **Vendors** | `searchVendors` · `addVendorToEvent` · `getRecommendedVendors` · `getEventVendors` |
+| **Sponsors** | `searchSponsors` · `addSponsorToEvent` · `getRecommendedSponsors` · `getEventSponsors` |
+| **Profile** | `getUserProfile` |
 
----
+<br />
 
-## AI Agent System
-
-The AI assistant uses OpenAI's function calling to provide a truly **agentic experience**. It can perform real actions on your behalf, not just answer questions.
-
-### Available Tools (13 Tools)
-
-#### Event Management
-| Tool | Description | Confirmation |
-|------|-------------|--------------|
-| `createEvent` | Create a new event with full details | Required |
-| `updateEvent` | Update event details | Required |
-| `getEventDetails` | Get event information | Auto |
-| `getUpcomingEvents` | List upcoming events | Auto |
-
-#### Vendor Management
-| Tool | Description | Confirmation |
-|------|-------------|--------------|
-| `searchVendors` | Search for vendors by category | Auto |
-| `addVendorToEvent` | Add vendor to event (creates inquiry) | Required |
-| `getRecommendedVendors` | Get AI-matched vendor recommendations | Auto |
-| `getEventVendors` | List vendors linked to an event | Auto |
-
-#### Sponsor Management
-| Tool | Description | Confirmation |
-|------|-------------|--------------|
-| `searchSponsors` | Search for sponsors by industry | Auto |
-| `addSponsorToEvent` | Add sponsor to event (creates inquiry) | Required |
-| `getRecommendedSponsors` | Get AI-matched sponsor recommendations | Auto |
-| `getEventSponsors` | List sponsors linked to an event | Auto |
-
-#### Profile
-| Tool | Description | Confirmation |
-|------|-------------|--------------|
-| `getUserProfile` | Get user preferences for personalization | Auto |
-
-### Intelligent Matching
-
-The agent includes smart recommendation tools that score vendors and sponsors based on:
-- **Vendors**: Rating, verification status, price range vs. event budget
-- **Sponsors**: Verification, target event types, budget alignment with event size
-
-### How It Works
+## 📊 Database Schema
 
 ```
-User Message → AI Agent → Tool Selection → Execution → Response
-                  ↓
-         ┌───────────────────┐
-         │ OpenAI GPT-4o-mini │
-         │ with Function      │
-         │ Calling            │
-         └───────────────────┘
-                  ↓
-         Tool requires confirmation?
-                  ↓
-         Yes → Show confirmation dialog
-         No  → Execute immediately
-                  ↓
-         Persist to database → Return results to user
+┌─────────────┐       ┌─────────────┐       ┌─────────────┐
+│   users     │──────▶│   events    │◀──────│  eventTasks │
+└─────────────┘       └─────────────┘       └─────────────┘
+                             │
+           ┌─────────────────┼─────────────────┐
+           │                 │                 │
+           ▼                 ▼                 ▼
+   ┌─────────────┐   ┌─────────────┐   ┌─────────────┐
+   │eventVendors │   │eventSponsors│   │ budgetItems │
+   └─────────────┘   └─────────────┘   └─────────────┘
+           │                 │
+           ▼                 ▼
+   ┌─────────────┐   ┌─────────────┐
+   │  vendors    │   │  sponsors   │
+   └─────────────┘   └─────────────┘
 ```
 
-### Security
+<br />
 
-All agent actions are:
-- **Authenticated**: Requires valid user session
-- **Authorized**: Verifies resource ownership before modifications
-- **Validated**: Input validation and status whitelisting
-- **Auditable**: All changes are timestamped
-
----
-
-## Testing
-
-The project includes comprehensive testing:
+## 🧪 Testing
 
 ```bash
-# Run all unit tests (114 tests)
-npm run test:run
-
-# Watch mode
+# Unit tests (watch mode)
 npm run test
+
+# Run once
+npm run test:run
 
 # With coverage
 npm run test:coverage
 
-# End-to-end tests
+# E2E tests
 npm run test:e2e
 ```
 
-### Test Coverage
+<br />
 
-| Category | Tests |
-|----------|-------|
-| Agent Tools Config | 18 |
-| ToolExecutionCard | 11 |
-| ToolConfirmationDialog | 19 |
-| SearchResultsCard | 21 |
-| Other Components | 45+ |
+## 📜 Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start frontend dev server |
+| `npm run dev:backend` | Start Convex backend |
+| `npm run dev:all` | Start both (recommended) |
+| `npm run build` | Production build |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run tests |
+
+<br />
+
+## 🗺️ Roadmap
+
+- [x] 🤖 AI Event Assistant
+- [x] 📊 Event Dashboard
+- [x] ✅ Task Management
+- [x] 💰 Budget Tracking
+- [x] 🔍 Vendor/Sponsor Discovery
+- [x] 📱 PWA Support
+- [x] 🌙 Dark Mode
+- [x] 🔐 Role-based Access
+- [ ] 📧 Email Notifications
+- [ ] 📅 Calendar Integration
+- [ ] 📲 Native Mobile App
+- [ ] 📋 Event Templates
+- [ ] 📈 Advanced Analytics
+
+<br />
+
+## 🤝 Contributing
+
+We love contributions! Here's how to get started:
+
+```bash
+# 1. Fork & clone
+git clone https://github.com/YOUR_USERNAME/open-event.git
+
+# 2. Create a branch
+git checkout -b feature/amazing-feature
+
+# 3. Make changes & test
+npm run test:run && npm run lint
+
+# 4. Commit & push
+git commit -m "feat: add amazing feature"
+git push origin feature/amazing-feature
+
+# 5. Open a Pull Request 🎉
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+<br />
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+<br />
+
+## 🙏 Acknowledgments
+
+<table>
+<tr>
+<td align="center">
+<a href="https://convex.dev">
+<img src="https://avatars.githubusercontent.com/u/108468352?s=200&v=4" width="40" style="border-radius: 8px;" />
+<br /><sub><b>Convex</b></sub>
+</a>
+</td>
+<td align="center">
+<a href="https://ui.shadcn.com">
+<img src="https://avatars.githubusercontent.com/u/139895814?s=200&v=4" width="40" style="border-radius: 8px;" />
+<br /><sub><b>ShadCN</b></sub>
+</a>
+</td>
+<td align="center">
+<a href="https://phosphoricons.com">
+<img src="https://phosphoricons.com/favicon-512.png" width="40" style="border-radius: 8px;" />
+<br /><sub><b>Phosphor</b></sub>
+</a>
+</td>
+<td align="center">
+<a href="https://vercel.com/font">
+<img src="https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.ico" width="40" style="border-radius: 8px;" />
+<br /><sub><b>Geist Font</b></sub>
+</a>
+</td>
+<td align="center">
+<a href="https://openai.com">
+<img src="https://seeklogo.com/images/O/openai-logo-8B9FEDE59D-seeklogo.com.png" width="40" style="border-radius: 8px;" />
+<br /><sub><b>OpenAI</b></sub>
+</a>
+</td>
+</tr>
+</table>
 
 ---
 
-## Roadmap
+<div align="center">
 
-- [x] AI Event Creation Assistant
-- [x] Event Dashboard with Analytics
-- [x] Vendor Management System
-- [x] Sponsor Management System
-- [x] Task Management (Kanban)
-- [x] Budget Tracking
-- [x] Inquiry System
-- [x] Application Workflow
-- [x] Role-based Access Control
-- [x] Dark Mode Support
-- [ ] Email Notifications
-- [ ] Calendar Integration
-- [ ] Mobile App
-- [ ] Event Templates
-- [ ] Advanced Analytics
+**Researched & designed by [Hazli](https://github.com/hazlijohar95) · Built by [Azmir](https://github.com/azmir32)**
 
----
+<br />
 
-## Contributing
+<a href="https://github.com/hazlijohar95/open-event/stargazers">⭐ Star us on GitHub</a> — it helps!
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+<br />
 
-### Development Workflow
+[![Twitter Follow](https://img.shields.io/twitter/follow/openevent?style=social)](https://twitter.com/openevent)
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes
-4. Run tests (`npm run test:run && npm run lint`)
-5. Commit your changes (`git commit -m 'Add amazing feature'`)
-6. Push to your fork (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
----
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## Acknowledgments
-
-- [Convex](https://convex.dev) - Real-time backend platform
-- [ShadCN UI](https://ui.shadcn.com) - UI component library
-- [Phosphor Icons](https://phosphoricons.com) - Icon library
-- [Geist](https://vercel.com/font) - Font family
-- [OpenAI](https://openai.com) - AI capabilities
-
----
-
-<p align="center">
-  Researched & designed by <a href="https://github.com/hazlijohar95">Hazli</a> · Built by <a href="https://github.com/azmir32">Azmir</a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/hazlijohar95/open-event/issues">Report Bug</a>
-  •
-  <a href="https://github.com/hazlijohar95/open-event/issues">Request Feature</a>
-</p>
+</div>

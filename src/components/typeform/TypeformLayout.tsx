@@ -72,7 +72,7 @@ export function TypeformLayout({
   return (
     <div
       className={cn(
-        'min-h-screen flex flex-col bg-background',
+        'min-h-dvh flex flex-col bg-background',
         'typeform-layout',
         className
       )}
@@ -84,16 +84,16 @@ export function TypeformLayout({
 
       {/* Header */}
       {showHeader && (
-        <header className="flex items-center justify-between px-6 py-4 pt-6">
+        <header className="sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 pt-5 bg-background/80 backdrop-blur-sm">
           <Link
             to={brandLink}
-            className="font-mono text-lg font-semibold hover:opacity-80 transition-opacity"
+            className="font-mono text-base sm:text-lg font-semibold hover:opacity-80 transition-opacity"
           >
             {brandText}
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:inline">
-              {currentStep} of {totalSteps}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <span className="text-xs sm:text-sm text-muted-foreground font-medium tabular-nums">
+              {currentStep}/{totalSteps}
             </span>
             <ThemeToggle />
           </div>
@@ -101,14 +101,14 @@ export function TypeformLayout({
       )}
 
       {/* Main content - centered vertically and horizontally */}
-      <main className="flex-1 flex items-center justify-center px-6 py-8 sm:py-12">
-        <div className="w-full max-w-2xl typeform-content">{children}</div>
+      <main className="flex-1 flex items-start sm:items-center justify-center px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+        <div className="w-full max-w-xl lg:max-w-2xl typeform-content">{children}</div>
       </main>
 
       {/* Decorative Background - subtle gradient */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-primary/5 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-muted/20 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.1),transparent)]" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-linear-to-t from-muted/10 to-transparent" />
       </div>
     </div>
   )

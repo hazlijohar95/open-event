@@ -883,48 +883,13 @@ body {
    One-question-at-a-time with smooth transitions
    ================================================ */
 
-/* Typeform Layout */
+/* CSS Variables for typeform animations */
 .typeform-layout {
   --typeform-slide-duration: 400ms;
   --typeform-fade-duration: 200ms;
 }
 
-/* Question Typography - Large, legible, conversational */
-.typeform-question {
-  font-size: clamp(1.5rem, 4vw, 2.5rem);
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
-  color: var(--foreground);
-}
-
-/* Description Text */
-.typeform-description {
-  font-size: clamp(1rem, 2vw, 1.25rem);
-  color: oklch(var(--muted-foreground));
-  line-height: 1.5;
-}
-
-/* Typeform Input - Large, minimal, underline style */
-.typeform-input {
-  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
-  padding: 1rem 0;
-  border: none;
-  border-bottom: 2px solid var(--border);
-  background: transparent;
-  border-radius: 0;
-  transition: border-color var(--duration-normal) var(--ease-out);
-}
-
-.typeform-input:focus {
-  border-bottom-color: var(--primary);
-}
-
-.typeform-input::placeholder {
-  color: oklch(var(--muted-foreground) / 0.5);
-}
-
-/* Transition Container */
+/* Transition Container - handles step-to-step animations */
 .typeform-transition-container {
   transform-origin: center center;
 }
@@ -933,16 +898,8 @@ body {
   animation: typeform-slide-in var(--typeform-slide-duration) var(--ease-out) forwards;
 }
 
-.typeform-transition-container.typeform-exiting {
-  animation: typeform-slide-out var(--typeform-fade-duration) ease-out forwards;
-}
-
 .typeform-transition-container.typeform-reverse.typeform-entering {
   animation: typeform-slide-in-reverse var(--typeform-slide-duration) var(--ease-out) forwards;
-}
-
-.typeform-transition-container.typeform-reverse.typeform-exiting {
-  animation: typeform-slide-out-reverse var(--typeform-fade-duration) ease-out forwards;
 }
 
 @keyframes typeform-slide-in {
@@ -953,17 +910,6 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes typeform-slide-out {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-20px);
   }
 }
 
@@ -978,18 +924,7 @@ body {
   }
 }
 
-@keyframes typeform-slide-out-reverse {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-}
-
-/* Typeform Content Area */
+/* Content area entrance animation */
 .typeform-content {
   animation: typeform-content-enter 500ms var(--ease-out);
 }
@@ -1003,73 +938,6 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Typeform Option Cards - Enhanced for fullscreen */
-.typeform-option-card {
-  position: relative;
-  width: 100%;
-  padding: 1.25rem;
-  border-radius: 0.75rem;
-  border: 2px solid var(--border);
-  background: var(--card);
-  text-align: left;
-  cursor: pointer;
-  transition: all var(--duration-normal) var(--ease-out);
-}
-
-.typeform-option-card:hover {
-  border-color: oklch(var(--primary) / 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px -4px oklch(0 0 0 / 0.1);
-}
-
-.typeform-option-card:active {
-  transform: scale(0.98);
-}
-
-.typeform-option-card.selected {
-  border-color: var(--primary);
-  background: oklch(var(--primary) / 0.05);
-}
-
-.dark .typeform-option-card:hover {
-  box-shadow: 0 4px 20px -4px oklch(0 0 0 / 0.3);
-}
-
-/* Staggered entrance for option cards */
-.typeform-option-card {
-  opacity: 0;
-  animation: typeform-option-enter 400ms var(--ease-spring) forwards;
-}
-
-@keyframes typeform-option-enter {
-  from {
-    opacity: 0;
-    transform: translateY(20px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Custom scrollbar for typeform content */
-.typeform-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-
-.typeform-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.typeform-scroll::-webkit-scrollbar-thumb {
-  background: oklch(var(--muted-foreground) / 0.2);
-  border-radius: 2px;
-}
-
-.typeform-scroll::-webkit-scrollbar-thumb:hover {
-  background: oklch(var(--muted-foreground) / 0.3);
 }
 
 /* ================================================

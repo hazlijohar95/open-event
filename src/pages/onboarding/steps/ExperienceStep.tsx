@@ -42,14 +42,14 @@ export function ExperienceStep({ onNext, onBack, currentData }: StepProps) {
   )
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10">
       <TypeformQuestion
         stepNumber={6}
         question="How experienced are you with event management?"
         description="This helps us customize your dashboard"
       />
 
-      <div className="space-y-3">
+      <div className="space-y-2.5 sm:space-y-3">
         {levels.map((level, index) => (
           <OptionCard
             key={level.value}
@@ -58,7 +58,7 @@ export function ExperienceStep({ onNext, onBack, currentData }: StepProps) {
             icon={level.icon}
             isSelected={selected === level.value}
             onClick={() => setSelected(level.value)}
-            delay={index * 100}
+            delay={index * 75}
           />
         ))}
       </div>

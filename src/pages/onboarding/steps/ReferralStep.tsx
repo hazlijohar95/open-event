@@ -24,14 +24,14 @@ export function ReferralStep({ onNext, onBack, onSkip, currentData }: StepProps)
   const [selected, setSelected] = useState<string | undefined>(currentData.referralSource)
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10">
       <TypeformQuestion
         stepNumber={7}
-        question="One last thing - how did you discover Open-Event?"
+        question="One last thing — how did you discover Open Event?"
         description="This is optional, but helps us a lot!"
       />
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         {sources.map((source, index) => (
           <OptionCard
             key={source.value}
@@ -39,12 +39,13 @@ export function ReferralStep({ onNext, onBack, onSkip, currentData }: StepProps)
             icon={source.icon}
             isSelected={selected === source.value}
             onClick={() => setSelected(source.value)}
-            delay={index * 75}
+            delay={index * 50}
+            compact
           />
         ))}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         <TypeformNavigation
           onPrevious={onBack}
           onNext={() => onNext({ referralSource: selected })}
@@ -56,7 +57,7 @@ export function ReferralStep({ onNext, onBack, onSkip, currentData }: StepProps)
           <button
             type="button"
             onClick={onSkip}
-            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="w-full text-xs sm:text-sm text-muted-foreground/70 hover:text-foreground transition-colors py-2"
           >
             Skip onboarding entirely
           </button>

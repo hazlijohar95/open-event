@@ -13,7 +13,7 @@ export function EventTypesStep({ onNext, onBack, currentData }: StepProps) {
   const [selected, setSelected] = useState<string[]>(currentData.eventTypes || [])
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10">
       <TypeformQuestion
         stepNumber={3}
         question="What type of events do you typically organize?"

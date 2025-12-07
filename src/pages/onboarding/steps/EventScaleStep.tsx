@@ -40,14 +40,14 @@ export function EventScaleStep({ onNext, onBack, currentData }: StepProps) {
   const [selected, setSelected] = useState<EventScale | undefined>(currentData.eventScale)
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10">
       <TypeformQuestion
         stepNumber={4}
         question="How big are your typical events?"
         description="This helps us suggest the right features"
       />
 
-      <div className="space-y-3">
+      <div className="space-y-2.5 sm:space-y-3">
         {scales.map((scale, index) => (
           <OptionCard
             key={scale.value}
@@ -56,7 +56,7 @@ export function EventScaleStep({ onNext, onBack, currentData }: StepProps) {
             icon={scale.icon}
             isSelected={selected === scale.value}
             onClick={() => setSelected(scale.value)}
-            delay={index * 100}
+            delay={index * 75}
           />
         ))}
       </div>

@@ -40,14 +40,14 @@ export function RoleStep({ onNext, currentData }: StepProps) {
   const [selected, setSelected] = useState<UserRole | undefined>(currentData.role)
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10">
       <TypeformQuestion
         stepNumber={1}
         question="Let's personalize your experience!"
-        description="First, tell me about your role:"
+        description="First, tell us about your role:"
       />
 
-      <div className="space-y-3">
+      <div className="space-y-2.5 sm:space-y-3">
         {roles.map((role, index) => (
           <OptionCard
             key={role.value}
@@ -56,7 +56,7 @@ export function RoleStep({ onNext, currentData }: StepProps) {
             icon={role.icon}
             isSelected={selected === role.value}
             onClick={() => setSelected(role.value)}
-            delay={index * 100}
+            delay={index * 75}
           />
         ))}
       </div>

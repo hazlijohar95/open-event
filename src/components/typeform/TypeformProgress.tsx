@@ -10,32 +10,22 @@ export interface TypeformProgressProps {
 export function TypeformProgress({
   current,
   total,
-  showPercentage = false,
   className,
 }: TypeformProgressProps) {
   const percentage = Math.round((current / total) * 100)
 
   return (
-    <div className={cn('w-full', className)}>
-      {/* Progress bar container */}
-      <div className="h-1 bg-muted/50 w-full">
+    <div className={cn('w-full bg-background/80 backdrop-blur-sm', className)}>
+      {/* Progress bar container - sleek and minimal */}
+      <div className="h-[3px] bg-muted/30 w-full overflow-hidden">
         <div
-          className="h-full bg-primary transition-all duration-500 ease-out"
+          className={cn(
+            'h-full transition-all duration-700 ease-out',
+            'bg-linear-to-r from-primary via-primary to-primary/80'
+          )}
           style={{ width: `${percentage}%` }}
         />
       </div>
-
-      {/* Optional percentage indicator */}
-      {showPercentage && (
-        <div className="flex justify-between items-center mt-3 px-1">
-          <span className="text-xs text-muted-foreground font-medium">
-            {current} of {total}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {percentage}% complete
-          </span>
-        </div>
-      )}
     </div>
   )
 }

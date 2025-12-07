@@ -11,16 +11,21 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
  */
 export function AuthRedirect() {
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth()
+  
+  // Always query user data when authenticated
   const user = useQuery(
     api.queries.auth.getCurrentUser,
     isAuthenticated ? {} : 'skip'
   )
 
-  // Only check organizer profile for organizer role users
-  const isOrganizer = user && (user.role === 'organizer' || !user.role)
+  // Determine role for profile query
+  const role = user?.role || 'organizer'
+  const isOrganizer = role === 'organizer'
+  
+  // Always query profile for organizers - we need this to decide the redirect
   const organizerProfile = useQuery(
     api.organizerProfiles.getMyProfile,
-    isAuthenticated && isOrganizer ? {} : 'skip'
+    isAuthenticated && user && isOrganizer ? {} : 'skip'
   )
 
   // Still loading auth
@@ -48,16 +53,13 @@ export function AuthRedirect() {
     return <Navigate to="/sign-in" replace />
   }
 
-  // Route based on role
-  const role = user.role || 'organizer'
-
-  // Admin/Superadmin → Admin Panel
+  // Admin/Superadmin → Admin Panel (no onboarding needed)
   if (role === 'admin' || role === 'superadmin') {
     return <Navigate to="/admin" replace />
   }
 
   // Organizer → Check if onboarding needed
-  // Still loading profile
+  // Still loading profile - wait for it
   if (organizerProfile === undefined) {
     return <LoadingSpinner message="Setting up your workspace..." fullScreen />
   }
