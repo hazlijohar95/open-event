@@ -38,10 +38,28 @@ export const list = query({
 })
 
 // Get a single sponsor by ID
+// Only returns approved sponsors to unauthenticated users
+// Admins can view all sponsors including pending/rejected
 export const get = query({
   args: { id: v.id('sponsors') },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id)
+    const sponsor = await ctx.db.get(args.id)
+    if (!sponsor) return null
+
+    // Always allow viewing approved sponsors
+    if (sponsor.status === 'approved') {
+      return sponsor
+    }
+
+    // For non-approved sponsors, require admin role
+    const { getCurrentUser, isAdminRole } = await import('./lib/auth')
+    const user = await getCurrentUser(ctx)
+    if (!user || !isAdminRole(user.role)) {
+      // Return null for unauthorized access to non-approved sponsors
+      return null
+    }
+
+    return sponsor
   },
 })
 
@@ -91,6 +109,7 @@ export const getByEvent = query({
 })
 
 // Create a new sponsor (for sponsor registration - future feature)
+// Requires authentication - creates sponsor in pending status for admin review
 export const create = mutation({
   args: {
     name: v.string(),
@@ -106,10 +125,57 @@ export const create = mutation({
     website: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Require authentication for sponsor creation
+    const { getCurrentUser } = await import('./lib/auth')
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required to register as a sponsor')
+    }
+
+    // Input validation - prevent excessively long strings
+    if (args.name.length > 200) {
+      throw new Error('Sponsor name must be 200 characters or less')
+    }
+    if (args.description && args.description.length > 5000) {
+      throw new Error('Description must be 5000 characters or less')
+    }
+    if (args.industry.length > 100) {
+      throw new Error('Industry must be 100 characters or less')
+    }
+
+    // Validate budget range
+    if (args.budgetMin !== undefined && args.budgetMin < 0) {
+      throw new Error('Minimum budget cannot be negative')
+    }
+    if (args.budgetMax !== undefined && args.budgetMax < 0) {
+      throw new Error('Maximum budget cannot be negative')
+    }
+    if (args.budgetMin !== undefined && args.budgetMax !== undefined && args.budgetMin > args.budgetMax) {
+      throw new Error('Minimum budget cannot exceed maximum budget')
+    }
+
+    // Validate email format if provided
+    if (args.contactEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(args.contactEmail)) {
+        throw new Error('Invalid email format')
+      }
+    }
+
+    // Validate website URL format if provided
+    if (args.website) {
+      try {
+        new URL(args.website)
+      } catch {
+        throw new Error('Invalid website URL format')
+      }
+    }
+
     return await ctx.db.insert('sponsors', {
       ...args,
       verified: false,
       status: 'pending',
+      // Note: Consider adding submittedBy field to schema to track who submitted
       createdAt: Date.now(),
     })
   },

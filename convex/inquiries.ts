@@ -323,6 +323,20 @@ export const send = mutation({
       }
     }
 
+    // Input validation - string length limits
+    if (args.subject.length > 200) {
+      throw new Error('Subject must be 200 characters or less')
+    }
+    if (args.subject.trim().length === 0) {
+      throw new Error('Subject cannot be empty')
+    }
+    if (args.message.length > 10000) {
+      throw new Error('Message must be 10000 characters or less')
+    }
+    if (args.message.trim().length === 0) {
+      throw new Error('Message cannot be empty')
+    }
+
     const fromType = isAdmin ? 'admin' : 'organizer'
 
     return await ctx.db.insert('inquiries', {
@@ -331,8 +345,8 @@ export const send = mutation({
       toType: args.toType,
       toId: args.toId,
       eventId: args.eventId,
-      subject: args.subject,
-      message: args.message,
+      subject: args.subject.trim(),
+      message: args.message.trim(),
       status: 'sent',
       createdAt: Date.now(),
     })
@@ -377,8 +391,16 @@ export const respond = mutation({
       throw new Error('Inquiry not found')
     }
 
+    // Input validation - string length limits
+    if (args.response.length > 10000) {
+      throw new Error('Response must be 10000 characters or less')
+    }
+    if (args.response.trim().length === 0) {
+      throw new Error('Response cannot be empty')
+    }
+
     await ctx.db.patch(args.inquiryId, {
-      response: args.response,
+      response: args.response.trim(),
       respondedAt: Date.now(),
       status: 'replied',
       updatedAt: Date.now(),

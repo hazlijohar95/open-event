@@ -105,6 +105,23 @@ export const create = mutation({
       throw new Error('Authentication required')
     }
 
+    // Input validation - string length limits
+    if (args.title.length > 200) {
+      throw new Error('Event title must be 200 characters or less')
+    }
+    if (args.title.trim().length === 0) {
+      throw new Error('Event title cannot be empty')
+    }
+    if (args.description && args.description.length > 10000) {
+      throw new Error('Description must be 10000 characters or less')
+    }
+    if (args.venueName && args.venueName.length > 200) {
+      throw new Error('Venue name must be 200 characters or less')
+    }
+    if (args.venueAddress && args.venueAddress.length > 500) {
+      throw new Error('Venue address must be 500 characters or less')
+    }
+
     // Validate budget/attendees are non-negative
     if (args.budget !== undefined && args.budget < 0) {
       throw new Error('Budget cannot be negative')
@@ -113,16 +130,27 @@ export const create = mutation({
       throw new Error('Expected attendees cannot be negative')
     }
 
+    // Validate date is not too far in the past
+    const oneYearAgo = Date.now() - (365 * 24 * 60 * 60 * 1000)
+    if (args.startDate < oneYearAgo) {
+      throw new Error('Event date cannot be more than one year in the past')
+    }
+
+    // Validate end date is after start date if provided
+    if (args.endDate && args.endDate < args.startDate) {
+      throw new Error('End date must be after start date')
+    }
+
     return await ctx.db.insert('events', {
       organizerId: user._id, // Always use current user's ID
-      title: args.title,
+      title: args.title.trim(),
       startDate: args.startDate,
-      description: args.description,
+      description: args.description?.trim(),
       eventType: args.eventType,
       status: args.status ?? 'draft',
       locationType: args.locationType,
-      venueName: args.venueName,
-      venueAddress: args.venueAddress,
+      venueName: args.venueName?.trim(),
+      venueAddress: args.venueAddress?.trim(),
       virtualPlatform: args.virtualPlatform,
       expectedAttendees: args.expectedAttendees,
       budget: args.budget,
@@ -181,6 +209,25 @@ export const update = mutation({
     // Only owner or superadmin can update
     if (user.role !== 'superadmin' && event.organizerId !== user._id) {
       throw new Error('Access denied - you can only update your own events')
+    }
+
+    // Input validation - string length limits
+    if (args.title !== undefined) {
+      if (args.title.length > 200) {
+        throw new Error('Event title must be 200 characters or less')
+      }
+      if (args.title.trim().length === 0) {
+        throw new Error('Event title cannot be empty')
+      }
+    }
+    if (args.description !== undefined && args.description.length > 10000) {
+      throw new Error('Description must be 10000 characters or less')
+    }
+    if (args.venueName !== undefined && args.venueName.length > 200) {
+      throw new Error('Venue name must be 200 characters or less')
+    }
+    if (args.venueAddress !== undefined && args.venueAddress.length > 500) {
+      throw new Error('Venue address must be 500 characters or less')
     }
 
     // Validate budget/attendees are non-negative

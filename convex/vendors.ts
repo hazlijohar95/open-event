@@ -38,10 +38,28 @@ export const list = query({
 })
 
 // Get a single vendor by ID
+// Only returns approved vendors to unauthenticated users
+// Admins can view all vendors including pending/rejected
 export const get = query({
   args: { id: v.id('vendors') },
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.id)
+    const vendor = await ctx.db.get(args.id)
+    if (!vendor) return null
+
+    // Always allow viewing approved vendors
+    if (vendor.status === 'approved') {
+      return vendor
+    }
+
+    // For non-approved vendors, require admin role
+    const { getCurrentUser, isAdminRole } = await import('./lib/auth')
+    const user = await getCurrentUser(ctx)
+    if (!user || !isAdminRole(user.role)) {
+      // Return null for unauthorized access to non-approved vendors
+      return null
+    }
+
+    return vendor
   },
 })
 
@@ -91,6 +109,7 @@ export const getByEvent = query({
 })
 
 // Create a new vendor (for vendor registration - future feature)
+// Requires authentication - creates vendor in pending status for admin review
 export const create = mutation({
   args: {
     name: v.string(),
@@ -103,12 +122,48 @@ export const create = mutation({
     website: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Require authentication for vendor creation
+    const { getCurrentUser } = await import('./lib/auth')
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required to register as a vendor')
+    }
+
+    // Input validation - prevent excessively long strings
+    if (args.name.length > 200) {
+      throw new Error('Vendor name must be 200 characters or less')
+    }
+    if (args.description && args.description.length > 5000) {
+      throw new Error('Description must be 5000 characters or less')
+    }
+    if (args.category.length > 100) {
+      throw new Error('Category must be 100 characters or less')
+    }
+
+    // Validate email format if provided
+    if (args.contactEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(args.contactEmail)) {
+        throw new Error('Invalid email format')
+      }
+    }
+
+    // Validate website URL format if provided
+    if (args.website) {
+      try {
+        new URL(args.website)
+      } catch {
+        throw new Error('Invalid website URL format')
+      }
+    }
+
     return await ctx.db.insert('vendors', {
       ...args,
       rating: 0,
       reviewCount: 0,
       verified: false,
       status: 'pending',
+      // Note: Consider adding submittedBy field to schema to track who submitted
       createdAt: Date.now(),
     })
   },
