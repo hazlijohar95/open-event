@@ -4,11 +4,16 @@ import type { OnboardingState, OnboardingAnswers } from '@/types/onboarding'
 /** Total number of onboarding steps */
 const TOTAL_STEPS = 7
 
-const initialState: OnboardingState = {
+interface ExtendedOnboardingState extends OnboardingState {
+  direction: 'forward' | 'backward'
+}
+
+const initialState: ExtendedOnboardingState = {
   currentStep: 1,
   totalSteps: TOTAL_STEPS,
   answers: {},
   isComplete: false,
+  direction: 'forward',
 }
 
 /**
@@ -36,13 +41,14 @@ const initialState: OnboardingState = {
  * ```
  */
 export function useOnboarding() {
-  const [state, setState] = useState<OnboardingState>(initialState)
+  const [state, setState] = useState<ExtendedOnboardingState>(initialState)
 
   /** Jump to a specific step (clamped to valid range) */
   const goToStep = useCallback((step: number) => {
     setState((prev) => ({
       ...prev,
       currentStep: Math.max(1, Math.min(step, TOTAL_STEPS)),
+      direction: step > prev.currentStep ? 'forward' : 'backward',
     }))
   }, [])
 
@@ -57,6 +63,7 @@ export function useOnboarding() {
           ...prev,
           answers: newAnswers,
           isComplete: true,
+          direction: 'forward' as const,
         }
       }
 
@@ -64,6 +71,7 @@ export function useOnboarding() {
         ...prev,
         currentStep: nextStepNum,
         answers: newAnswers,
+        direction: 'forward' as const,
       }
     })
   }, [])
@@ -73,6 +81,7 @@ export function useOnboarding() {
     setState((prev) => ({
       ...prev,
       currentStep: Math.max(1, prev.currentStep - 1),
+      direction: 'backward' as const,
     }))
   }, [])
 

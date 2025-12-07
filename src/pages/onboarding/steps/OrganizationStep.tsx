@@ -1,15 +1,11 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { OnboardingChat, OptionCard } from '@/components/onboarding'
+import { TypeformQuestion, TypeformNavigation, TypeformInput } from '@/components/typeform'
+import { OptionCard } from '@/components/onboarding'
 import {
   Buildings,
   Heart,
   Bank,
   Users,
-  ArrowRight,
-  ArrowLeft,
 } from '@phosphor-icons/react'
 import type { StepProps, OrganizationType } from '@/types/onboarding'
 
@@ -27,26 +23,23 @@ export function OrganizationStep({ onNext, onBack, currentData }: StepProps) {
   const canContinue = name.trim().length > 0 && type
 
   return (
-    <div className="space-y-8">
-      <OnboardingChat
-        message="Great! Tell me about your organization."
-        subMessage="This helps us tailor the experience for you."
+    <div className="space-y-10">
+      <TypeformQuestion
+        stepNumber={2}
+        question="Tell me about your organization"
+        description="This helps us tailor the experience for you."
       />
 
-      <div className="space-y-6">
-        <div className="space-y-2 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <Label htmlFor="org-name">Organization Name</Label>
-          <Input
-            id="org-name"
-            placeholder="Acme Inc."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="text-base"
-          />
-        </div>
+      <div className="space-y-8">
+        <TypeformInput
+          placeholder="Your organization name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          autoFocus
+        />
 
         <div className="space-y-3">
-          <Label>Organization Type</Label>
+          <p className="text-sm font-medium text-muted-foreground mb-4">Organization Type</p>
           <div className="grid grid-cols-2 gap-3">
             {orgTypes.map((org, index) => (
               <OptionCard
@@ -62,21 +55,11 @@ export function OrganizationStep({ onNext, onBack, currentData }: StepProps) {
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
-          <ArrowLeft size={18} weight="duotone" className="mr-2" />
-          Back
-        </Button>
-        <Button
-          onClick={() => onNext({ organizationName: name, organizationType: type })}
-          disabled={!canContinue}
-          className="flex-1"
-          size="lg"
-        >
-          Continue
-          <ArrowRight size={18} weight="duotone" className="ml-2" />
-        </Button>
-      </div>
+      <TypeformNavigation
+        onPrevious={onBack}
+        onNext={() => onNext({ organizationName: name, organizationType: type })}
+        canGoNext={!!canContinue}
+      />
     </div>
   )
 }

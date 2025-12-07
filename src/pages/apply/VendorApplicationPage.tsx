@@ -1,38 +1,65 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useMutation, useQuery } from 'convex/react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import {
+  TypeformLayout,
+  TypeformTransition,
+  TypeformQuestion,
+  TypeformNavigation,
+  TypeformInput,
+  TypeformTextarea,
+  TypeformSelect,
+} from '@/components/typeform'
+import { OptionCard } from '@/components/onboarding'
+import {
   Storefront,
-  Buildings,
-  Phone,
-  Envelope,
   Globe,
   MapPin,
-  CaretLeft,
-  CaretRight,
-  CheckCircle,
-  CircleNotch,
-  Package,
   CurrencyDollar,
-  Info,
+  User,
+  Envelope,
+  Phone,
 } from '@phosphor-icons/react'
 
-type Step = 'company' | 'services' | 'experience' | 'contact'
+// Define all steps as individual questions (Typeform style)
+const STEPS = [
+  'companyName',
+  'description',
+  'website',
+  'category',
+  'services',
+  'location',
+  'priceRange',
+  'pastExperience',
+  'additionalNotes',
+  'referralSource',
+  'contactName',
+  'contactEmail',
+  'contactPhone',
+  'review',
+] as const
 
-const STEPS: { id: Step; label: string; icon: typeof Buildings }[] = [
-  { id: 'company', label: 'Company Info', icon: Buildings },
-  { id: 'services', label: 'Services', icon: Package },
-  { id: 'experience', label: 'Experience', icon: Storefront },
-  { id: 'contact', label: 'Contact', icon: Phone },
+const SERVICE_OPTIONS = [
+  'Setup & Installation',
+  'On-site Support',
+  'Equipment Rental',
+  'Design Services',
+  'Consultation',
+  'Full Service',
+  'Delivery',
+  'Cleanup',
+  'Custom Solutions',
 ]
 
 export function VendorApplicationPage() {
   const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState<Step>('company')
+  const [currentStepIndex, setCurrentStepIndex] = useState(0)
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const prevStepRef = useRef(0)
 
   // Form data
   const [formData, setFormData] = useState({
@@ -54,32 +81,45 @@ export function VendorApplicationPage() {
   const formOptions = useQuery(api.publicApplications.getFormOptions)
   const submitApplication = useMutation(api.publicApplications.submitVendorApplication)
 
+  const currentStep = STEPS[currentStepIndex]
+  const totalSteps = STEPS.length
+
+  // Track direction for animations
+  useEffect(() => {
+    if (currentStepIndex > prevStepRef.current) {
+      setDirection('forward')
+    } else if (currentStepIndex < prevStepRef.current) {
+      setDirection('backward')
+    }
+    prevStepRef.current = currentStepIndex
+  }, [currentStepIndex])
+
   const updateField = (field: keyof typeof formData, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     setError(null)
   }
 
-  const currentStepIndex = STEPS.findIndex((s) => s.id === currentStep)
-
-  const validateStep = (): boolean => {
+  const validateCurrentStep = (): boolean => {
     switch (currentStep) {
-      case 'company':
+      case 'companyName':
         if (!formData.companyName.trim()) {
           setError('Company name is required')
           return false
         }
         break
-      case 'services':
+      case 'category':
         if (!formData.category) {
           setError('Please select a category')
           return false
         }
         break
-      case 'contact': {
+      case 'contactName':
         if (!formData.contactName.trim()) {
           setError('Contact name is required')
           return false
         }
+        break
+      case 'contactEmail': {
         if (!formData.contactEmail.trim()) {
           setError('Email is required')
           return false
@@ -96,24 +136,28 @@ export function VendorApplicationPage() {
   }
 
   const nextStep = () => {
-    if (!validateStep()) return
+    if (!validateCurrentStep()) return
+    setError(null)
 
-    const nextIndex = currentStepIndex + 1
-    if (nextIndex < STEPS.length) {
-      setCurrentStep(STEPS[nextIndex].id)
+    if (currentStepIndex < STEPS.length - 1) {
+      setCurrentStepIndex((prev) => prev + 1)
     }
   }
 
   const prevStep = () => {
-    const prevIndex = currentStepIndex - 1
-    if (prevIndex >= 0) {
-      setCurrentStep(STEPS[prevIndex].id)
+    if (currentStepIndex > 0) {
+      setCurrentStepIndex((prev) => prev - 1)
     }
   }
 
-  const handleSubmit = async () => {
-    if (!validateStep()) return
+  const toggleService = (service: string) => {
+    const newServices = formData.services.includes(service)
+      ? formData.services.filter((s) => s !== service)
+      : [...formData.services, service]
+    updateField('services', newServices)
+  }
 
+  const handleSubmit = async () => {
     setIsSubmitting(true)
     setError(null)
 
@@ -142,452 +186,432 @@ export function VendorApplicationPage() {
     }
   }
 
-  const toggleService = (service: string) => {
-    const newServices = formData.services.includes(service)
-      ? formData.services.filter((s) => s !== service)
-      : [...formData.services, service]
-    updateField('services', newServices)
+  // Check if current step can proceed (for keyboard nav)
+  const canProceed = (): boolean => {
+    switch (currentStep) {
+      case 'companyName':
+        return formData.companyName.trim().length > 0
+      case 'category':
+        return !!formData.category
+      case 'contactName':
+        return formData.contactName.trim().length > 0
+      case 'contactEmail':
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)
+      default:
+        return true
+    }
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="font-mono text-lg font-bold">
-              <span className="text-foreground">open</span>
-              <span className="text-primary">-</span>
-              <span className="text-foreground">event</span>
-            </Link>
-            <Link
-              to="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+  const renderStep = () => {
+    switch (currentStep) {
+      case 'companyName':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={1}
+              question="What's your company name?"
+              description="This is how you'll appear to event organizers."
+            />
+            <TypeformInput
+              placeholder="Your company or business name"
+              value={formData.companyName}
+              onChange={(e) => updateField('companyName', e.target.value)}
+              error={error || undefined}
+              autoFocus
+            />
+            <TypeformNavigation
+              onNext={nextStep}
+              canGoNext={canProceed()}
+            />
+          </div>
+        )
+
+      case 'description':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={2}
+              question="Tell us about your company"
+              description="What makes your business unique? (Optional)"
+            />
+            <TypeformTextarea
+              placeholder="Share your story, expertise, and what sets you apart..."
+              value={formData.description}
+              onChange={(e) => updateField('description', e.target.value)}
+              rows={4}
+            />
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
+          </div>
+        )
+
+      case 'website':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={3}
+              question="Do you have a website?"
+              description="Help organizers learn more about you (Optional)"
             >
-              Back to Home
-            </Link>
+              <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                <Globe size={18} weight="duotone" />
+                <span className="text-sm">Include https://</span>
+              </div>
+            </TypeformQuestion>
+            <TypeformInput
+              type="url"
+              placeholder="https://yourcompany.com"
+              value={formData.website}
+              onChange={(e) => updateField('website', e.target.value)}
+            />
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
           </div>
-        </div>
-      </header>
+        )
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Page Title */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-orange-500/10 mb-4">
-            <Storefront size={24} weight="duotone" className="text-orange-500" />
-          </div>
-          <h1 className="text-3xl font-bold mb-2">Become a Vendor</h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Join our network of trusted event vendors. Fill out this application and our team
-            will review it within 2-3 business days.
-          </p>
-        </div>
-
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            {STEPS.map((step, index) => {
-              const isActive = step.id === currentStep
-              const isCompleted = index < currentStepIndex
-              const Icon = step.icon
-
-              return (
-                <div key={step.id} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={cn(
-                        'flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors',
-                        isActive && 'border-primary bg-primary text-primary-foreground',
-                        isCompleted && 'border-green-500 bg-green-500 text-white',
-                        !isActive && !isCompleted && 'border-border text-muted-foreground'
-                      )}
-                    >
-                      {isCompleted ? (
-                        <CheckCircle size={20} weight="bold" />
-                      ) : (
-                        <Icon size={18} weight={isActive ? 'fill' : 'duotone'} />
-                      )}
-                    </div>
-                    <span
-                      className={cn(
-                        'mt-2 text-xs font-medium hidden sm:block',
-                        isActive && 'text-foreground',
-                        !isActive && 'text-muted-foreground'
-                      )}
-                    >
-                      {step.label}
-                    </span>
-                  </div>
-                  {index < STEPS.length - 1 && (
-                    <div
-                      className={cn(
-                        'flex-1 h-0.5 mx-2',
-                        index < currentStepIndex ? 'bg-green-500' : 'bg-border'
-                      )}
-                    />
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Form Card */}
-        <div className="bg-card rounded-xl border border-border p-6 md:p-8">
-          {error && (
-            <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex items-start gap-2">
-              <Info size={18} weight="duotone" className="shrink-0 mt-0.5" />
-              {error}
+      case 'category':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={4}
+              question="What category best describes your services?"
+              description="Select your primary service category."
+            />
+            <div className="grid grid-cols-2 gap-3">
+              {formOptions?.vendorCategories.map((cat, index) => (
+                <OptionCard
+                  key={cat}
+                  label={cat.charAt(0).toUpperCase() + cat.slice(1).replace('_', ' ')}
+                  isSelected={formData.category === cat}
+                  onClick={() => updateField('category', cat)}
+                  delay={index * 50}
+                  icon={Storefront}
+                />
+              ))}
             </div>
-          )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+              canGoNext={canProceed()}
+            />
+          </div>
+        )
 
-          {/* Step: Company Info */}
-          {currentStep === 'company' && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Company Name <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.companyName}
-                  onChange={(e) => updateField('companyName', e.target.value)}
-                  placeholder="Your company or business name"
+      case 'services':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={5}
+              question="What services do you offer?"
+              description="Select all that apply (Optional)"
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {SERVICE_OPTIONS.map((service) => (
+                <button
+                  key={service}
+                  type="button"
+                  onClick={() => toggleService(service)}
                   className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm placeholder:text-muted-foreground',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Description</label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => updateField('description', e.target.value)}
-                  placeholder="Tell us about your company and what makes you unique..."
-                  rows={4}
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm placeholder:text-muted-foreground resize-none',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  <Globe size={16} weight="duotone" className="inline mr-1" />
-                  Website
-                </label>
-                <input
-                  type="url"
-                  value={formData.website}
-                  onChange={(e) => updateField('website', e.target.value)}
-                  placeholder="https://yourcompany.com"
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm placeholder:text-muted-foreground',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Step: Services */}
-          {currentStep === 'services' && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Category <span className="text-destructive">*</span>
-                </label>
-                <select
-                  value={formData.category}
-                  onChange={(e) => updateField('category', e.target.value)}
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm focus:outline-none focus:ring-2 focus:ring-primary/20'
+                    'px-4 py-3 rounded-lg border text-sm transition-all text-left',
+                    'hover:scale-[1.02] active:scale-[0.98]',
+                    formData.services.includes(service)
+                      ? 'border-primary bg-primary/10 text-primary font-medium'
+                      : 'border-border hover:border-primary/50'
                   )}
                 >
-                  <option value="">Select a category</option>
-                  {formOptions?.vendorCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat.charAt(0).toUpperCase() + cat.slice(1).replace('_', ' ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Services Offered</label>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Select all services you provide
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {[
-                    'Setup & Installation',
-                    'On-site Support',
-                    'Equipment Rental',
-                    'Design Services',
-                    'Consultation',
-                    'Full Service',
-                    'Delivery',
-                    'Cleanup',
-                    'Custom Solutions',
-                  ].map((service) => (
-                    <button
-                      key={service}
-                      type="button"
-                      onClick={() => toggleService(service)}
-                      className={cn(
-                        'px-3 py-2 rounded-lg border text-sm transition-colors text-left',
-                        formData.services.includes(service)
-                          ? 'border-primary bg-primary/10 text-primary'
-                          : 'border-border hover:border-primary/50'
-                      )}
-                    >
-                      {service}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    <MapPin size={16} weight="duotone" className="inline mr-1" />
-                    Service Area / Location
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.location}
-                    onChange={(e) => updateField('location', e.target.value)}
-                    placeholder="e.g., New York, Nationwide"
-                    className={cn(
-                      'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                      'text-sm placeholder:text-muted-foreground',
-                      'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                    )}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">
-                    <CurrencyDollar size={16} weight="duotone" className="inline mr-1" />
-                    Price Range
-                  </label>
-                  <select
-                    value={formData.priceRange}
-                    onChange={(e) => updateField('priceRange', e.target.value)}
-                    className={cn(
-                      'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                      'text-sm focus:outline-none focus:ring-2 focus:ring-primary/20'
-                    )}
-                  >
-                    <option value="">Select price range</option>
-                    {formOptions?.priceRanges.map((range) => (
-                      <option key={range} value={range}>
-                        {range.charAt(0).toUpperCase() + range.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+                  {service}
+                </button>
+              ))}
             </div>
-          )}
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
+          </div>
+        )
 
-          {/* Step: Experience */}
-          {currentStep === 'experience' && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">Past Experience</label>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Tell us about events you&apos;ve worked with before
-                </p>
-                <textarea
-                  value={formData.pastExperience}
-                  onChange={(e) => updateField('pastExperience', e.target.value)}
-                  placeholder="Describe your experience working with events, notable clients, types of events, etc..."
-                  rows={5}
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm placeholder:text-muted-foreground resize-none',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
+      case 'location':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={6}
+              question="Where do you provide services?"
+              description="Your service area or location (Optional)"
+            >
+              <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                <MapPin size={18} weight="duotone" />
+                <span className="text-sm">City, region, or "Nationwide"</span>
+              </div>
+            </TypeformQuestion>
+            <TypeformInput
+              placeholder="e.g., New York, Nationwide"
+              value={formData.location}
+              onChange={(e) => updateField('location', e.target.value)}
+            />
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
+          </div>
+        )
+
+      case 'priceRange':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={7}
+              question="What's your typical price range?"
+              description="Help organizers find vendors that match their budget (Optional)"
+            >
+              <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                <CurrencyDollar size={18} weight="duotone" />
+              </div>
+            </TypeformQuestion>
+            <div className="space-y-3">
+              {formOptions?.priceRanges.map((range, index) => (
+                <OptionCard
+                  key={range}
+                  label={range.charAt(0).toUpperCase() + range.slice(1)}
+                  isSelected={formData.priceRange === range}
+                  onClick={() => updateField('priceRange', range)}
+                  delay={index * 100}
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Additional Notes</label>
-                <textarea
-                  value={formData.additionalNotes}
-                  onChange={(e) => updateField('additionalNotes', e.target.value)}
-                  placeholder="Any other information you'd like to share..."
-                  rows={3}
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm placeholder:text-muted-foreground resize-none',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">How did you hear about us?</label>
-                <select
-                  value={formData.referralSource}
-                  onChange={(e) => updateField('referralSource', e.target.value)}
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
-                >
-                  <option value="">Select an option</option>
-                  {formOptions?.referralSources.map((source) => (
-                    <option key={source} value={source}>
-                      {source.charAt(0).toUpperCase() + source.slice(1).replace('_', ' ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              ))}
             </div>
-          )}
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
+          </div>
+        )
 
-          {/* Step: Contact */}
-          {currentStep === 'contact' && (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Contact Name <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.contactName}
-                  onChange={(e) => updateField('contactName', e.target.value)}
-                  placeholder="Your full name"
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm placeholder:text-muted-foreground',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
-                />
+      case 'pastExperience':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={8}
+              question="Tell us about your experience"
+              description="Share notable events, clients, or projects you've worked on (Optional)"
+            />
+            <TypeformTextarea
+              placeholder="Describe your experience working with events..."
+              value={formData.pastExperience}
+              onChange={(e) => updateField('pastExperience', e.target.value)}
+              rows={5}
+            />
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
+          </div>
+        )
+
+      case 'additionalNotes':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={9}
+              question="Anything else you'd like to share?"
+              description="Additional information, certifications, or notes (Optional)"
+            />
+            <TypeformTextarea
+              placeholder="Any other information..."
+              value={formData.additionalNotes}
+              onChange={(e) => updateField('additionalNotes', e.target.value)}
+              rows={4}
+            />
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
+          </div>
+        )
+
+      case 'referralSource':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={10}
+              question="How did you hear about us?"
+              description="This helps us improve (Optional)"
+            />
+            <TypeformSelect
+              value={formData.referralSource}
+              onChange={(e) => updateField('referralSource', e.target.value)}
+            >
+              <option value="">Select an option</option>
+              {formOptions?.referralSources.map((source) => (
+                <option key={source} value={source}>
+                  {source.charAt(0).toUpperCase() + source.slice(1).replace('_', ' ')}
+                </option>
+              ))}
+            </TypeformSelect>
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
+          </div>
+        )
+
+      case 'contactName':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={11}
+              question="What's your name?"
+              description="The primary contact for this application."
+            >
+              <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                <User size={18} weight="duotone" />
+              </div>
+            </TypeformQuestion>
+            <TypeformInput
+              placeholder="Your full name"
+              value={formData.contactName}
+              onChange={(e) => updateField('contactName', e.target.value)}
+              error={error || undefined}
+              autoFocus
+            />
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+              canGoNext={canProceed()}
+            />
+          </div>
+        )
+
+      case 'contactEmail':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={12}
+              question="What's your email address?"
+              description="We'll use this to contact you about your application."
+            >
+              <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                <Envelope size={18} weight="duotone" />
+              </div>
+            </TypeformQuestion>
+            <TypeformInput
+              type="email"
+              placeholder="you@company.com"
+              value={formData.contactEmail}
+              onChange={(e) => updateField('contactEmail', e.target.value)}
+              error={error || undefined}
+              autoFocus
+            />
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+              canGoNext={canProceed()}
+            />
+          </div>
+        )
+
+      case 'contactPhone':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={13}
+              question="What's your phone number?"
+              description="Optional, but helpful for quick questions."
+            >
+              <div className="flex items-center gap-2 text-muted-foreground mt-2">
+                <Phone size={18} weight="duotone" />
+              </div>
+            </TypeformQuestion>
+            <TypeformInput
+              type="tel"
+              placeholder="+1 (555) 000-0000"
+              value={formData.contactPhone}
+              onChange={(e) => updateField('contactPhone', e.target.value)}
+            />
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={nextStep}
+            />
+          </div>
+        )
+
+      case 'review':
+        return (
+          <div className="space-y-10">
+            <TypeformQuestion
+              stepNumber={14}
+              question="Ready to submit your application?"
+              description="Review your information and submit when ready."
+            />
+
+            {/* Summary */}
+            <div className="space-y-4 p-6 rounded-xl bg-muted/30 border border-border">
+              <div className="grid gap-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Company:</span>{' '}
+                  <span className="font-medium">{formData.companyName}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Category:</span>{' '}
+                  <span className="font-medium">{formData.category}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Contact:</span>{' '}
+                  <span className="font-medium">{formData.contactName}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Email:</span>{' '}
+                  <span className="font-medium">{formData.contactEmail}</span>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  <Envelope size={16} weight="duotone" className="inline mr-1" />
-                  Email <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={formData.contactEmail}
-                  onChange={(e) => updateField('contactEmail', e.target.value)}
-                  placeholder="you@company.com"
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm placeholder:text-muted-foreground',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  <Phone size={16} weight="duotone" className="inline mr-1" />
-                  Phone
-                </label>
-                <input
-                  type="tel"
-                  value={formData.contactPhone}
-                  onChange={(e) => updateField('contactPhone', e.target.value)}
-                  placeholder="+1 (555) 000-0000"
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border border-border bg-background',
-                    'text-sm placeholder:text-muted-foreground',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/20'
-                  )}
-                />
-              </div>
-
-              <div className="p-4 rounded-lg bg-muted/50 text-sm text-muted-foreground">
-                <p className="font-medium text-foreground mb-1">What happens next?</p>
+              <div className="pt-4 border-t border-border text-sm text-muted-foreground">
+                <p className="font-medium text-foreground mb-2">What happens next?</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>Our team will review your application within 2-3 business days</li>
                   <li>We may reach out for additional information if needed</li>
-                  <li>Once approved, you&apos;ll be able to browse and apply to events</li>
+                  <li>Once approved, you'll be able to browse and apply to events</li>
                 </ul>
               </div>
             </div>
-          )}
 
-          {/* Navigation Buttons */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
-            {currentStepIndex > 0 ? (
-              <button
-                type="button"
-                onClick={prevStep}
-                className={cn(
-                  'flex items-center gap-2 px-4 py-2 rounded-lg border border-border',
-                  'text-sm font-medium hover:bg-muted transition-colors'
-                )}
-              >
-                <CaretLeft size={16} weight="bold" />
-                Back
-              </button>
-            ) : (
-              <div />
+            {error && (
+              <p className="text-sm text-destructive p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                {error}
+              </p>
             )}
 
-            {currentStepIndex < STEPS.length - 1 ? (
-              <button
-                type="button"
-                onClick={nextStep}
-                className={cn(
-                  'flex items-center gap-2 px-6 py-2 rounded-lg',
-                  'bg-primary text-primary-foreground text-sm font-medium',
-                  'hover:bg-primary/90 transition-colors'
-                )}
-              >
-                Continue
-                <CaretRight size={16} weight="bold" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
-                className={cn(
-                  'flex items-center gap-2 px-6 py-2 rounded-lg',
-                  'bg-primary text-primary-foreground text-sm font-medium',
-                  'hover:bg-primary/90 transition-colors',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
-              >
-                {isSubmitting ? (
-                  <>
-                    <CircleNotch size={16} weight="bold" className="animate-spin" />
-                    Submitting...
-                  </>
-                ) : (
-                  <>
-                    Submit Application
-                    <CheckCircle size={16} weight="bold" />
-                  </>
-                )}
-              </button>
-            )}
+            <TypeformNavigation
+              onPrevious={prevStep}
+              onNext={handleSubmit}
+              canGoNext={!isSubmitting}
+              isLoading={isSubmitting}
+              isLastStep
+              showKeyboardHint={false}
+            />
           </div>
-        </div>
-      </main>
+        )
 
-      {/* Footer */}
-      <footer className="border-t border-border mt-12 py-8">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} open-event. All rights reserved.</p>
-        </div>
-      </footer>
-    </div>
+      default:
+        return null
+    }
+  }
+
+  return (
+    <TypeformLayout
+      currentStep={currentStepIndex + 1}
+      totalSteps={totalSteps}
+      onNext={currentStep === 'review' ? handleSubmit : nextStep}
+      canGoNext={canProceed()}
+      canGoPrevious={currentStepIndex > 0}
+      enableKeyboardNav={currentStep !== 'review'}
+    >
+      <TypeformTransition transitionKey={currentStepIndex} direction={direction}>
+        {renderStep()}
+      </TypeformTransition>
+    </TypeformLayout>
   )
 }

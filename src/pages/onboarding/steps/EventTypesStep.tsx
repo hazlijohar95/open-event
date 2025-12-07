@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { OnboardingChat, MultiSelect } from '@/components/onboarding'
-import { ArrowRight, ArrowLeft } from '@phosphor-icons/react'
+import { TypeformQuestion, TypeformNavigation } from '@/components/typeform'
+import { MultiSelect } from '@/components/onboarding'
 import type { StepProps } from '@/types/onboarding'
 import { EVENT_TYPES } from '@/types/onboarding'
 
@@ -14,10 +13,11 @@ export function EventTypesStep({ onNext, onBack, currentData }: StepProps) {
   const [selected, setSelected] = useState<string[]>(currentData.eventTypes || [])
 
   return (
-    <div className="space-y-8">
-      <OnboardingChat
-        message="What type of events do you typically organize?"
-        subMessage="Select all that apply"
+    <div className="space-y-10">
+      <TypeformQuestion
+        stepNumber={3}
+        question="What type of events do you typically organize?"
+        description="Select all that apply"
       />
 
       <MultiSelect
@@ -26,21 +26,11 @@ export function EventTypesStep({ onNext, onBack, currentData }: StepProps) {
         onChange={setSelected}
       />
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
-          <ArrowLeft size={18} weight="duotone" className="mr-2" />
-          Back
-        </Button>
-        <Button
-          onClick={() => onNext({ eventTypes: selected })}
-          disabled={selected.length === 0}
-          className="flex-1"
-          size="lg"
-        >
-          Continue
-          <ArrowRight size={18} weight="duotone" className="ml-2" />
-        </Button>
-      </div>
+      <TypeformNavigation
+        onPrevious={onBack}
+        onNext={() => onNext({ eventTypes: selected })}
+        canGoNext={selected.length > 0}
+      />
     </div>
   )
 }

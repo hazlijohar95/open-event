@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { OnboardingChat, OptionCard } from '@/components/onboarding'
+import { TypeformQuestion, TypeformNavigation } from '@/components/typeform'
+import { OptionCard } from '@/components/onboarding'
 import {
   MagnifyingGlass,
   ChatCircle,
@@ -8,8 +8,6 @@ import {
   Microphone,
   GithubLogo,
   DotsThree,
-  ArrowRight,
-  ArrowLeft,
 } from '@phosphor-icons/react'
 import type { StepProps } from '@/types/onboarding'
 
@@ -26,10 +24,11 @@ export function ReferralStep({ onNext, onBack, onSkip, currentData }: StepProps)
   const [selected, setSelected] = useState<string | undefined>(currentData.referralSource)
 
   return (
-    <div className="space-y-8">
-      <OnboardingChat
-        message="One last thing - how did you discover Open-Event?"
-        subMessage="This is optional, but helps us a lot!"
+    <div className="space-y-10">
+      <TypeformQuestion
+        stepNumber={7}
+        question="One last thing - how did you discover Open-Event?"
+        description="This is optional, but helps us a lot!"
       />
 
       <div className="grid grid-cols-2 gap-3">
@@ -45,30 +44,24 @@ export function ReferralStep({ onNext, onBack, onSkip, currentData }: StepProps)
         ))}
       </div>
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
-          <ArrowLeft size={18} weight="duotone" className="mr-2" />
-          Back
-        </Button>
-        <Button
-          onClick={() => onNext({ referralSource: selected })}
-          className="flex-1"
-          size="lg"
-        >
-          {selected ? 'Finish' : 'Skip & Finish'}
-          <ArrowRight size={18} weight="duotone" className="ml-2" />
-        </Button>
-      </div>
+      <div className="space-y-4">
+        <TypeformNavigation
+          onPrevious={onBack}
+          onNext={() => onNext({ referralSource: selected })}
+          isLastStep
+          showKeyboardHint={false}
+        />
 
-      {onSkip && (
-        <button
-          type="button"
-          onClick={onSkip}
-          className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Skip onboarding entirely
-        </button>
-      )}
+        {onSkip && (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Skip onboarding entirely
+          </button>
+        )}
+      </div>
     </div>
   )
 }

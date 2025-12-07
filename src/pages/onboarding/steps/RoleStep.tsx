@@ -1,12 +1,11 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { OnboardingChat, OptionCard } from '@/components/onboarding'
+import { TypeformQuestion, TypeformNavigation } from '@/components/typeform'
+import { OptionCard } from '@/components/onboarding'
 import {
   CalendarBlank,
   Handshake,
   Truck,
   Compass,
-  ArrowRight,
 } from '@phosphor-icons/react'
 import type { StepProps, UserRole } from '@/types/onboarding'
 
@@ -41,10 +40,11 @@ export function RoleStep({ onNext, currentData }: StepProps) {
   const [selected, setSelected] = useState<UserRole | undefined>(currentData.role)
 
   return (
-    <div className="space-y-8">
-      <OnboardingChat
-        message="Let's personalize your experience!"
-        subMessage="First, tell me about your role:"
+    <div className="space-y-10">
+      <TypeformQuestion
+        stepNumber={1}
+        question="Let's personalize your experience!"
+        description="First, tell me about your role:"
       />
 
       <div className="space-y-3">
@@ -61,15 +61,10 @@ export function RoleStep({ onNext, currentData }: StepProps) {
         ))}
       </div>
 
-      <Button
-        onClick={() => onNext({ role: selected })}
-        disabled={!selected}
-        className="w-full"
-        size="lg"
-      >
-        Continue
-        <ArrowRight size={18} weight="duotone" className="ml-2" />
-      </Button>
+      <TypeformNavigation
+        onNext={() => onNext({ role: selected })}
+        canGoNext={!!selected}
+      />
     </div>
   )
 }

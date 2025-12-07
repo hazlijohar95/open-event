@@ -1,13 +1,11 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { OnboardingChat, OptionCard } from '@/components/onboarding'
+import { TypeformQuestion, TypeformNavigation } from '@/components/typeform'
+import { OptionCard } from '@/components/onboarding'
 import {
   Baby,
   Leaf,
   Tree,
   Mountains,
-  ArrowRight,
-  ArrowLeft,
 } from '@phosphor-icons/react'
 import type { StepProps, ExperienceLevel } from '@/types/onboarding'
 
@@ -44,10 +42,11 @@ export function ExperienceStep({ onNext, onBack, currentData }: StepProps) {
   )
 
   return (
-    <div className="space-y-8">
-      <OnboardingChat
-        message="How experienced are you with event management?"
-        subMessage="This helps us customize your dashboard"
+    <div className="space-y-10">
+      <TypeformQuestion
+        stepNumber={6}
+        question="How experienced are you with event management?"
+        description="This helps us customize your dashboard"
       />
 
       <div className="space-y-3">
@@ -64,21 +63,11 @@ export function ExperienceStep({ onNext, onBack, currentData }: StepProps) {
         ))}
       </div>
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
-          <ArrowLeft size={18} weight="duotone" className="mr-2" />
-          Back
-        </Button>
-        <Button
-          onClick={() => onNext({ experienceLevel: selected })}
-          disabled={!selected}
-          className="flex-1"
-          size="lg"
-        >
-          Continue
-          <ArrowRight size={18} weight="duotone" className="ml-2" />
-        </Button>
-      </div>
+      <TypeformNavigation
+        onPrevious={onBack}
+        onNext={() => onNext({ experienceLevel: selected })}
+        canGoNext={!!selected}
+      />
     </div>
   )
 }

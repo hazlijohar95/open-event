@@ -1,13 +1,11 @@
 import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { OnboardingChat, OptionCard } from '@/components/onboarding'
+import { TypeformQuestion, TypeformNavigation } from '@/components/typeform'
+import { OptionCard } from '@/components/onboarding'
 import {
   UsersThree,
   UsersFour,
   Users,
   Buildings,
-  ArrowRight,
-  ArrowLeft,
 } from '@phosphor-icons/react'
 import type { StepProps, EventScale } from '@/types/onboarding'
 
@@ -42,10 +40,11 @@ export function EventScaleStep({ onNext, onBack, currentData }: StepProps) {
   const [selected, setSelected] = useState<EventScale | undefined>(currentData.eventScale)
 
   return (
-    <div className="space-y-8">
-      <OnboardingChat
-        message="How big are your typical events?"
-        subMessage="This helps us suggest the right features"
+    <div className="space-y-10">
+      <TypeformQuestion
+        stepNumber={4}
+        question="How big are your typical events?"
+        description="This helps us suggest the right features"
       />
 
       <div className="space-y-3">
@@ -62,21 +61,11 @@ export function EventScaleStep({ onNext, onBack, currentData }: StepProps) {
         ))}
       </div>
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={onBack} className="flex-1" size="lg">
-          <ArrowLeft size={18} weight="duotone" className="mr-2" />
-          Back
-        </Button>
-        <Button
-          onClick={() => onNext({ eventScale: selected })}
-          disabled={!selected}
-          className="flex-1"
-          size="lg"
-        >
-          Continue
-          <ArrowRight size={18} weight="duotone" className="ml-2" />
-        </Button>
-      </div>
+      <TypeformNavigation
+        onPrevious={onBack}
+        onNext={() => onNext({ eventScale: selected })}
+        canGoNext={!!selected}
+      />
     </div>
   )
 }
