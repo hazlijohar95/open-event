@@ -45,8 +45,14 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallback: '/offline.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/__/],
+        // Use index.html as fallback for SPA routing - this ensures the React app
+        // loads properly for all routes. Offline detection is handled in-app via usePWA hook.
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/api/,      // API routes
+          /^\/__/,       // Internal routes
+          /^\/.*\.[^/]+$/, // Files with extensions (assets, etc.)
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
