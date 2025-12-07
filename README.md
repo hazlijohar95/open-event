@@ -308,8 +308,6 @@ See [`.env.example`](.env.example) for all available configuration options.
 | `SITE_URL` | Your production URL (for OAuth redirects) |
 | `AUTH_GOOGLE_ID` | Google OAuth client ID |
 | `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
-| `AUTH_RESEND_KEY` | Resend API key for password reset emails |
-| `EMAIL_FROM` | Email sender address |
 | `OPENAI_API_KEY` | OpenAI API key (for AI features) |
 
 ---

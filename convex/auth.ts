@@ -1,10 +1,8 @@
 import Google from '@auth/core/providers/google'
-import Resend from '@auth/core/providers/resend'
 import { Password } from '@convex-dev/auth/providers/Password'
 import { convexAuth } from '@convex-dev/auth/server'
 
 const SITE_URL = process.env.SITE_URL || 'http://localhost:5173'
-const EMAIL_FROM = process.env.EMAIL_FROM || 'Open Event <noreply@openevent.app>'
 
 export const { auth, signIn, signOut, store } = convexAuth({
   providers: [
@@ -12,10 +10,6 @@ export const { auth, signIn, signOut, store } = convexAuth({
     Password,
     // Google OAuth
     Google,
-    // Magic Links via Resend
-    Resend({
-      from: EMAIL_FROM,
-    }),
   ],
   callbacks: {
     async redirect({ redirectTo }) {
