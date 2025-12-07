@@ -1,6 +1,12 @@
 import { httpRouter } from 'convex/server'
 import { httpAction } from './_generated/server'
 import { auth } from './auth'
+import OpenAI from 'openai'
+import { api } from './_generated/api'
+import type { Id } from './_generated/dataModel'
+import { getOpenAITools, toolRequiresConfirmation } from './lib/agent/tools'
+import { executeToolHandler } from './lib/agent/handlers'
+import type { ToolName, ToolCall, ToolResult } from './lib/agent/types'
 
 // ============================================================================
 // HTTP Router
@@ -23,6 +29,367 @@ http.route({
         headers: { 'Content-Type': 'application/json' },
       }
     )
+  }),
+})
+
+// ============================================================================
+// Streaming Chat Endpoint
+// ============================================================================
+
+const SYSTEM_PROMPT = `You are an expert AI event planning assistant for open-event, a platform that helps organizers create and manage events. You have access to tools that allow you to:
+
+1. **Create and manage events** - You can create new events, update existing ones, and retrieve event details
+2. **Search for vendors** - Find catering, AV, photography, and other service providers
+3. **Search for sponsors** - Find companies interested in sponsoring events
+4. **Access user profile** - Understand the organizer's preferences and history
+
+## How to help users:
+
+1. **Understand their needs** - Ask clarifying questions about event type, date, size, budget, etc.
+2. **Take action** - Use your tools to create events, search for vendors/sponsors, and help plan
+3. **Be proactive** - Suggest relevant vendors or sponsors based on event details
+4. **Confirm before acting** - For important actions (creating events, adding vendors), confirm with the user first
+
+## Guidelines:
+
+- Be conversational and helpful
+- When you have enough information, USE YOUR TOOLS to take action
+- Always confirm before creating events or adding vendors/sponsors
+- Provide specific, actionable recommendations
+- If searching returns no results, explain that the marketplace is growing
+- Keep responses concise but informative
+
+## Important:
+- You MUST use your tools to perform actions. Don't just describe what could be done - actually do it!
+- After gathering event details, call createEvent with the information
+- When the user mentions needing a service, call searchVendors to find options
+- Be proactive about suggesting next steps`
+
+http.route({
+  path: '/api/chat/stream',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    // Parse request body
+    const body = await request.json()
+    const { conversationId, userMessage, confirmedToolCalls } = body as {
+      conversationId: string
+      userMessage: string
+      confirmedToolCalls?: string[]
+    }
+
+    if (!conversationId || !userMessage) {
+      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Get user from auth
+    const user = await ctx.runQuery(api.queries.auth.getCurrentUser)
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // Get conversation history
+    const messages = await ctx.runQuery(api.aiConversations.getMessages, {
+      conversationId: conversationId as Id<'aiConversations'>,
+    })
+
+    // Get user profile for context
+    const profile = await ctx.runQuery(api.organizerProfiles.getMyProfile)
+
+    // Build message history for OpenAI
+    const chatHistory: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      {
+        role: 'system',
+        content: profile
+          ? `${SYSTEM_PROMPT}\n\n## User Context:\n- Organization: ${profile.organizationName || 'Not set'}\n- Event Types: ${profile.eventTypes?.join(', ') || 'Not specified'}\n- Experience: ${profile.experienceLevel || 'Unknown'}`
+          : SYSTEM_PROMPT,
+      },
+    ]
+
+    // Add conversation history
+    for (const msg of messages) {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        chatHistory.push({
+          role: msg.role,
+          content: msg.content,
+        })
+      }
+    }
+
+    // Add the new user message
+    chatHistory.push({
+      role: 'user',
+      content: userMessage,
+    })
+
+    // Save user message to database
+    await ctx.runMutation(api.aiConversations.sendMessage, {
+      conversationId: conversationId as Id<'aiConversations'>,
+      content: userMessage,
+    })
+
+    // Initialize OpenAI
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+
+    // Get available tools
+    const tools = getOpenAITools()
+
+    // Create SSE stream
+    const encoder = new TextEncoder()
+    const stream = new ReadableStream({
+      async start(controller) {
+        const sendEvent = (event: string, data: unknown) => {
+          controller.enqueue(encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`))
+        }
+
+        try {
+          const currentMessages = [...chatHistory]
+          const allToolCalls: ToolCall[] = []
+          const allToolResults: ToolResult[] = []
+          const pendingConfirmations: ToolCall[] = []
+          let finalMessage = ''
+          let isComplete = false
+          let entityId: string | undefined
+
+          const MAX_ITERATIONS = 5
+          let iteration = 0
+
+          while (iteration < MAX_ITERATIONS) {
+            iteration++
+
+            // Send thinking event
+            sendEvent('thinking', { iteration })
+
+            // Create streaming completion
+            const stream = await openai.chat.completions.create({
+              model: 'gpt-4o-mini',
+              messages: currentMessages,
+              tools,
+              tool_choice: 'auto',
+              temperature: 0.7,
+              max_tokens: 1500,
+              stream: true,
+            })
+
+            let currentContent = ''
+            let currentToolCalls: Array<{
+              id: string
+              function: { name: string; arguments: string }
+            }> = []
+
+            // Process streaming chunks
+            for await (const chunk of stream) {
+              const delta = chunk.choices[0]?.delta
+
+              // Stream text content
+              if (delta?.content) {
+                currentContent += delta.content
+                sendEvent('text', { content: delta.content })
+              }
+
+              // Accumulate tool calls
+              if (delta?.tool_calls) {
+                for (const tc of delta.tool_calls) {
+                  const index = tc.index
+                  if (!currentToolCalls[index]) {
+                    currentToolCalls[index] = {
+                      id: tc.id || '',
+                      function: { name: '', arguments: '' },
+                    }
+                  }
+                  if (tc.id) currentToolCalls[index].id = tc.id
+                  if (tc.function?.name) currentToolCalls[index].function.name += tc.function.name
+                  if (tc.function?.arguments) currentToolCalls[index].function.arguments += tc.function.arguments
+                }
+              }
+            }
+
+            // If no tool calls, we're done
+            if (currentToolCalls.length === 0) {
+              finalMessage = currentContent
+              break
+            }
+
+            // Process tool calls
+            const toolCalls: ToolCall[] = currentToolCalls
+              .filter((tc) => tc.id && tc.function.name)
+              .map((tc) => {
+                let parsedArgs: Record<string, unknown> = {}
+                try {
+                  parsedArgs = JSON.parse(tc.function.arguments)
+                } catch {
+                  // Continue with empty arguments
+                }
+                return {
+                  id: tc.id,
+                  name: tc.function.name as ToolName,
+                  arguments: parsedArgs,
+                }
+              })
+
+            // Add assistant message with tool calls to history
+            currentMessages.push({
+              role: 'assistant',
+              content: currentContent,
+              tool_calls: currentToolCalls.map((tc) => ({
+                id: tc.id,
+                type: 'function' as const,
+                function: tc.function,
+              })),
+            })
+
+            // Execute each tool call
+            for (const toolCall of toolCalls) {
+              allToolCalls.push(toolCall)
+
+              // Send tool start event
+              sendEvent('tool_start', {
+                id: toolCall.id,
+                name: toolCall.name,
+                arguments: toolCall.arguments,
+              })
+
+              // Check if this tool requires confirmation
+              if (toolRequiresConfirmation(toolCall.name)) {
+                if (!confirmedToolCalls?.includes(toolCall.id)) {
+                  pendingConfirmations.push(toolCall)
+                  sendEvent('tool_pending', {
+                    id: toolCall.id,
+                    name: toolCall.name,
+                    arguments: toolCall.arguments,
+                  })
+
+                  const placeholderResult: ToolResult = {
+                    toolCallId: toolCall.id,
+                    name: toolCall.name,
+                    success: false,
+                    error: 'Awaiting user confirmation',
+                    summary: 'This action requires your confirmation',
+                  }
+                  allToolResults.push(placeholderResult)
+                  currentMessages.push({
+                    role: 'tool',
+                    tool_call_id: toolCall.id,
+                    content: JSON.stringify(placeholderResult),
+                  })
+                  continue
+                }
+              }
+
+              // Execute the tool
+              const result = await executeToolHandler(
+                ctx,
+                user._id,
+                toolCall.id,
+                toolCall.name,
+                toolCall.arguments
+              )
+              allToolResults.push(result)
+
+              // Send tool result event
+              sendEvent('tool_result', {
+                id: toolCall.id,
+                name: toolCall.name,
+                success: result.success,
+                summary: result.summary,
+                data: result.data,
+                error: result.error,
+              })
+
+              // Check if event was created
+              if (result.name === 'createEvent' && result.success && result.data) {
+                isComplete = true
+                entityId = (result.data as { eventId: string }).eventId
+              }
+
+              // Add tool result to messages
+              currentMessages.push({
+                role: 'tool',
+                tool_call_id: toolCall.id,
+                content: JSON.stringify(result),
+              })
+            }
+
+            // If there are pending confirmations, stop and ask user
+            if (pendingConfirmations.length > 0) {
+              const confirmCompletion = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [
+                  ...currentMessages,
+                  {
+                    role: 'user',
+                    content: 'The action requires user confirmation. Please explain what you are about to do and ask for confirmation.',
+                  },
+                ],
+                temperature: 0.7,
+                max_tokens: 500,
+              })
+              finalMessage = confirmCompletion.choices[0]?.message?.content || ''
+
+              // Stream the confirmation message
+              if (finalMessage) {
+                sendEvent('text', { content: finalMessage })
+              }
+              break
+            }
+          }
+
+          // Build final response
+          let responseContent = finalMessage
+          if (allToolResults.length > 0) {
+            const executedResults = allToolResults.filter(
+              (r) => r.error !== 'Awaiting user confirmation'
+            )
+            if (executedResults.length > 0 && !finalMessage.includes('successfully')) {
+              const summaries = executedResults.map((r) => `- ${r.summary}`).join('\n')
+              responseContent = `${finalMessage}\n\n**Actions taken:**\n${summaries}`
+            }
+          }
+
+          // Save assistant response
+          await ctx.runMutation(api.aiConversations.addAssistantMessage, {
+            conversationId: conversationId as Id<'aiConversations'>,
+            content: responseContent,
+            metadata: {
+              model: 'gpt-4o-mini',
+              extractedFields: allToolCalls.map((tc) => tc.name),
+              suggestedActions: pendingConfirmations.map((tc) => tc.name),
+            },
+          })
+
+          // Send completion event
+          sendEvent('done', {
+            message: responseContent,
+            toolCalls: allToolCalls,
+            toolResults: allToolResults,
+            pendingConfirmations,
+            isComplete,
+            entityId,
+          })
+        } catch (error) {
+          sendEvent('error', {
+            message: error instanceof Error ? error.message : 'Unknown error',
+          })
+        } finally {
+          controller.close()
+        }
+      },
+    })
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    })
   }),
 })
 

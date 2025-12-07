@@ -1,7 +1,29 @@
 {
   "name": "open-event",
-  "private": true,
   "version": "0.1.0",
+  "description": "Open-source event management platform for organizers, vendors, and sponsors",
+  "author": "Open Event Contributors",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hazlijohar95/open-event.git"
+  },
+  "homepage": "https://github.com/hazlijohar95/open-event#readme",
+  "bugs": {
+    "url": "https://github.com/hazlijohar95/open-event/issues"
+  },
+  "keywords": [
+    "event-management",
+    "events",
+    "conference",
+    "hackathon",
+    "vendor-management",
+    "sponsorship",
+    "react",
+    "convex",
+    "typescript"
+  ],
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -37,9 +59,12 @@
     "convex": "^1.30.0",
     "next-themes": "^0.4.6",
     "openai": "^6.10.0",
+    "prism-react-renderer": "^2.4.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^7.5.2",
+    "remark-gfm": "^4.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0"
   },
