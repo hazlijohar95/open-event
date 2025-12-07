@@ -54,13 +54,13 @@ export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex items-center h-full px-4">
+    <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 safe-area-top">
+      <div className="flex items-center h-full px-2 sm:px-4">
         {/* Left: Menu toggle + Logo */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={onMenuClick}
-            className="p-2 -ml-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all cursor-pointer"
+            className="p-2.5 sm:p-2 -ml-1 sm:-ml-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all cursor-pointer touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
             aria-label="Toggle sidebar"
           >
             <SidebarSimple size={20} weight="duotone" />
@@ -70,7 +70,7 @@ export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
           <Link
             to="/dashboard"
             className={cn(
-              'font-mono text-base font-bold transition-opacity',
+              'font-mono text-sm sm:text-base font-bold transition-opacity',
               'lg:transition-all lg:duration-200',
               sidebarCollapsed ? 'lg:opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
             )}
@@ -103,17 +103,17 @@ export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
         </nav>
 
         {/* Right side */}
-        <div className="flex items-center gap-1 sm:gap-2 ml-auto">
+        <div className="flex items-center gap-0.5 sm:gap-2 ml-auto">
           {/* Notifications */}
           <button
             className={cn(
-              'relative p-2 rounded-lg text-muted-foreground',
-              'hover:text-foreground hover:bg-muted transition-colors cursor-pointer'
+              'relative p-2.5 sm:p-2 rounded-lg text-muted-foreground',
+              'hover:text-foreground hover:bg-muted transition-colors cursor-pointer touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center'
             )}
             title="Notifications"
           >
             <Bell size={18} weight="duotone" />
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
+            <span className="absolute top-2 sm:top-1.5 right-2 sm:right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
           </button>
 
           <ThemeToggle />
@@ -123,7 +123,7 @@ export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className={cn(
-                'flex items-center gap-2 p-1 rounded-lg transition-colors',
+                'flex items-center gap-1.5 sm:gap-2 p-1.5 sm:p-1 rounded-lg transition-colors touch-manipulation',
                 'hover:bg-muted cursor-pointer',
                 menuOpen && 'bg-muted'
               )}
@@ -132,10 +132,10 @@ export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
                 <img
                   src={user.image}
                   alt={user.name || 'User'}
-                  className="w-7 h-7 rounded-full object-cover ring-2 ring-border"
+                  className="w-7 h-7 sm:w-7 sm:h-7 rounded-full object-cover ring-2 ring-border"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-border">
+                <div className="w-7 h-7 sm:w-7 sm:h-7 rounded-full bg-primary/10 flex items-center justify-center ring-2 ring-border">
                   <span className="text-xs font-medium text-primary">
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </span>

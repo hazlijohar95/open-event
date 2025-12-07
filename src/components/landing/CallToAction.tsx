@@ -7,12 +7,12 @@ export function CallToAction() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="relative py-24 sm:py-32 px-6 overflow-hidden">
+    <section className="relative py-16 sm:py-24 lg:py-32 px-4 sm:px-6 overflow-hidden">
       {/* Beautiful gradient background - balanced tones */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-background to-amber-50/50 dark:from-indigo-950/30 dark:via-background dark:to-amber-950/15" />
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-indigo-200/25 to-transparent dark:from-indigo-800/15 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-tl from-amber-200/30 to-transparent dark:from-amber-800/15 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-gradient-to-br from-indigo-200/25 to-transparent dark:from-indigo-800/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-[250px] sm:w-[500px] h-[250px] sm:h-[500px] bg-gradient-to-tl from-amber-200/30 to-transparent dark:from-amber-800/15 rounded-full blur-3xl" />
       </div>
 
       <div
@@ -23,7 +23,7 @@ export function CallToAction() {
         )}
       >
         {/* Title */}
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight">
           Ready to simplify your
           <br />
           <span className="bg-gradient-to-r from-amber-600 to-orange-600 dark:from-amber-400 dark:to-orange-400 bg-clip-text text-transparent">
@@ -32,21 +32,26 @@ export function CallToAction() {
         </h2>
 
         {/* Subtitle */}
-        <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mt-6">
+        <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mt-4 sm:mt-6 px-2">
           Join organizers, sponsors, and vendors who've ditched spreadsheets for good.
         </p>
 
-        {/* CTAs */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10">
+        {/* CTAs - Full width on mobile */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 mt-8 sm:mt-10">
           <Link
             to="/sign-up"
-            className="group flex items-center gap-2 px-8 py-4 text-base font-medium bg-foreground text-background hover:bg-foreground/90 transition-all rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+            className="group flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-medium bg-foreground text-background hover:bg-foreground/90 transition-all rounded-xl shadow-lg hover:shadow-xl sm:hover:-translate-y-0.5 active:scale-[0.98] touch-manipulation"
           >
             Get Started Free
             <ArrowRight
-              size={18}
+              size={16}
+              className="sm:hidden transition-transform group-hover:translate-x-1"
               weight="bold"
-              className="transition-transform group-hover:translate-x-1"
+            />
+            <ArrowRight
+              size={18}
+              className="hidden sm:block transition-transform group-hover:translate-x-1"
+              weight="bold"
             />
           </Link>
 
@@ -54,25 +59,29 @@ export function CallToAction() {
             href="https://github.com/hazlijohar95/open-event"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center gap-2 px-6 py-4 text-base font-medium text-foreground hover:bg-muted/50 transition-all rounded-xl border border-border/50 hover:border-border"
+            className="group flex items-center justify-center gap-2 px-5 sm:px-6 py-3.5 sm:py-4 text-sm sm:text-base font-medium text-foreground hover:bg-muted/50 transition-all rounded-xl border border-border/50 hover:border-border active:scale-[0.98] touch-manipulation"
           >
-            <GithubLogo size={20} weight="fill" />
+            <GithubLogo size={18} className="sm:hidden" weight="fill" />
+            <GithubLogo size={20} className="hidden sm:block" weight="fill" />
             View on GitHub
           </a>
         </div>
 
         {/* Trust indicators */}
-        <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-muted-foreground">
-          <span className="flex items-center gap-2">
-            <CheckCircle size={16} weight="fill" className="text-emerald-500" />
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-6 sm:mt-8 text-xs sm:text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5 sm:gap-2">
+            <CheckCircle size={14} className="sm:hidden text-emerald-500" weight="fill" />
+            <CheckCircle size={16} className="hidden sm:block text-emerald-500" weight="fill" />
             Free and open-source
           </span>
-          <span className="flex items-center gap-2">
-            <CheckCircle size={16} weight="fill" className="text-emerald-500" />
+          <span className="flex items-center gap-1.5 sm:gap-2">
+            <CheckCircle size={14} className="sm:hidden text-emerald-500" weight="fill" />
+            <CheckCircle size={16} className="hidden sm:block text-emerald-500" weight="fill" />
             No credit card required
           </span>
-          <span className="flex items-center gap-2">
-            <CheckCircle size={16} weight="fill" className="text-emerald-500" />
+          <span className="flex items-center gap-1.5 sm:gap-2">
+            <CheckCircle size={14} className="sm:hidden text-emerald-500" weight="fill" />
+            <CheckCircle size={16} className="hidden sm:block text-emerald-500" weight="fill" />
             Deploy anywhere
           </span>
         </div>

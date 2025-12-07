@@ -1428,3 +1428,484 @@ body {
     0 0 35px -5px oklch(0.7 0.18 300 / 0.3),
     0 4px 30px -10px oklch(0 0 0 / 0.4);
 }
+
+/* ================================================
+   MOBILE RESPONSIVENESS SYSTEM
+   Native app-like experience on mobile devices
+   ================================================ */
+
+/* Safe Area Support for notched devices */
+:root {
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+}
+
+/* Safe area utility classes */
+.safe-area-top {
+  padding-top: var(--safe-area-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.safe-area-x {
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+.safe-area-all {
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+  padding-left: var(--safe-area-left);
+  padding-right: var(--safe-area-right);
+}
+
+/* ------------------------------------------------
+   Reduced Motion Support
+   ------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ------------------------------------------------
+   Touch Optimization Utilities
+   ------------------------------------------------ */
+
+/* Minimum touch target - 44px as per Apple HIG */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.touch-target-lg {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Faster tap response - removes 300ms delay */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Prevent text selection on touch */
+.touch-none {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Touch-friendly active states */
+.touch-active:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
+/* ------------------------------------------------
+   Mobile-First Utilities
+   ------------------------------------------------ */
+
+/* Full-width on mobile, auto on desktop */
+.mobile-full {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .mobile-full {
+    width: auto;
+  }
+}
+
+/* Stack on mobile, row on desktop */
+.mobile-stack {
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .mobile-stack {
+    flex-direction: row;
+  }
+}
+
+/* Hide on mobile, show on desktop */
+.mobile-hidden {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .mobile-hidden {
+    display: block;
+  }
+}
+
+/* Show on mobile, hide on desktop */
+.mobile-only {
+  display: block;
+}
+
+@media (min-width: 640px) {
+  .mobile-only {
+    display: none;
+  }
+}
+
+/* Mobile padding scales */
+.mobile-p {
+  padding: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .mobile-p {
+    padding: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-p {
+    padding: 1.5rem;
+  }
+}
+
+/* ------------------------------------------------
+   Mobile Typography
+   ------------------------------------------------ */
+
+/* Responsive text that scales with viewport but has bounds */
+.text-responsive-xs {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+}
+
+.text-responsive-sm {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.text-responsive-base {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+}
+
+.text-responsive-lg {
+  font-size: clamp(1.125rem, 3.5vw, 1.25rem);
+}
+
+.text-responsive-xl {
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+}
+
+.text-responsive-2xl {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+}
+
+.text-responsive-3xl {
+  font-size: clamp(1.875rem, 6vw, 2.5rem);
+}
+
+.text-responsive-4xl {
+  font-size: clamp(2.25rem, 8vw, 3.5rem);
+}
+
+/* ------------------------------------------------
+   Mobile Scroll Enhancements
+   ------------------------------------------------ */
+
+/* Smooth momentum scrolling */
+.scroll-smooth-mobile {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+/* Horizontal scroll container */
+.scroll-x-mobile {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-x-mobile::-webkit-scrollbar {
+  display: none;
+}
+
+.scroll-x-mobile > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* ------------------------------------------------
+   Mobile Navigation
+   ------------------------------------------------ */
+
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: oklch(0 0 0 / 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.mobile-menu-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Mobile slide-in menu */
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: min(280px, 85vw);
+  background: var(--background);
+  z-index: 50;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+
+.mobile-menu.open {
+  transform: translateX(0);
+}
+
+/* Mobile menu from right */
+.mobile-menu-right {
+  left: auto;
+  right: 0;
+  transform: translateX(100%);
+}
+
+.mobile-menu-right.open {
+  transform: translateX(0);
+}
+
+/* ------------------------------------------------
+   Mobile Cards & Containers
+   ------------------------------------------------ */
+
+/* Card with mobile-optimized padding */
+.card-mobile {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .card-mobile {
+    padding: 1rem;
+    border-radius: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .card-mobile {
+    padding: 1.5rem;
+    border-radius: 1.25rem;
+  }
+}
+
+/* ------------------------------------------------
+   Mobile Buttons
+   ------------------------------------------------ */
+
+/* Full-width CTA button on mobile */
+.btn-mobile-full {
+  width: 100%;
+  justify-content: center;
+  min-height: 48px;
+  font-size: 1rem;
+}
+
+@media (min-width: 640px) {
+  .btn-mobile-full {
+    width: auto;
+    min-height: 44px;
+  }
+}
+
+/* Floating action button */
+.fab {
+  position: fixed;
+  bottom: calc(1.5rem + var(--safe-area-bottom));
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 4px 12px -2px oklch(0 0 0 / 0.15),
+    0 2px 4px -1px oklch(0 0 0 / 0.1);
+  z-index: 30;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fab:active {
+  transform: scale(0.95);
+}
+
+/* ------------------------------------------------
+   Mobile Form Elements
+   ------------------------------------------------ */
+
+/* Large touch-friendly inputs */
+.input-mobile {
+  min-height: 48px;
+  font-size: 16px; /* Prevents iOS zoom on focus */
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+}
+
+/* Prevent iOS zoom - must be at least 16px */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="url"],
+input[type="search"],
+textarea,
+select {
+  font-size: max(16px, 1rem);
+}
+
+/* ------------------------------------------------
+   Mobile Bottom Sheet
+   ------------------------------------------------ */
+
+.bottom-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--card);
+  border-radius: 1.5rem 1.5rem 0 0;
+  padding: 1rem;
+  padding-bottom: calc(1rem + var(--safe-area-bottom));
+  z-index: 50;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+
+.bottom-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 1rem;
+}
+
+/* ------------------------------------------------
+   Mobile Header
+   ------------------------------------------------ */
+
+.mobile-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: calc(56px + var(--safe-area-top));
+  padding-top: var(--safe-area-top);
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.mobile-header-blur {
+  background: oklch(var(--background) / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ------------------------------------------------
+   Swipe Gesture Support
+   ------------------------------------------------ */
+
+.swipe-container {
+  touch-action: pan-y;
+  overflow-x: hidden;
+}
+
+.swipe-item {
+  transition: transform 0.2s ease;
+}
+
+/* ------------------------------------------------
+   Mobile Grid Adjustments
+   ------------------------------------------------ */
+
+/* Auto-fit grid that works on all screen sizes */
+.grid-auto-mobile {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  gap: 1rem;
+}
+
+/* Two columns on mobile, scales up */
+.grid-2-mobile {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .grid-2-mobile {
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .grid-2-mobile {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-2-mobile {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ------------------------------------------------
+   Mobile Animation Performance
+   ------------------------------------------------ */
+
+/* GPU-accelerated transforms */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Disable animations on low-end devices */
+@media (prefers-reduced-motion: reduce), (max-width: 320px) {
+  .gpu-accelerated {
+    will-change: auto;
+  }
+}

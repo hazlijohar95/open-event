@@ -35,14 +35,14 @@ export function DashboardOverview() {
   const isNewUser = stats?.totalEvents === 0
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 sm:space-y-8">
       {/* Workspace Header - Typeform style */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground truncate">
             {orgName}
           </h1>
-          <button className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+          <button className="p-1.5 rounded-md hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shrink-0 hidden sm:block">
             <span className="sr-only">More options</span>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="3" cy="8" r="1.5" fill="currentColor"/>
@@ -53,11 +53,11 @@ export function DashboardOverview() {
         </div>
 
         {/* View Toggle - refined */}
-        <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg">
+        <div className="flex items-center gap-0.5 sm:gap-1 p-0.5 sm:p-1 bg-muted/50 rounded-lg shrink-0">
           <button
             onClick={() => setViewMode('list')}
             className={cn(
-              'p-2 rounded-md transition-all duration-200 cursor-pointer',
+              'p-2 sm:p-2 rounded-md transition-all duration-200 cursor-pointer touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center',
               viewMode === 'list'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -68,7 +68,7 @@ export function DashboardOverview() {
           <button
             onClick={() => setViewMode('grid')}
             className={cn(
-              'p-2 rounded-md transition-all duration-200 cursor-pointer',
+              'p-2 sm:p-2 rounded-md transition-all duration-200 cursor-pointer touch-manipulation min-w-[36px] min-h-[36px] flex items-center justify-center',
               viewMode === 'grid'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
@@ -81,14 +81,25 @@ export function DashboardOverview() {
 
       {/* AI Suggestions Banner - Typeform cream/yellow style */}
       {hasEvents && (
-        <div className="relative overflow-hidden rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/50 dark:border-amber-800/30">
-          <div className="px-5 py-4 flex items-center gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
-                <Sparkle size={20} weight="fill" className="text-white" />
+        <div className="relative overflow-hidden rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 border border-amber-200/50 dark:border-amber-800/30">
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+              <div className="flex-shrink-0">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-violet-500/25">
+                  <Sparkle size={18} className="sm:hidden text-white" weight="fill" />
+                  <Sparkle size={20} className="hidden sm:block text-white" weight="fill" />
+                </div>
+              </div>
+              <div className="flex-1 min-w-0 sm:hidden">
+                <p className="text-xs text-foreground">
+                  <span className="font-medium">Tip:</span>{' '}
+                  <span className="text-muted-foreground">
+                    Add vendors and sponsors to unlock analytics.
+                  </span>
+                </p>
               </div>
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="hidden sm:block flex-1 min-w-0">
               <p className="text-sm text-foreground">
                 <span className="font-medium">Tip:</span>{' '}
                 <span className="text-muted-foreground">
@@ -96,7 +107,7 @@ export function DashboardOverview() {
                 </span>
               </p>
             </div>
-            <button className="flex-shrink-0 px-4 py-2 text-sm font-medium text-violet-700 dark:text-violet-300 bg-violet-100 dark:bg-violet-900/50 hover:bg-violet-200 dark:hover:bg-violet-900/70 rounded-lg transition-colors">
+            <button className="w-full sm:w-auto sm:flex-shrink-0 px-4 py-2 text-xs sm:text-sm font-medium text-violet-700 dark:text-violet-300 bg-violet-100 dark:bg-violet-900/50 hover:bg-violet-200 dark:hover:bg-violet-900/70 rounded-lg transition-colors touch-manipulation">
               Learn more
             </button>
           </div>
@@ -104,7 +115,7 @@ export function DashboardOverview() {
       )}
 
       {/* Stats Row - Minimal Typeform style */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: 'Events', value: stats?.totalEvents ?? 0, icon: Calendar, accent: 'violet' },
           { label: 'Vendors', value: stats?.confirmedVendors ?? 0, icon: Storefront, accent: 'emerald' },
@@ -116,24 +127,36 @@ export function DashboardOverview() {
             <div
               key={stat.label}
               className={cn(
-                'group p-5 rounded-xl bg-card border border-border/50',
+                'group p-3 sm:p-5 rounded-lg sm:rounded-xl bg-card border border-border/50',
                 'hover:border-border hover:shadow-sm transition-all duration-200'
               )}
             >
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <Icon
-                  size={20}
-                  weight="duotone"
+                  size={18}
                   className={cn(
+                    'sm:hidden',
                     stat.accent === 'violet' && 'text-violet-500',
                     stat.accent === 'emerald' && 'text-emerald-500',
                     stat.accent === 'amber' && 'text-amber-500',
                     stat.accent === 'blue' && 'text-blue-500',
                   )}
+                  weight="duotone"
+                />
+                <Icon
+                  size={20}
+                  className={cn(
+                    'hidden sm:block',
+                    stat.accent === 'violet' && 'text-violet-500',
+                    stat.accent === 'emerald' && 'text-emerald-500',
+                    stat.accent === 'amber' && 'text-amber-500',
+                    stat.accent === 'blue' && 'text-blue-500',
+                  )}
+                  weight="duotone"
                 />
               </div>
-              <p className="text-3xl font-semibold tracking-tight">{stat.value}</p>
-              <p className="text-sm text-muted-foreground mt-0.5">{stat.label}</p>
+              <p className="text-2xl sm:text-3xl font-semibold tracking-tight">{stat.value}</p>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{stat.label}</p>
             </div>
           )
         })}

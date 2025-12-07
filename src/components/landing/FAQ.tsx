@@ -42,26 +42,26 @@ export function FAQ() {
   const { ref, isVisible } = useScrollAnimation()
 
   return (
-    <section className="py-24 sm:py-32 px-6 section-divider">
+    <section className="py-16 sm:py-24 lg:py-32 px-4 sm:px-6 section-divider">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div
           ref={ref}
           className={cn(
-            'text-center mb-12 transition-all duration-700',
+            'text-center mb-8 sm:mb-12 transition-all duration-700',
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
-          <h2 className="font-mono text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">
+          <h2 className="font-mono text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
             got questions?
           </h2>
-          <p className="text-lg text-muted-foreground mt-4">
+          <p className="text-base sm:text-lg text-muted-foreground mt-3 sm:mt-4">
             we probably have answers. probably.
           </p>
         </div>
 
         {/* FAQ List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {faqs.map((faq, index) => (
             <FAQItem key={index} {...faq} index={index} />
           ))}
@@ -87,7 +87,7 @@ function FAQItem({
     <div
       ref={ref}
       className={cn(
-        'border border-border rounded-xl overflow-hidden bg-card',
+        'border border-border rounded-lg sm:rounded-xl overflow-hidden bg-card',
         'transition-all duration-500',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
@@ -95,16 +95,24 @@ function FAQItem({
     >
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/50 transition-colors cursor-pointer"
+        className="w-full flex items-center justify-between p-4 sm:p-5 text-left hover:bg-muted/50 transition-colors cursor-pointer touch-manipulation min-h-[56px] sm:min-h-0"
       >
-        <span className="font-medium text-sm sm:text-base pr-4">{question}</span>
+        <span className="font-medium text-xs sm:text-sm md:text-base pr-3 sm:pr-4">{question}</span>
         <CaretDown
-          size={20}
-          weight="bold"
+          size={16}
           className={cn(
-            'text-muted-foreground shrink-0 transition-transform duration-200',
+            'sm:hidden text-muted-foreground shrink-0 transition-transform duration-200',
             isOpen && 'rotate-180'
           )}
+          weight="bold"
+        />
+        <CaretDown
+          size={20}
+          className={cn(
+            'hidden sm:block text-muted-foreground shrink-0 transition-transform duration-200',
+            isOpen && 'rotate-180'
+          )}
+          weight="bold"
         />
       </button>
       <div
@@ -113,7 +121,7 @@ function FAQItem({
           isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
         )}
       >
-        <div className="p-5 pt-0 text-sm text-muted-foreground leading-relaxed">
+        <div className="p-4 sm:p-5 pt-0 text-xs sm:text-sm text-muted-foreground leading-relaxed">
           {answer}
         </div>
       </div>

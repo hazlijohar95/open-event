@@ -188,17 +188,17 @@ export function EventsPage() {
   const totalCount = allEvents?.length || 0
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold font-mono">Events</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold font-mono">Events</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mt-1">
           Manage all your events in one place
         </p>
       </div>
 
-      {/* Status Filter Tabs with Counts */}
-      <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-border">
+      {/* Status Filter Tabs with Counts - horizontal scroll on mobile */}
+      <div className="flex items-center gap-2 pb-2 border-b border-border overflow-x-auto hide-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0">
         {eventStatusFilters.map((filter) => {
           const count = filter.value === 'all'
             ? totalCount
@@ -213,7 +213,7 @@ export function EventsPage() {
                   <button
                     onClick={() => setStatusFilter(filter.value)}
                     className={cn(
-                      'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer',
+                      'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer touch-manipulation whitespace-nowrap shrink-0',
                       isActive
                         ? 'bg-primary text-primary-foreground shadow-sm'
                         : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -222,14 +222,22 @@ export function EventsPage() {
                     {config && (
                       <StatusIcon
                         status={filter.value}
-                        size={16}
-                        className={isActive ? '' : config.text}
+                        size={14}
+                        className={cn('sm:hidden', isActive ? '' : config.text)}
                       />
                     )}
-                    <span>{filter.label}</span>
+                    {config && (
+                      <StatusIcon
+                        status={filter.value}
+                        size={16}
+                        className={cn('hidden sm:block', isActive ? '' : config.text)}
+                      />
+                    )}
+                    <span className="hidden sm:inline">{filter.label}</span>
+                    <span className="sm:hidden">{filter.label.split(' ')[0]}</span>
                     <span
                       className={cn(
-                        'px-1.5 py-0.5 rounded text-xs font-semibold min-w-[1.25rem] text-center',
+                        'px-1 sm:px-1.5 py-0.5 rounded text-[10px] sm:text-xs font-semibold min-w-[1rem] sm:min-w-[1.25rem] text-center',
                         isActive
                           ? 'bg-primary-foreground/20 text-primary-foreground'
                           : 'bg-muted text-muted-foreground'
@@ -285,7 +293,7 @@ export function EventsPage() {
         </div>
       ) : (
         // Events List
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {events.map((event) => {
             const config = eventStatusConfig[event.status] || eventStatusConfig.draft
             const hasNextAction = config.nextStatus && config.nextAction
@@ -293,58 +301,63 @@ export function EventsPage() {
             return (
               <div
                 key={event._id}
-                className="rounded-xl border border-border bg-card p-5 hover:border-primary/20 hover:bg-muted/30 transition-colors group"
+                className="rounded-lg sm:rounded-xl border border-border bg-card p-3 sm:p-5 hover:border-primary/20 hover:bg-muted/30 transition-colors group"
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-2 sm:gap-4">
                   <Link
                     to={`/dashboard/events/${event._id}`}
                     className="flex-1 min-w-0"
                   >
                     {/* Title and Status Badge */}
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 mb-2">
+                      <h3 className="text-sm sm:text-base font-semibold truncate group-hover:text-primary transition-colors">
                         {event.title}
                       </h3>
                       <span
                         className={cn(
-                          'inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium',
+                          'inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium w-fit',
                           config.bg,
                           config.text
                         )}
                       >
-                        <StatusIcon status={event.status} size={12} />
+                        <StatusIcon status={event.status} size={10} className="sm:hidden" />
+                        <StatusIcon status={event.status} size={12} className="hidden sm:block" />
                         {config.label}
                       </span>
                     </div>
 
-                    {/* Description */}
+                    {/* Description - hidden on mobile */}
                     {event.description && (
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-1">
+                      <p className="hidden sm:block text-sm text-muted-foreground mb-3 line-clamp-1">
                         {event.description}
                       </p>
                     )}
 
                     {/* Event Details */}
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-3">
-                      <span className="inline-flex items-center gap-1.5">
-                        <Clock size={14} weight="bold" />
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3">
+                      <span className="inline-flex items-center gap-1 sm:gap-1.5">
+                        <Clock size={12} className="sm:hidden" weight="bold" />
+                        <Clock size={14} className="hidden sm:block" weight="bold" />
                         {formatDate(event.startDate)}
                       </span>
                       {event.venueName && (
-                        <span className="inline-flex items-center gap-1.5">
-                          <MapPin size={14} weight="bold" />
-                          {event.venueName}
+                        <span className="inline-flex items-center gap-1 sm:gap-1.5 truncate max-w-[120px] sm:max-w-none">
+                          <MapPin size={12} className="sm:hidden shrink-0" weight="bold" />
+                          <MapPin size={14} className="hidden sm:block shrink-0" weight="bold" />
+                          <span className="truncate">{event.venueName}</span>
                         </span>
                       )}
                       {event.eventType && (
-                        <span className="inline-flex items-center gap-1.5 capitalize">
+                        <span className="hidden sm:inline-flex items-center gap-1.5 capitalize">
                           {event.eventType}
                         </span>
                       )}
                     </div>
 
-                    {/* Progress Indicator */}
-                    <StatusProgress currentStatus={event.status} />
+                    {/* Progress Indicator - simplified on mobile */}
+                    <div className="hidden sm:block">
+                      <StatusProgress currentStatus={event.status} />
+                    </div>
                   </Link>
 
                   {/* Actions */}

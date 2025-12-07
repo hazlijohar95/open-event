@@ -54,43 +54,44 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
         onClick={onClose}
       />
 
-      {/* Sidebar */}
+      {/* Sidebar - Optimized width for mobile */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-72 bg-sidebar border-r border-border lg:hidden',
-          'transform transition-transform duration-200 ease-out',
+          'fixed inset-y-0 left-0 z-50 w-[280px] sm:w-72 bg-sidebar border-r border-border lg:hidden',
+          'transform transition-transform duration-300 ease-out',
+          'safe-area-top safe-area-bottom',
           open ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between h-14 px-4 border-b border-border">
-          <Link to="/" className="font-mono text-base font-bold" onClick={onClose}>
+        <div className="flex items-center justify-between h-14 px-3 sm:px-4 border-b border-border">
+          <Link to="/" className="font-mono text-sm sm:text-base font-bold" onClick={onClose}>
             <span className="text-foreground">open</span>
             <span className="text-primary">-</span>
             <span className="text-foreground">event</span>
           </Link>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            className="p-2.5 -mr-2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <X size={20} weight="bold" />
           </button>
         </div>
 
         {/* Organization Switcher */}
-        <div className="p-3 border-b border-border">
+        <div className="p-2.5 sm:p-3 border-b border-border">
           <OrganizationSwitcher />
         </div>
 
         {/* Create Event Button */}
-        <div className="p-3">
+        <div className="p-2.5 sm:p-3">
           <Link
             to="/dashboard/events/new"
             onClick={onClose}
             className={cn(
-              'flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg',
+              'flex items-center justify-center gap-2 w-full px-4 py-3 sm:py-2.5 rounded-lg',
               'bg-primary text-primary-foreground font-medium text-sm',
-              'hover:bg-primary/90 transition-all cursor-pointer'
+              'hover:bg-primary/90 transition-all cursor-pointer touch-manipulation active:scale-[0.98]'
             )}
           >
             <Plus size={18} weight="bold" />
@@ -98,8 +99,8 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
           </Link>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 px-2 py-2 space-y-1 overflow-y-auto">
+        {/* Navigation - Larger touch targets */}
+        <nav className="flex-1 px-2 py-2 space-y-0.5 sm:space-y-1 overflow-y-auto mobile-scroll">
           {navigationItems.map((item) => {
             const Icon = item.icon
             const active = isActive(item.path)
@@ -109,10 +110,10 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                 to={item.path}
                 onClick={onClose}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center gap-3 px-3 py-3 sm:py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation',
                   active
                     ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted active:bg-muted'
                 )}
               >
                 <Icon size={20} weight={active ? 'duotone' : 'regular'} />
@@ -123,14 +124,14 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
         </nav>
 
         {/* Bottom Navigation */}
-        <div className="px-2 py-3 border-t border-border space-y-1">
+        <div className="px-2 py-3 border-t border-border space-y-0.5 sm:space-y-1">
           {isAdmin && (
             <Link
               to="/admin"
               onClick={onClose}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
+                'flex items-center gap-3 px-3 py-3 sm:py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation',
+                'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 active:bg-amber-500/25'
               )}
             >
               <ShieldCheck size={20} weight="duotone" />
@@ -146,10 +147,10 @@ export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
                 to={item.path}
                 onClick={onClose}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  'flex items-center gap-3 px-3 py-3 sm:py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation',
                   active
                     ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted active:bg-muted'
                 )}
               >
                 <Icon size={20} weight={active ? 'duotone' : 'regular'} />

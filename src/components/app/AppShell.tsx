@@ -49,7 +49,7 @@ export function AppShell() {
             sidebarCollapsed ? 'lg:pl-16' : 'lg:pl-60'
           )}
         >
-          <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+          <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto safe-area-bottom">
             <Outlet />
           </div>
         </main>

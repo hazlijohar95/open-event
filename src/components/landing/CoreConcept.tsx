@@ -143,7 +143,7 @@ export function CoreConcept() {
   }
 
   return (
-    <section className="relative py-20 sm:py-28 px-6 overflow-hidden">
+    <section className="relative py-14 sm:py-20 lg:py-28 px-4 sm:px-6 overflow-hidden">
       {/* Clean subtle background */}
       <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-background to-background" />
 
@@ -152,27 +152,27 @@ export function CoreConcept() {
         <div
           ref={ref}
           className={cn(
-            'text-center mb-12 transition-all duration-700',
+            'text-center mb-8 sm:mb-12 transition-all duration-700',
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
           )}
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight mb-4">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight mb-3 sm:mb-4">
             How it{' '}
             <span className="relative inline-block">
               works
-              <svg className="absolute -bottom-1 left-0 w-full" height="6" viewBox="0 0 100 6" preserveAspectRatio="none">
+              <svg className="absolute -bottom-0.5 sm:-bottom-1 left-0 w-full" height="6" viewBox="0 0 100 6" preserveAspectRatio="none">
                 <path d="M0 5 Q25 0 50 5 T100 5" stroke="currentColor" strokeWidth="2" fill="none" className="text-amber-400" />
               </svg>
             </span>
           </h2>
-          <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-xl mx-auto px-2">
             Three steps for everyone. Pick your role.
           </p>
         </div>
 
-        {/* Minimal tabs */}
-        <div className="flex justify-center mb-10">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-background">
+        {/* Horizontal scrollable tabs on mobile */}
+        <div className="flex justify-center mb-6 sm:mb-10">
+          <div className="inline-flex items-center gap-0.5 sm:gap-1 p-1 rounded-full border border-border bg-background overflow-x-auto hide-scrollbar max-w-full">
             {(Object.keys(audienceData) as AudienceType[]).map((key) => {
               const data = audienceData[key]
               const isActive = activeAudience === key
@@ -181,14 +181,14 @@ export function CoreConcept() {
                   key={key}
                   onClick={() => handleTabChange(key)}
                   className={cn(
-                    'relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer',
+                    'relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-medium transition-all duration-300 cursor-pointer touch-manipulation shrink-0 min-h-[44px]',
                     isActive
                       ? `${data.textColor} bg-muted/50`
-                      : 'text-muted-foreground hover:text-foreground'
+                      : 'text-muted-foreground hover:text-foreground active:bg-muted/30'
                   )}
                 >
-                  <span className="text-base">{data.emoji}</span>
-                  <span className="hidden sm:inline">{data.label}</span>
+                  <span className="text-sm sm:text-base">{data.emoji}</span>
+                  <span className="text-xs sm:text-sm">{data.label}</span>
                 </button>
               )
             })}
@@ -200,18 +200,18 @@ export function CoreConcept() {
           'transition-all duration-300',
           isAnimating && 'opacity-0 scale-95'
         )}>
-          {/* Progress dots */}
-          <div className="flex justify-center mb-8">
-            <div className="flex items-center gap-2">
+          {/* Progress dots - larger touch targets on mobile */}
+          <div className="flex justify-center mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 sm:gap-2">
               {[0, 1, 2].map((i) => (
                 <button
                   key={i}
                   onClick={() => setActiveStep(i)}
                   className={cn(
-                    'transition-all duration-300 cursor-pointer rounded-full',
+                    'transition-all duration-300 cursor-pointer rounded-full touch-manipulation p-2 -m-2 sm:p-0 sm:m-0',
                     activeStep === i
-                      ? `w-6 h-1.5 ${currentData.textColor.replace('text-', 'bg-')}`
-                      : 'w-1.5 h-1.5 bg-border hover:bg-muted-foreground/50'
+                      ? `w-8 sm:w-6 h-2 sm:h-1.5 ${currentData.textColor.replace('text-', 'bg-')}`
+                      : 'w-2.5 sm:w-1.5 h-2.5 sm:h-1.5 bg-border hover:bg-muted-foreground/50'
                   )}
                 />
               ))}
@@ -219,7 +219,7 @@ export function CoreConcept() {
           </div>
 
           {/* Steps grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5">
             {currentData.steps.map((step, index) => (
               <StepCard
                 key={`${activeAudience}-${step.number}`}
@@ -244,9 +244,10 @@ export function CoreConcept() {
           </div>
 
           {/* Footer */}
-          <div className="text-center mt-8">
-            <p className="text-sm text-muted-foreground/50 flex items-center justify-center gap-2">
-              <Sparkle size={12} weight="fill" className="text-amber-400" />
+          <div className="text-center mt-6 sm:mt-8">
+            <p className="text-xs sm:text-sm text-muted-foreground/50 flex items-center justify-center gap-1.5 sm:gap-2">
+              <Sparkle size={10} className="sm:hidden text-amber-400" weight="fill" />
+              <Sparkle size={12} className="hidden sm:block text-amber-400" weight="fill" />
               That's it. No 47-step onboarding.
             </p>
           </div>
@@ -276,7 +277,7 @@ function StepCard({
     <div
       ref={ref}
       className={cn(
-        'relative p-6 rounded-2xl border bg-card transition-all duration-500',
+        'relative p-4 sm:p-6 rounded-xl sm:rounded-2xl border bg-card transition-all duration-500 touch-manipulation',
         isActive
           ? `${borderColor} border-2`
           : 'border-border hover:border-border/80',
@@ -286,7 +287,7 @@ function StepCard({
     >
       {/* Step number - minimal outline style */}
       <div className={cn(
-        'absolute -top-3 left-6 w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 bg-background transition-all duration-300',
+        'absolute -top-2.5 sm:-top-3 left-4 sm:left-6 w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold border-2 bg-background transition-all duration-300',
         isActive ? borderColor : 'border-border',
         isActive ? textColor : 'text-muted-foreground'
       )}>
@@ -295,24 +296,32 @@ function StepCard({
 
       {/* Icon - minimal with color on active */}
       <div className={cn(
-        'w-12 h-12 rounded-xl flex items-center justify-center mb-4 mt-2 border transition-all duration-300',
+        'w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 mt-1 sm:mt-2 border transition-all duration-300',
         isActive
           ? `${borderColor} border-2`
           : 'border-border'
       )}>
         <IconComponent
-          size={24}
-          weight="duotone"
+          size={20}
           className={cn(
-            'transition-colors duration-300',
+            'sm:hidden transition-colors duration-300',
             isActive ? textColor : 'text-muted-foreground'
           )}
+          weight="duotone"
+        />
+        <IconComponent
+          size={24}
+          className={cn(
+            'hidden sm:block transition-colors duration-300',
+            isActive ? textColor : 'text-muted-foreground'
+          )}
+          weight="duotone"
         />
       </div>
 
       {/* Title with color accent when active */}
       <h3 className={cn(
-        'text-lg font-semibold mb-2 transition-colors duration-300',
+        'text-base sm:text-lg font-semibold mb-1.5 sm:mb-2 transition-colors duration-300',
         isActive ? textColor : 'text-foreground'
       )}>
         {step.title}
@@ -320,7 +329,7 @@ function StepCard({
 
       {/* Description */}
       <p className={cn(
-        'text-sm leading-relaxed transition-colors duration-300',
+        'text-xs sm:text-sm leading-relaxed transition-colors duration-300',
         isActive ? 'text-foreground' : 'text-muted-foreground'
       )}>
         {step.description}
