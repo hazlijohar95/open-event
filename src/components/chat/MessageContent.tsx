@@ -1,0 +1,213 @@
+import { memo, type ReactNode } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import { Highlight, themes } from 'prism-react-renderer'
+import { cn } from '@/lib/utils'
+
+// ============================================================================
+// Types
+// ============================================================================
+
+export interface MessageContentProps {
+  content: string
+  className?: string
+  isUser?: boolean
+}
+
+// ============================================================================
+// Code Block Component
+// ============================================================================
+
+interface CodeBlockProps {
+  language: string
+  code: string
+  isUser?: boolean
+}
+
+function CodeBlock({ language, code, isUser }: CodeBlockProps) {
+  return (
+    <Highlight theme={themes.nightOwl} code={code.trim()} language={language || 'text'}>
+      {({ className, style, tokens, getLineProps, getTokenProps }) => (
+        <div className="relative group my-2">
+          {/* Language badge */}
+          {language && (
+            <div className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-mono bg-white/10 text-white/70">
+              {language}
+            </div>
+          )}
+          <pre
+            className={cn(
+              className,
+              'p-4 rounded-lg overflow-x-auto text-sm',
+              isUser ? 'bg-black/20' : 'bg-zinc-900'
+            )}
+            style={style}
+          >
+            {tokens.map((line, i) => {
+              const lineProps = getLineProps({ line, key: i })
+              return (
+                <div key={i} {...lineProps}>
+                  {line.map((token, tokenIdx) => {
+                    const tokenProps = getTokenProps({ token, key: tokenIdx })
+                    return <span key={tokenIdx} {...tokenProps} />
+                  })}
+                </div>
+              )
+            })}
+          </pre>
+        </div>
+      )}
+    </Highlight>
+  )
+}
+
+// ============================================================================
+// Inline Code Component
+// ============================================================================
+
+interface InlineCodeProps {
+  children: ReactNode
+  isUser?: boolean
+}
+
+function InlineCode({ children, isUser }: InlineCodeProps) {
+  return (
+    <code
+      className={cn(
+        'px-1.5 py-0.5 rounded font-mono text-sm',
+        isUser ? 'bg-black/20' : 'bg-muted-foreground/20'
+      )}
+    >
+      {children}
+    </code>
+  )
+}
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
+export const MessageContent = memo(function MessageContent({
+  content,
+  className,
+  isUser = false,
+}: MessageContentProps) {
+  return (
+    <div
+      className={cn(
+        'prose prose-sm max-w-none',
+        isUser ? 'prose-invert' : 'dark:prose-invert',
+        // Override prose styles
+        '[&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+        className
+      )}
+    >
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          // Headings
+          h1: ({ children }) => (
+            <h1 className="text-lg font-bold mt-4 mb-2">{children}</h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-base font-bold mt-3 mb-2">{children}</h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-sm font-bold mt-2 mb-1">{children}</h3>
+          ),
+
+          // Paragraphs
+          p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+
+          // Lists
+          ul: ({ children }) => (
+            <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>
+          ),
+          li: ({ children }) => <li className="ml-2">{children}</li>,
+
+          // Links
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                'underline underline-offset-2',
+                isUser ? 'hover:text-white/80' : 'text-primary hover:text-primary/80'
+              )}
+            >
+              {children}
+            </a>
+          ),
+
+          // Blockquotes
+          blockquote: ({ children }) => (
+            <blockquote
+              className={cn(
+                'border-l-2 pl-3 italic my-2',
+                isUser ? 'border-white/30' : 'border-primary/50'
+              )}
+            >
+              {children}
+            </blockquote>
+          ),
+
+          // Code
+          code: ({ className, children }) => {
+            const match = /language-(\w+)/.exec(className || '')
+            const isBlock = match !== null
+
+            if (isBlock) {
+              return (
+                <CodeBlock
+                  language={match[1]}
+                  code={String(children)}
+                  isUser={isUser}
+                />
+              )
+            }
+
+            return <InlineCode isUser={isUser}>{children}</InlineCode>
+          },
+
+          // Pre (for code blocks wrapped in pre)
+          pre: ({ children }) => <>{children}</>,
+
+          // Tables
+          table: ({ children }) => (
+            <div className="overflow-x-auto my-2">
+              <table className="min-w-full border-collapse text-sm">{children}</table>
+            </div>
+          ),
+          thead: ({ children }) => (
+            <thead className={cn(isUser ? 'bg-black/10' : 'bg-muted/50')}>
+              {children}
+            </thead>
+          ),
+          th: ({ children }) => (
+            <th className="px-3 py-2 text-left font-semibold border-b border-border">
+              {children}
+            </th>
+          ),
+          td: ({ children }) => (
+            <td className="px-3 py-2 border-b border-border/50">{children}</td>
+          ),
+
+          // Horizontal rule
+          hr: () => (
+            <hr className={cn('my-4', isUser ? 'border-white/20' : 'border-border')} />
+          ),
+
+          // Strong and emphasis
+          strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+          em: ({ children }) => <em className="italic">{children}</em>,
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  )
+})
