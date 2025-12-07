@@ -2,7 +2,7 @@ import { httpRouter } from 'convex/server'
 import { httpAction } from './_generated/server'
 import { auth } from './auth'
 import OpenAI from 'openai'
-import { api } from './_generated/api'
+import { api, internal } from './_generated/api'
 import { getOpenAITools, toolRequiresConfirmation } from './lib/agent/tools'
 import { executeToolHandler } from './lib/agent/handlers'
 import type { ToolName, ToolCall, ToolResult } from './lib/agent/types'
@@ -208,6 +208,23 @@ http.route({
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
+    }
+
+    // Check rate limit
+    const rateLimit = await ctx.runQuery(api.aiUsage.checkRateLimit, { userId: user._id })
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          message: `You've used all ${rateLimit.limit} AI prompts for today. Your limit resets at midnight UTC.`,
+          remaining: 0,
+          limit: rateLimit.limit,
+        }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
     }
 
     // Get user profile for context
@@ -449,6 +466,12 @@ http.route({
             }
           }
 
+          // Increment usage count for successful request
+          await ctx.runMutation(internal.aiUsage.incrementUsageInternal, { userId: user._id })
+
+          // Get updated remaining prompts
+          const updatedRateLimit = await ctx.runQuery(api.aiUsage.checkRateLimit, { userId: user._id })
+
           // Send completion event
           sendEvent('done', {
             message: finalMessage,
@@ -457,6 +480,11 @@ http.route({
             pendingConfirmations,
             isComplete,
             entityId,
+            // Include rate limit info
+            rateLimit: {
+              remaining: updatedRateLimit.remaining,
+              limit: updatedRateLimit.limit,
+            },
           })
         } catch (error) {
           sendEvent('error', {

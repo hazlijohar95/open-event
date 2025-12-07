@@ -614,4 +614,19 @@ export default defineSchema({
     .index('by_type', ['applicationType'])
     .index('by_type_status', ['applicationType', 'status'])
     .index('by_email', ['contactEmail']),
+
+  // AI Usage Tracking - Rate limiting for AI agent prompts
+  aiUsage: defineTable({
+    userId: v.id('users'),
+    // Daily usage tracking
+    promptCount: v.number(), // Number of prompts used today
+    lastResetDate: v.string(), // Date string (YYYY-MM-DD) for daily reset
+    // Lifetime stats
+    totalPrompts: v.optional(v.number()),
+    // Plan limits (default 5 for free users)
+    dailyLimit: v.optional(v.number()), // Override default limit (e.g., for premium)
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_user', ['userId']),
 })

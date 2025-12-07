@@ -1,7 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect, type ReactNode, useLayoutEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useConvexAuth } from 'convex/react'
+import { useConvexAuth, useQuery } from 'convex/react'
 import { useAuthToken } from '@convex-dev/auth/react'
+import { api } from '../../../convex/_generated/api'
 import {
   Sparkle,
   PaperPlaneTilt,
@@ -13,6 +14,7 @@ import {
   Copy,
   CheckCircle,
   CaretUp,
+  Lightning,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -496,6 +498,15 @@ export function AgenticChat({
   const { isAuthenticated } = useConvexAuth()
   const authToken = useAuthToken()
 
+  // AI Usage/Rate limit
+  const aiUsage = useQuery(api.aiUsage.getMyUsage)
+  const [localRemaining, setLocalRemaining] = useState<number | null>(null)
+
+  // Use local state if available, otherwise use query result
+  const promptsRemaining = localRemaining ?? aiUsage?.promptsRemaining ?? 5
+  const promptsLimit = aiUsage?.dailyLimit ?? 5
+  const isRateLimited = promptsRemaining <= 0
+
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
@@ -570,6 +581,12 @@ export function AgenticChat({
   const handleSend = useCallback(async (userMessage: string) => {
     if (isLoading || !isAuthenticated || !authToken || !userMessage.trim()) return
 
+    // Check rate limit before sending
+    if (isRateLimited) {
+      toast.error('Daily limit reached. Your prompts reset at midnight UTC.')
+      return
+    }
+
     setInputValue('')
     setIsLoading(true)
     setIsStreaming(false)
@@ -613,8 +630,15 @@ export function AgenticChat({
       })
 
       if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(errorText || `HTTP error! status: ${response.status}`)
+        const errorData = await response.json().catch(() => null)
+
+        // Handle rate limit specifically
+        if (response.status === 429) {
+          setLocalRemaining(0)
+          throw new Error(errorData?.message || 'Daily limit reached. Please try again tomorrow.')
+        }
+
+        throw new Error(errorData?.error || errorData?.message || `HTTP error! status: ${response.status}`)
       }
 
       const reader = response.body?.getReader()
@@ -705,6 +729,12 @@ export function AgenticChat({
                     pendingConfirmations: ToolCall[]
                     isComplete: boolean
                     entityId?: string
+                    rateLimit?: { remaining: number; limit: number }
+                  }
+
+                  // Update local remaining count
+                  if (doneData.rateLimit) {
+                    setLocalRemaining(doneData.rateLimit.remaining)
                   }
 
                   if (doneData.isComplete && doneData.entityId) {
@@ -761,7 +791,7 @@ export function AgenticChat({
       setCurrentActivity(null)
       abortControllerRef.current = null
     }
-  }, [messages, isLoading, isAuthenticated, authToken, convexUrl, confirmedToolCalls, navigate, onComplete])
+  }, [messages, isLoading, isAuthenticated, authToken, convexUrl, confirmedToolCalls, navigate, onComplete, isRateLimited])
 
   // Confirm tool - execute directly via dedicated endpoint
   const handleConfirm = useCallback(async () => {
@@ -865,13 +895,35 @@ export function AgenticChat({
       <div className="agentic-chat-layout">
         {/* Header */}
         <div className="agentic-header">
-          <p className="text-muted-foreground text-sm font-medium">{title}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-muted-foreground text-sm font-medium">{title}</p>
+            {/* Prompts remaining indicator */}
+            {isAuthenticated && (
+              <div className={cn(
+                'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
+                'transition-all duration-300',
+                isRateLimited
+                  ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                  : promptsRemaining <= 2
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    : 'bg-primary/10 text-primary'
+              )}>
+                <Lightning size={12} weight="fill" />
+                <span>{promptsRemaining}/{promptsLimit} prompts</span>
+              </div>
+            )}
+          </div>
           <h1 className={cn(
             'font-semibold tracking-tight transition-all duration-500',
             hasMessages ? 'text-xl' : 'text-2xl sm:text-3xl'
           )}>
-            {hasMessages ? 'Continue your conversation' : subtitle}
+            {isRateLimited ? 'Daily limit reached' : hasMessages ? 'Continue your conversation' : subtitle}
           </h1>
+          {isRateLimited && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Your prompts reset at midnight UTC. Come back tomorrow!
+            </p>
+          )}
         </div>
 
         {/* Conversation Area - Animated height */}
@@ -1056,8 +1108,8 @@ export function AgenticChat({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={placeholder}
-                disabled={isLoading || !!pendingConfirmation}
+                placeholder={isRateLimited ? 'Daily limit reached. Come back tomorrow!' : placeholder}
+                disabled={isLoading || !!pendingConfirmation || isRateLimited}
                 rows={2}
                 className="agentic-textarea"
               />
@@ -1074,10 +1126,10 @@ export function AgenticChat({
 
                 <button
                   onClick={handleSubmit}
-                  disabled={!inputValue.trim() || isLoading || !!pendingConfirmation}
+                  disabled={!inputValue.trim() || isLoading || !!pendingConfirmation || isRateLimited}
                   className={cn(
                     'p-2.5 rounded-xl transition-all duration-200',
-                    inputValue.trim() && !isLoading
+                    inputValue.trim() && !isLoading && !isRateLimited
                       ? 'bg-foreground text-background hover:scale-105 shadow-lg'
                       : 'bg-muted/50 text-muted-foreground/50 cursor-not-allowed'
                   )}
