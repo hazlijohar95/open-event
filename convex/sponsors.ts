@@ -1,5 +1,10 @@
 import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
+import { assertRole } from './lib/auth'
+
+// ============================================================================
+// Public Queries (for organizers)
+// ============================================================================
 
 // List all approved sponsors with optional industry filter
 export const list = query({
@@ -63,18 +68,25 @@ export const getByEvent = query({
       .withIndex('by_event', (q) => q.eq('eventId', args.eventId))
       .collect()
 
-    // Fetch full sponsor details for each relationship
-    const sponsorsWithDetails = await Promise.all(
-      eventSponsors.map(async (es) => {
-        const sponsor = await ctx.db.get(es.sponsorId)
-        return {
-          ...es,
-          sponsor,
-        }
-      })
+    if (eventSponsors.length === 0) return []
+
+    // BATCH LOAD: Fetch all sponsors at once instead of N+1 queries
+    const sponsorIds = [...new Set(eventSponsors.map((es) => es.sponsorId))]
+    const sponsorPromises = sponsorIds.map((id) => ctx.db.get(id))
+    const sponsors = await Promise.all(sponsorPromises)
+
+    // Create lookup map
+    const sponsorMap = new Map(
+      sponsors.filter(Boolean).map((s) => [s!._id, s!])
     )
 
-    return sponsorsWithDetails.filter((s) => s.sponsor !== null)
+    // Merge using map (no additional queries)
+    return eventSponsors
+      .map((es) => ({
+        ...es,
+        sponsor: sponsorMap.get(es.sponsorId) || null,
+      }))
+      .filter((s) => s.sponsor !== null)
   },
 })
 
@@ -100,5 +112,269 @@ export const create = mutation({
       status: 'pending',
       createdAt: Date.now(),
     })
+  },
+})
+
+// ============================================================================
+// Admin Queries
+// ============================================================================
+
+// List all sponsors for admin review (includes pending)
+export const listForAdmin = query({
+  args: {
+    status: v.optional(v.union(v.literal('pending'), v.literal('approved'), v.literal('rejected'))),
+    industry: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await assertRole(ctx, 'admin')
+
+    let sponsors
+    const statusFilter = args.status
+    if (statusFilter) {
+      sponsors = await ctx.db
+        .query('sponsors')
+        .withIndex('by_status', (q) => q.eq('status', statusFilter))
+        .order('desc')
+        .collect()
+    } else {
+      sponsors = await ctx.db.query('sponsors').order('desc').collect()
+    }
+
+    // Filter by industry if provided
+    if (args.industry && args.industry !== 'all') {
+      sponsors = sponsors.filter((s) => s.industry === args.industry)
+    }
+
+    // Apply limit
+    const limit = args.limit || 100
+    return sponsors.slice(0, limit)
+  },
+})
+
+// Get pending sponsors count for admin dashboard
+export const getPendingCount = query({
+  args: {},
+  handler: async (ctx) => {
+    await assertRole(ctx, 'admin')
+
+    const pending = await ctx.db
+      .query('sponsors')
+      .withIndex('by_status', (q) => q.eq('status', 'pending'))
+      .collect()
+
+    return pending.length
+  },
+})
+
+// ============================================================================
+// Admin Mutations
+// ============================================================================
+
+// Approve a sponsor
+export const approve = mutation({
+  args: {
+    sponsorId: v.id('sponsors'),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await assertRole(ctx, 'admin')
+
+    const sponsor = await ctx.db.get(args.sponsorId)
+    if (!sponsor) {
+      throw new Error('Sponsor not found')
+    }
+
+    if (sponsor.status === 'approved') {
+      throw new Error('Sponsor is already approved')
+    }
+
+    const now = Date.now()
+
+    await ctx.db.patch(args.sponsorId, {
+      status: 'approved',
+      verified: true,
+      reviewedBy: admin._id,
+      reviewedAt: now,
+      reviewNotes: args.notes,
+      rejectionReason: undefined,
+      updatedAt: now,
+    })
+
+    // Log the action
+    await ctx.db.insert('moderationLogs', {
+      adminId: admin._id,
+      action: 'sponsor_approved',
+      targetType: 'sponsor',
+      targetId: args.sponsorId,
+      reason: args.notes || 'Sponsor approved',
+      metadata: {
+        sponsorName: sponsor.name,
+        sponsorIndustry: sponsor.industry,
+      },
+      createdAt: now,
+    })
+
+    return { success: true }
+  },
+})
+
+// Reject a sponsor
+export const reject = mutation({
+  args: {
+    sponsorId: v.id('sponsors'),
+    reason: v.string(),
+    notes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await assertRole(ctx, 'admin')
+
+    const sponsor = await ctx.db.get(args.sponsorId)
+    if (!sponsor) {
+      throw new Error('Sponsor not found')
+    }
+
+    if (sponsor.status === 'rejected') {
+      throw new Error('Sponsor is already rejected')
+    }
+
+    const now = Date.now()
+
+    await ctx.db.patch(args.sponsorId, {
+      status: 'rejected',
+      verified: false,
+      reviewedBy: admin._id,
+      reviewedAt: now,
+      rejectionReason: args.reason,
+      reviewNotes: args.notes,
+      updatedAt: now,
+    })
+
+    // Log the action
+    await ctx.db.insert('moderationLogs', {
+      adminId: admin._id,
+      action: 'sponsor_rejected',
+      targetType: 'sponsor',
+      targetId: args.sponsorId,
+      reason: args.reason,
+      metadata: {
+        sponsorName: sponsor.name,
+        sponsorIndustry: sponsor.industry,
+        internalNotes: args.notes,
+      },
+      createdAt: now,
+    })
+
+    return { success: true }
+  },
+})
+
+// Admin create sponsor (manual onboarding)
+export const adminCreate = mutation({
+  args: {
+    name: v.string(),
+    description: v.optional(v.string()),
+    industry: v.string(),
+    sponsorshipTiers: v.optional(v.array(v.string())),
+    budgetMin: v.optional(v.number()),
+    budgetMax: v.optional(v.number()),
+    targetEventTypes: v.optional(v.array(v.string())),
+    targetAudience: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    contactName: v.optional(v.string()),
+    website: v.optional(v.string()),
+    applicationSource: v.optional(v.string()),
+    applicationNotes: v.optional(v.string()),
+    autoApprove: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await assertRole(ctx, 'admin')
+
+    const now = Date.now()
+    const status = args.autoApprove ? 'approved' : 'pending'
+
+    const sponsorId = await ctx.db.insert('sponsors', {
+      name: args.name,
+      description: args.description,
+      industry: args.industry,
+      sponsorshipTiers: args.sponsorshipTiers,
+      budgetMin: args.budgetMin,
+      budgetMax: args.budgetMax,
+      targetEventTypes: args.targetEventTypes,
+      targetAudience: args.targetAudience,
+      contactEmail: args.contactEmail,
+      contactName: args.contactName,
+      website: args.website,
+      verified: args.autoApprove || false,
+      status,
+      applicationSource: args.applicationSource || 'manual',
+      applicationNotes: args.applicationNotes,
+      reviewedBy: args.autoApprove ? admin._id : undefined,
+      reviewedAt: args.autoApprove ? now : undefined,
+      createdAt: now,
+    })
+
+    // Log if auto-approved
+    if (args.autoApprove) {
+      await ctx.db.insert('moderationLogs', {
+        adminId: admin._id,
+        action: 'sponsor_approved',
+        targetType: 'sponsor',
+        targetId: sponsorId,
+        reason: 'Manually onboarded and approved',
+        metadata: {
+          sponsorName: args.name,
+          sponsorIndustry: args.industry,
+          source: args.applicationSource || 'manual',
+        },
+        createdAt: now,
+      })
+    }
+
+    return sponsorId
+  },
+})
+
+// Admin update sponsor
+export const adminUpdate = mutation({
+  args: {
+    sponsorId: v.id('sponsors'),
+    name: v.optional(v.string()),
+    description: v.optional(v.string()),
+    industry: v.optional(v.string()),
+    sponsorshipTiers: v.optional(v.array(v.string())),
+    budgetMin: v.optional(v.number()),
+    budgetMax: v.optional(v.number()),
+    targetEventTypes: v.optional(v.array(v.string())),
+    targetAudience: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    contactName: v.optional(v.string()),
+    website: v.optional(v.string()),
+    applicationNotes: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await assertRole(ctx, 'admin')
+
+    const { sponsorId, ...updates } = args
+
+    const sponsor = await ctx.db.get(sponsorId)
+    if (!sponsor) {
+      throw new Error('Sponsor not found')
+    }
+
+    // Filter out undefined values
+    const filteredUpdates: Record<string, unknown> = {}
+    for (const [key, value] of Object.entries(updates)) {
+      if (value !== undefined) {
+        filteredUpdates[key] = value
+      }
+    }
+
+    await ctx.db.patch(sponsorId, {
+      ...filteredUpdates,
+      updatedAt: Date.now(),
+    })
+
+    return { success: true }
   },
 })

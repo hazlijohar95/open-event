@@ -51,3 +51,4 @@ export const getUserRole = query({
     return user?.role ?? null
   },
 })
+

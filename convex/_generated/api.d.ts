@@ -10,15 +10,21 @@
 
 import type * as actions_agent from "../actions/agent.js";
 import type * as actions_ai from "../actions/ai.js";
+import type * as admin from "../admin.js";
 import type * as aiConversations from "../aiConversations.js";
 import type * as auth from "../auth.js";
+import type * as budgetItems from "../budgetItems.js";
+import type * as eventApplications from "../eventApplications.js";
+import type * as eventTasks from "../eventTasks.js";
 import type * as events from "../events.js";
 import type * as http from "../http.js";
+import type * as inquiries from "../inquiries.js";
 import type * as lib_agent_handlers from "../lib/agent/handlers.js";
 import type * as lib_agent_index from "../lib/agent/index.js";
 import type * as lib_agent_tools from "../lib/agent/tools.js";
 import type * as lib_agent_types from "../lib/agent/types.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as moderation from "../moderation.js";
 import type * as mutations_events from "../mutations/events.js";
 import type * as mutations_superadmin from "../mutations/superadmin.js";
 import type * as organizerProfiles from "../organizerProfiles.js";
@@ -37,15 +43,21 @@ import type {
 declare const fullApi: ApiFromModules<{
   "actions/agent": typeof actions_agent;
   "actions/ai": typeof actions_ai;
+  admin: typeof admin;
   aiConversations: typeof aiConversations;
   auth: typeof auth;
+  budgetItems: typeof budgetItems;
+  eventApplications: typeof eventApplications;
+  eventTasks: typeof eventTasks;
   events: typeof events;
   http: typeof http;
+  inquiries: typeof inquiries;
   "lib/agent/handlers": typeof lib_agent_handlers;
   "lib/agent/index": typeof lib_agent_index;
   "lib/agent/tools": typeof lib_agent_tools;
   "lib/agent/types": typeof lib_agent_types;
   "lib/auth": typeof lib_auth;
+  moderation: typeof moderation;
   "mutations/events": typeof mutations_events;
   "mutations/superadmin": typeof mutations_superadmin;
   organizerProfiles: typeof organizerProfiles;

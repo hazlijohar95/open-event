@@ -1,14 +1,62 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useQuery } from 'convex/react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { Plus, Calendar, FunnelSimple, MapPin, Clock, DotsThree } from '@phosphor-icons/react'
+import type { Id } from '../../../convex/_generated/dataModel'
+import { Plus, Calendar, MapPin, Clock, DotsThree, PencilSimple, Trash, Copy, Eye, CheckCircle } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { eventStatusColors, eventStatusFilters, formatDate } from '@/lib/constants'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { toast } from 'sonner'
 
 export function EventsPage() {
+  const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = useState('all')
+  const [deleteEventId, setDeleteEventId] = useState<Id<'events'> | null>(null)
+  const [deleteEventTitle, setDeleteEventTitle] = useState('')
+
   const events = useQuery(api.events.getMyEvents, { status: statusFilter === 'all' ? undefined : statusFilter })
+  const deleteEvent = useMutation(api.events.remove)
+  const updateEvent = useMutation(api.events.update)
+
+  const handleDelete = async () => {
+    if (!deleteEventId) return
+    try {
+      await deleteEvent({ id: deleteEventId })
+      toast.success('Event deleted successfully')
+      setDeleteEventId(null)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete event')
+    }
+  }
+
+  const handleStatusChange = async (eventId: Id<'events'>, newStatus: string) => {
+    try {
+      await updateEvent({ id: eventId, status: newStatus })
+      toast.success(`Event marked as ${newStatus}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update status')
+    }
+  }
+
+  const handleDuplicate = () => {
+    // Navigate to create page with pre-filled data
+    toast.info('Duplicate feature coming soon')
+  }
 
   return (
     <div className="space-y-6">
@@ -47,15 +95,6 @@ export function EventsPage() {
             {filter.label}
           </button>
         ))}
-        <div className="flex-1" />
-        <button className={cn(
-          'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm',
-          'border border-border text-muted-foreground',
-          'hover:bg-muted transition-colors cursor-pointer'
-        )}>
-          <FunnelSimple size={16} weight="bold" />
-          Filters
-        </button>
       </div>
 
       {/* Events List or Empty State */}
@@ -101,13 +140,15 @@ export function EventsPage() {
           {events.map((event) => {
             const colors = eventStatusColors[event.status] || eventStatusColors.draft
             return (
-              <Link
+              <div
                 key={event._id}
-                to={`/dashboard/events/${event._id}`}
-                className="block rounded-xl border border-border bg-card p-5 hover:border-primary/20 hover:bg-muted/30 transition-colors"
+                className="rounded-xl border border-border bg-card p-5 hover:border-primary/20 hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
+                  <Link
+                    to={`/dashboard/events/${event._id}`}
+                    className="flex-1 min-w-0"
+                  >
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold truncate">{event.title}</h3>
                       <span className={cn(
@@ -140,22 +181,94 @@ export function EventsPage() {
                         </span>
                       )}
                     </div>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      // TODO: Add dropdown menu for actions
-                    }}
-                    className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-                  >
-                    <DotsThree size={20} weight="bold" />
-                  </button>
+                  </Link>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+                      >
+                        <DotsThree size={20} weight="bold" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem onClick={() => navigate(`/dashboard/events/${event._id}`)}>
+                        <Eye size={16} weight="duotone" className="mr-2" />
+                        View Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate(`/dashboard/events/${event._id}/edit`)}>
+                        <PencilSimple size={16} weight="duotone" className="mr-2" />
+                        Edit Event
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDuplicate()}>
+                        <Copy size={16} weight="duotone" className="mr-2" />
+                        Duplicate
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      {event.status === 'draft' && (
+                        <DropdownMenuItem onClick={() => handleStatusChange(event._id, 'planning')}>
+                          <CheckCircle size={16} weight="duotone" className="mr-2 text-blue-500" />
+                          Start Planning
+                        </DropdownMenuItem>
+                      )}
+                      {event.status === 'planning' && (
+                        <DropdownMenuItem onClick={() => handleStatusChange(event._id, 'active')}>
+                          <CheckCircle size={16} weight="duotone" className="mr-2 text-green-500" />
+                          Mark as Active
+                        </DropdownMenuItem>
+                      )}
+                      {event.status === 'active' && (
+                        <DropdownMenuItem onClick={() => handleStatusChange(event._id, 'completed')}>
+                          <CheckCircle size={16} weight="duotone" className="mr-2 text-purple-500" />
+                          Mark as Completed
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setDeleteEventId(event._id)
+                          setDeleteEventTitle(event.title)
+                        }}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash size={16} weight="duotone" className="mr-2" />
+                        Delete Event
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-              </Link>
+              </div>
             )
           })}
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!deleteEventId} onOpenChange={(open: boolean) => !open && setDeleteEventId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Event</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete "{deleteEventTitle}"? This action cannot be undone.
+              All associated vendors and sponsors will also be removed from this event.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button
+              onClick={() => setDeleteEventId(null)}
+              className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              className="px-4 py-2 rounded-lg text-sm font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
+            >
+              Delete
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

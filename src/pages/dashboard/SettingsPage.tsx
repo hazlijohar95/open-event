@@ -391,16 +391,7 @@ export function SettingsPage() {
               Organization Stats
             </h3>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <StatCard icon={Calendar} label="Total Events" value="0" />
-              <StatCard icon={Users} label="Total Attendees" value="0" />
-              <StatCard icon={Buildings} label="Vendors Used" value="0" />
-              <StatCard icon={Target} label="Sponsors" value="0" />
-            </div>
-
-            <p className="text-xs text-muted-foreground text-center mt-4">
-              Stats will update as you create and manage events
-            </p>
+            <OrgStats />
           </div>
         </TabsContent>
 
@@ -546,5 +537,41 @@ function NotificationToggle({
       </div>
       <Switch checked={checked} onCheckedChange={onCheckedChange} />
     </div>
+  )
+}
+
+// Organization Stats Component with real data
+function OrgStats() {
+  const stats = useQuery(api.events.getMyStats)
+
+  if (stats === undefined) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="p-4 rounded-lg bg-muted/50 text-center animate-pulse">
+            <div className="h-6 w-6 bg-muted rounded mx-auto mb-2" />
+            <div className="h-8 bg-muted rounded w-12 mx-auto mb-1" />
+            <div className="h-3 bg-muted rounded w-16 mx-auto" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard icon={Calendar} label="Total Events" value={String(stats?.totalEvents ?? 0)} />
+        <StatCard icon={Users} label="Total Attendees" value={String(stats?.totalAttendees ?? 0)} />
+        <StatCard icon={Buildings} label="Vendors" value={String(stats?.confirmedVendors ?? 0)} />
+        <StatCard icon={Target} label="Sponsors" value={String(stats?.confirmedSponsors ?? 0)} />
+      </div>
+
+      {stats && stats.totalEvents === 0 && (
+        <p className="text-xs text-muted-foreground text-center mt-4">
+          Stats will update as you create and manage events
+        </p>
+      )}
+    </>
   )
 }

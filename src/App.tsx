@@ -17,6 +17,7 @@ import {
   Footer,
 } from '@/components/landing'
 import { SignIn, SignUp } from '@/pages/auth'
+import { AuthRedirect } from '@/components/auth/AuthRedirect'
 import { Onboarding, OnboardingComplete } from '@/pages/onboarding'
 import {
   DashboardOverview,
@@ -24,13 +25,26 @@ import {
   EventCreatePage,
   EventDetailPage,
   EventEditPage,
+  EventApplicationsPage,
+  EventBudgetPage,
+  EventTasksPage,
   VendorsPage,
   SponsorsPage,
   AnalyticsPage,
   SettingsPage,
 } from '@/pages/dashboard'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
+import { AdminLayout } from '@/components/admin'
+import {
+  AdminDashboard,
+  AdminVendors,
+  AdminSponsors,
+  AdminUsers,
+  AdminModeration,
+  AdminSettings,
+} from '@/pages/admin'
 import { PrivacyPolicy, TermsOfService } from '@/pages/legal'
+import { EventDirectory } from '@/pages/public'
 
 function LandingPage() {
   return (
@@ -62,6 +76,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/sign-in" element={<SignIn />} />
           <Route path="/sign-up" element={<SignUp />} />
+          {/* Smart redirect based on role */}
+          <Route path="/auth/redirect" element={<AuthRedirect />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/onboarding/complete" element={<OnboardingComplete />} />
           <Route path="/dashboard" element={<DashboardLayout />}>
@@ -70,11 +86,25 @@ function App() {
             <Route path="events/new" element={<EventCreatePage />} />
             <Route path="events/:eventId" element={<EventDetailPage />} />
             <Route path="events/:eventId/edit" element={<EventEditPage />} />
+            <Route path="events/:eventId/applications" element={<EventApplicationsPage />} />
+            <Route path="events/:eventId/budget" element={<EventBudgetPage />} />
+            <Route path="events/:eventId/tasks" element={<EventTasksPage />} />
             <Route path="vendors" element={<VendorsPage />} />
             <Route path="sponsors" element={<SponsorsPage />} />
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route path="settings" element={<SettingsPage />} />
           </Route>
+          {/* Admin Routes */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="vendors" element={<AdminVendors />} />
+            <Route path="sponsors" element={<AdminSponsors />} />
+            <Route path="moderation" element={<AdminModeration />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
+          {/* Public Routes */}
+          <Route path="/events" element={<EventDirectory />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
         </Routes>

@@ -33,8 +33,8 @@ export const createEvent = mutation({
 })
 
 /**
- * Public mutation for vendors to apply to events
- * No authentication required
+ * Mutation for vendors to apply to events
+ * Requires admin role (admin acts on behalf of vendor)
  */
 export const vendorApply = mutation({
   args: {
@@ -42,16 +42,25 @@ export const vendorApply = mutation({
     vendorId: v.id('vendors'),
   },
   handler: async (ctx, args) => {
-    // Verify event exists
+    // Require admin authentication
+    await assertRole(ctx, 'admin')
+
+    // Verify event exists and is public
     const event = await ctx.db.get(args.eventId)
     if (!event) {
       throw new Error('Event not found')
     }
+    if (!event.isPublic) {
+      throw new Error('Event is not accepting vendor applications')
+    }
 
-    // Verify vendor exists
+    // Verify vendor exists and is approved
     const vendor = await ctx.db.get(args.vendorId)
     if (!vendor) {
       throw new Error('Vendor not found')
+    }
+    if (vendor.status !== 'approved') {
+      throw new Error('Vendor must be approved before applying to events')
     }
 
     // Check if relationship already exists

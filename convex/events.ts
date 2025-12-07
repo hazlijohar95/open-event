@@ -2,6 +2,22 @@ import { v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { getCurrentUser } from './lib/auth'
 
+// Valid event status transitions (state machine)
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  draft: ['planning', 'cancelled'],
+  planning: ['active', 'draft', 'cancelled'],
+  active: ['completed', 'cancelled'],
+  completed: [], // Terminal state
+  cancelled: ['draft'], // Can reactivate by going back to draft
+}
+
+// Helper to validate status transition
+function isValidStatusTransition(currentStatus: string, newStatus: string): boolean {
+  const allowedTransitions = VALID_STATUS_TRANSITIONS[currentStatus]
+  if (!allowedTransitions) return false
+  return allowedTransitions.includes(newStatus)
+}
+
 // List all events - public for marketplace, but only returns basic info
 export const list = query({
   args: {},
@@ -175,6 +191,23 @@ export const update = mutation({
       throw new Error('Expected attendees cannot be negative')
     }
 
+    // Validate date order if both provided
+    const startDate = args.startDate ?? event.startDate
+    const endDate = args.endDate ?? event.endDate
+    if (startDate && endDate && startDate > endDate) {
+      throw new Error('Start date must be before end date')
+    }
+
+    // Validate status transitions (state machine)
+    if (args.status && args.status !== event.status) {
+      if (!isValidStatusTransition(event.status, args.status)) {
+        throw new Error(
+          `Invalid status transition: cannot change from "${event.status}" to "${args.status}". ` +
+          `Allowed transitions: ${VALID_STATUS_TRANSITIONS[event.status]?.join(', ') || 'none'}`
+        )
+      }
+    }
+
     const { id, ...updates } = args
     // Filter out undefined values
     const cleanUpdates = Object.fromEntries(
@@ -188,6 +221,7 @@ export const update = mutation({
 })
 
 // Delete event - owner or superadmin only
+// CASCADE DELETES: Removes all related records to prevent orphaned data
 export const remove = mutation({
   args: { id: v.id('events') },
   handler: async (ctx, args) => {
@@ -206,7 +240,26 @@ export const remove = mutation({
       throw new Error('Access denied - you can only delete your own events')
     }
 
-    // Delete related records (eventVendors, eventSponsors)
+    // Prevent deleting active events with confirmed vendors/sponsors
+    if (event.status === 'active') {
+      const confirmedVendors = await ctx.db
+        .query('eventVendors')
+        .withIndex('by_event', (q) => q.eq('eventId', args.id))
+        .filter((q) => q.eq(q.field('status'), 'confirmed'))
+        .first()
+
+      const confirmedSponsors = await ctx.db
+        .query('eventSponsors')
+        .withIndex('by_event', (q) => q.eq('eventId', args.id))
+        .filter((q) => q.eq(q.field('status'), 'confirmed'))
+        .first()
+
+      if (confirmedVendors || confirmedSponsors) {
+        throw new Error('Cannot delete active event with confirmed vendors or sponsors. Cancel the event first.')
+      }
+    }
+
+    // CASCADE DELETE: eventVendors
     const eventVendors = await ctx.db
       .query('eventVendors')
       .withIndex('by_event', (q) => q.eq('eventId', args.id))
@@ -215,6 +268,7 @@ export const remove = mutation({
       await ctx.db.delete(ev._id)
     }
 
+    // CASCADE DELETE: eventSponsors
     const eventSponsors = await ctx.db
       .query('eventSponsors')
       .withIndex('by_event', (q) => q.eq('eventId', args.id))
@@ -223,6 +277,345 @@ export const remove = mutation({
       await ctx.db.delete(es._id)
     }
 
+    // CASCADE DELETE: budgetItems
+    const budgetItems = await ctx.db
+      .query('budgetItems')
+      .withIndex('by_event', (q) => q.eq('eventId', args.id))
+      .collect()
+    for (const item of budgetItems) {
+      await ctx.db.delete(item._id)
+    }
+
+    // CASCADE DELETE: eventTasks
+    const eventTasks = await ctx.db
+      .query('eventTasks')
+      .withIndex('by_event', (q) => q.eq('eventId', args.id))
+      .collect()
+    for (const task of eventTasks) {
+      await ctx.db.delete(task._id)
+    }
+
+    // CASCADE DELETE: eventApplications
+    const eventApplications = await ctx.db
+      .query('eventApplications')
+      .withIndex('by_event', (q) => q.eq('eventId', args.id))
+      .collect()
+    for (const app of eventApplications) {
+      await ctx.db.delete(app._id)
+    }
+
+    // CASCADE DELETE: inquiries related to this event
+    const inquiries = await ctx.db
+      .query('inquiries')
+      .withIndex('by_event', (q) => q.eq('eventId', args.id))
+      .collect()
+    for (const inquiry of inquiries) {
+      await ctx.db.delete(inquiry._id)
+    }
+
+    // CASCADE DELETE: AI conversations and messages
+    const aiConversations = await ctx.db
+      .query('aiConversations')
+      .withIndex('by_event', (q) => q.eq('eventId', args.id))
+      .collect()
+    for (const conv of aiConversations) {
+      // Delete all messages in the conversation
+      const messages = await ctx.db
+        .query('aiMessages')
+        .withIndex('by_conversation', (q) => q.eq('conversationId', conv._id))
+        .collect()
+      for (const msg of messages) {
+        await ctx.db.delete(msg._id)
+      }
+      await ctx.db.delete(conv._id)
+    }
+
     await ctx.db.delete(args.id)
+  },
+})
+
+// ============================================================================
+// Public Event Directory (No auth required)
+// ============================================================================
+
+// List public events for the directory (vendors/sponsors can browse)
+export const listPublic = query({
+  args: {
+    eventType: v.optional(v.string()),
+    locationType: v.optional(v.string()),
+    seekingVendors: v.optional(v.boolean()),
+    seekingSponsors: v.optional(v.boolean()),
+    search: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    // Get all public events that are active or planning
+    let events = await ctx.db
+      .query('events')
+      .withIndex('by_public', (q) => q.eq('isPublic', true))
+      .order('desc')
+      .collect()
+
+    // Filter to only active/planning events
+    events = events.filter(
+      (e) => e.status === 'active' || e.status === 'planning'
+    )
+
+    // Filter by event type
+    if (args.eventType && args.eventType !== 'all') {
+      events = events.filter((e) => e.eventType === args.eventType)
+    }
+
+    // Filter by location type
+    if (args.locationType && args.locationType !== 'all') {
+      events = events.filter((e) => e.locationType === args.locationType)
+    }
+
+    // Filter by seeking vendors
+    if (args.seekingVendors) {
+      events = events.filter((e) => e.seekingVendors)
+    }
+
+    // Filter by seeking sponsors
+    if (args.seekingSponsors) {
+      events = events.filter((e) => e.seekingSponsors)
+    }
+
+    // Search filter
+    if (args.search && args.search.trim()) {
+      const searchLower = args.search.toLowerCase()
+      events = events.filter(
+        (e) =>
+          e.title.toLowerCase().includes(searchLower) ||
+          e.description?.toLowerCase().includes(searchLower) ||
+          e.eventType?.toLowerCase().includes(searchLower) ||
+          e.venueName?.toLowerCase().includes(searchLower)
+      )
+    }
+
+    // Apply limit
+    const limit = args.limit || 50
+    events = events.slice(0, limit)
+
+    // Return sanitized public data (respect visibility settings)
+    return events.map((e) => ({
+      _id: e._id,
+      title: e.title,
+      description: e.description,
+      eventType: e.eventType,
+      startDate: e.startDate,
+      endDate: e.endDate,
+      locationType: e.locationType,
+      // Respect visibility settings
+      venueName: e.publicVisibility?.showVenue !== false ? e.venueName : undefined,
+      expectedAttendees: e.publicVisibility?.showAttendees !== false ? e.expectedAttendees : undefined,
+      budget: e.publicVisibility?.showBudget ? e.budget : undefined,
+      budgetCurrency: e.publicVisibility?.showBudget ? e.budgetCurrency : undefined,
+      // What they're looking for
+      seekingVendors: e.seekingVendors,
+      seekingSponsors: e.seekingSponsors,
+      vendorCategories: e.vendorCategories,
+      sponsorBenefits: e.sponsorBenefits,
+      requirements: e.publicVisibility?.showRequirements !== false ? e.requirements : undefined,
+      createdAt: e.createdAt,
+    }))
+  },
+})
+
+// Get a single public event for viewing
+export const getPublic = query({
+  args: { id: v.id('events') },
+  handler: async (ctx, args) => {
+    const event = await ctx.db.get(args.id)
+    if (!event) return null
+
+    // Must be public and active/planning
+    if (!event.isPublic || (event.status !== 'active' && event.status !== 'planning')) {
+      return null
+    }
+
+    // Get organizer info (just name)
+    const organizer = await ctx.db.get(event.organizerId)
+
+    // Return sanitized public data
+    return {
+      _id: event._id,
+      title: event.title,
+      description: event.description,
+      eventType: event.eventType,
+      startDate: event.startDate,
+      endDate: event.endDate,
+      timezone: event.timezone,
+      locationType: event.locationType,
+      // Respect visibility settings
+      venueName: event.publicVisibility?.showVenue !== false ? event.venueName : undefined,
+      venueAddress: event.publicVisibility?.showVenue !== false ? event.venueAddress : undefined,
+      virtualPlatform: event.locationType !== 'in-person' ? event.virtualPlatform : undefined,
+      expectedAttendees: event.publicVisibility?.showAttendees !== false ? event.expectedAttendees : undefined,
+      budget: event.publicVisibility?.showBudget ? event.budget : undefined,
+      budgetCurrency: event.publicVisibility?.showBudget ? event.budgetCurrency : undefined,
+      // What they're looking for
+      seekingVendors: event.seekingVendors,
+      seekingSponsors: event.seekingSponsors,
+      vendorCategories: event.vendorCategories,
+      sponsorBenefits: event.sponsorBenefits,
+      requirements: event.publicVisibility?.showRequirements !== false ? event.requirements : undefined,
+      // Organizer info
+      organizer: organizer ? {
+        name: organizer.name,
+      } : undefined,
+      createdAt: event.createdAt,
+    }
+  },
+})
+
+// Get event types for filtering
+export const getPublicEventTypes = query({
+  args: {},
+  handler: async (ctx) => {
+    const events = await ctx.db
+      .query('events')
+      .withIndex('by_public', (q) => q.eq('isPublic', true))
+      .collect()
+
+    const types = [...new Set(events.map((e) => e.eventType).filter(Boolean))]
+    return types.sort()
+  },
+})
+
+// Toggle event public visibility - owner only
+export const setPublicVisibility = mutation({
+  args: {
+    id: v.id('events'),
+    isPublic: v.boolean(),
+    seekingVendors: v.optional(v.boolean()),
+    seekingSponsors: v.optional(v.boolean()),
+    vendorCategories: v.optional(v.array(v.string())),
+    sponsorBenefits: v.optional(v.string()),
+    publicVisibility: v.optional(
+      v.object({
+        showBudget: v.optional(v.boolean()),
+        showAttendees: v.optional(v.boolean()),
+        showVenue: v.optional(v.boolean()),
+        showRequirements: v.optional(v.boolean()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required')
+    }
+
+    const event = await ctx.db.get(args.id)
+    if (!event) {
+      throw new Error('Event not found')
+    }
+
+    // Only owner or superadmin can change visibility
+    if (user.role !== 'superadmin' && event.organizerId !== user._id) {
+      throw new Error('Access denied')
+    }
+
+    const { id, ...updates } = args
+
+    await ctx.db.patch(id, {
+      ...updates,
+      updatedAt: Date.now(),
+    })
+
+    return { success: true }
+  },
+})
+
+// ============================================================================
+// Dashboard Stats Queries
+// ============================================================================
+
+// Get stats for the current organizer's dashboard
+export const getMyStats = query({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) return null
+
+    const events = await ctx.db
+      .query('events')
+      .withIndex('by_organizer', (q) => q.eq('organizerId', user._id))
+      .collect()
+
+    const now = Date.now()
+
+    // Count events by status
+    const totalEvents = events.length
+    const activeEvents = events.filter((e) => e.status === 'active').length
+    const planningEvents = events.filter((e) => e.status === 'planning').length
+    const draftEvents = events.filter((e) => e.status === 'draft').length
+    const completedEvents = events.filter((e) => e.status === 'completed').length
+
+    // Upcoming events (start date in the future)
+    const upcomingEvents = events.filter((e) => e.startDate > now).length
+
+    // Total budget across all events
+    const totalBudget = events.reduce((sum, e) => sum + (e.budget || 0), 0)
+
+    // Total expected attendees
+    const totalAttendees = events.reduce((sum, e) => sum + (e.expectedAttendees || 0), 0)
+
+    // Get vendor and sponsor counts - BATCH LOAD to avoid N+1 queries
+    const eventIds = new Set(events.map((e) => e._id))
+
+    // Fetch ALL eventVendors and eventSponsors in single queries
+    const allEventVendors = await ctx.db.query('eventVendors').collect()
+    const allEventSponsors = await ctx.db.query('eventSponsors').collect()
+
+    // Filter to user's events and count confirmed ones
+    const vendorCount = allEventVendors.filter(
+      (ev) => eventIds.has(ev.eventId) && ev.status === 'confirmed'
+    ).length
+
+    const sponsorCount = allEventSponsors.filter(
+      (es) => eventIds.has(es.eventId) && es.status === 'confirmed'
+    ).length
+
+    return {
+      totalEvents,
+      activeEvents,
+      planningEvents,
+      draftEvents,
+      completedEvents,
+      upcomingEvents,
+      totalBudget,
+      totalAttendees,
+      confirmedVendors: vendorCount,
+      confirmedSponsors: sponsorCount,
+    }
+  },
+})
+
+// Get upcoming events for dashboard preview
+export const getUpcoming = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) return []
+
+    const now = Date.now()
+    const limit = args.limit || 5
+
+    const events = await ctx.db
+      .query('events')
+      .withIndex('by_organizer', (q) => q.eq('organizerId', user._id))
+      .collect()
+
+    // Filter to upcoming events and sort by start date
+    const upcoming = events
+      .filter((e) => e.startDate > now && e.status !== 'cancelled')
+      .sort((a, b) => a.startDate - b.startDate)
+      .slice(0, limit)
+
+    return upcoming
   },
 })

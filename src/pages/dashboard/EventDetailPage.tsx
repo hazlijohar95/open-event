@@ -21,6 +21,8 @@ import {
   Star,
   Envelope,
   LinkSimple,
+  Receipt,
+  ListChecks,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import {
@@ -149,7 +151,29 @@ export function EventDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:ml-auto">
+        <div className="flex items-center gap-2 sm:ml-auto flex-wrap">
+          <Link
+            to={`/dashboard/events/${eventId}/tasks`}
+            className={cn(
+              'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+              'border border-border text-sm font-medium',
+              'hover:bg-muted transition-colors'
+            )}
+          >
+            <ListChecks size={16} weight="bold" />
+            Tasks
+          </Link>
+          <Link
+            to={`/dashboard/events/${eventId}/budget`}
+            className={cn(
+              'inline-flex items-center gap-2 px-4 py-2 rounded-lg',
+              'border border-border text-sm font-medium',
+              'hover:bg-muted transition-colors'
+            )}
+          >
+            <Receipt size={16} weight="bold" />
+            Budget
+          </Link>
           <Link
             to={`/dashboard/events/${eventId}/edit`}
             className={cn(

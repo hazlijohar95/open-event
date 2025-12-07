@@ -3,6 +3,7 @@ import { useConvexAuth } from 'convex/react'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
@@ -27,13 +28,25 @@ export function SignUp() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   // Redirect if already authenticated (e.g., after OAuth callback)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate('/onboarding', { replace: true })
+      setRedirecting(true)
+      navigate('/auth/redirect', { replace: true })
     }
   }, [isAuthenticated, isLoading, navigate])
+
+  // Show loading screen while checking auth or redirecting
+  if (isLoading || redirecting) {
+    return (
+      <LoadingSpinner
+        message={redirecting ? 'Setting up your account...' : 'Loading...'}
+        fullScreen
+      />
+    )
+  }
 
   const handlePasswordSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,7 +61,7 @@ export function SignUp() {
     setLoading(true)
     try {
       await signIn('password', { email, password, name, flow: 'signUp' })
-      navigate('/onboarding')
+      navigate('/auth/redirect')
     } catch {
       toast.error('Failed to create account. Email may already be in use.')
     } finally {
@@ -77,7 +90,7 @@ export function SignUp() {
   const handleGoogleSignUp = async () => {
     setLoading(true)
     try {
-      await signIn('google', { redirectTo: '/onboarding' })
+      await signIn('google', { redirectTo: '/auth/redirect' })
     } catch {
       toast.error('Failed to sign up with Google')
       setLoading(false)

@@ -19,10 +19,26 @@ export default defineSchema({
     isAnonymous: v.optional(v.boolean()),
 
     // App-specific fields
-    role: v.optional(v.union(v.literal('superadmin'), v.literal('organizer'))),
+    role: v.optional(
+      v.union(v.literal('superadmin'), v.literal('admin'), v.literal('organizer'))
+    ),
+
+    // Account status for moderation
+    status: v.optional(
+      v.union(v.literal('active'), v.literal('suspended'), v.literal('pending'))
+    ),
+
+    // Suspension tracking
+    suspendedAt: v.optional(v.number()),
+    suspendedReason: v.optional(v.string()),
+    suspendedBy: v.optional(v.id('users')),
+
     createdAt: v.optional(v.number()),
     updatedAt: v.optional(v.number()),
-  }).index('email', ['email']),
+  })
+    .index('email', ['email'])
+    .index('by_role', ['role'])
+    .index('by_status', ['status']),
 
   // Organizer Profiles - Stores onboarding data for personalization
   organizerProfiles: defineTable({
@@ -64,6 +80,23 @@ export default defineSchema({
     // Status tracking
     status: v.string(), // draft, planning, active, completed, cancelled
 
+    // Public directory visibility
+    isPublic: v.optional(v.boolean()), // Show in public event directory
+    publicVisibility: v.optional(
+      v.object({
+        showBudget: v.optional(v.boolean()),
+        showAttendees: v.optional(v.boolean()),
+        showVenue: v.optional(v.boolean()),
+        showRequirements: v.optional(v.boolean()),
+      })
+    ),
+
+    // What the organizer is looking for (for public directory)
+    seekingVendors: v.optional(v.boolean()),
+    seekingSponsors: v.optional(v.boolean()),
+    vendorCategories: v.optional(v.array(v.string())), // Categories they need
+    sponsorBenefits: v.optional(v.string()), // What sponsors get
+
     // Requirements for vendors
     requirements: v.optional(
       v.object({
@@ -85,7 +118,8 @@ export default defineSchema({
   })
     .index('by_organizer', ['organizerId'])
     .index('by_status', ['status'])
-    .index('by_date', ['startDate']),
+    .index('by_date', ['startDate'])
+    .index('by_public', ['isPublic']),
 
   // Vendors - Service providers for events
   vendors: defineTable({
@@ -102,6 +136,17 @@ export default defineSchema({
     website: v.optional(v.string()),
     verified: v.boolean(),
     status: v.union(v.literal('pending'), v.literal('approved'), v.literal('rejected')),
+
+    // Application/Review tracking
+    applicationSource: v.optional(v.string()), // form, email, manual, import
+    applicationNotes: v.optional(v.string()), // Admin notes during onboarding
+
+    // Review workflow
+    reviewedBy: v.optional(v.id('users')), // Admin who reviewed
+    reviewedAt: v.optional(v.number()),
+    rejectionReason: v.optional(v.string()),
+    reviewNotes: v.optional(v.string()), // Internal notes from reviewer
+
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
@@ -124,6 +169,17 @@ export default defineSchema({
     logoUrl: v.optional(v.string()),
     verified: v.boolean(),
     status: v.union(v.literal('pending'), v.literal('approved'), v.literal('rejected')),
+
+    // Application/Review tracking
+    applicationSource: v.optional(v.string()), // form, email, manual, import
+    applicationNotes: v.optional(v.string()), // Admin notes during onboarding
+
+    // Review workflow
+    reviewedBy: v.optional(v.id('users')), // Admin who reviewed
+    reviewedAt: v.optional(v.number()),
+    rejectionReason: v.optional(v.string()),
+    reviewNotes: v.optional(v.string()), // Internal notes from reviewer
+
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
@@ -220,4 +276,204 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   }).index('by_conversation', ['conversationId']),
+
+  // Event Applications - Vendors/Sponsors applying to events
+  eventApplications: defineTable({
+    eventId: v.id('events'),
+    // Applicant type (vendor or sponsor from admin-managed entities)
+    applicantType: v.union(v.literal('vendor'), v.literal('sponsor')),
+    applicantId: v.string(), // ID of vendor or sponsor
+
+    // Application status
+    status: v.union(
+      v.literal('pending'),      // Awaiting organizer review
+      v.literal('under_review'), // Organizer is reviewing
+      v.literal('accepted'),     // Accepted by organizer
+      v.literal('rejected'),     // Rejected by organizer
+      v.literal('withdrawn')     // Withdrawn by applicant (admin)
+    ),
+
+    // Application details
+    message: v.optional(v.string()),       // Cover letter/pitch
+    proposedServices: v.optional(v.array(v.string())), // What they're offering
+    proposedBudget: v.optional(v.number()), // Budget ask or offer
+    proposedTier: v.optional(v.string()),   // For sponsors: tier they want
+
+    // Contact info for this application (may differ from main profile)
+    contactName: v.optional(v.string()),
+    contactEmail: v.optional(v.string()),
+    contactPhone: v.optional(v.string()),
+
+    // Organizer response
+    organizerNotes: v.optional(v.string()),
+    rejectionReason: v.optional(v.string()),
+    respondedAt: v.optional(v.number()),
+    respondedBy: v.optional(v.id('users')),
+
+    // Submitted by (admin who submitted on behalf of vendor/sponsor)
+    submittedBy: v.optional(v.id('users')),
+
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_event', ['eventId'])
+    .index('by_applicant', ['applicantType', 'applicantId'])
+    .index('by_status', ['status'])
+    .index('by_event_status', ['eventId', 'status']),
+
+  // Inquiries - General messaging between parties
+  inquiries: defineTable({
+    // Source of inquiry
+    fromType: v.union(v.literal('organizer'), v.literal('admin')),
+    fromUserId: v.id('users'),
+
+    // Target of inquiry
+    toType: v.union(v.literal('vendor'), v.literal('sponsor')),
+    toId: v.string(), // Vendor or sponsor ID
+
+    // Related event (optional)
+    eventId: v.optional(v.id('events')),
+
+    // Inquiry content
+    subject: v.string(),
+    message: v.string(),
+
+    // Status tracking
+    status: v.union(
+      v.literal('sent'),
+      v.literal('read'),
+      v.literal('replied'),
+      v.literal('closed')
+    ),
+
+    // Response (if any)
+    response: v.optional(v.string()),
+    respondedAt: v.optional(v.number()),
+
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_from', ['fromUserId'])
+    .index('by_to', ['toType', 'toId'])
+    .index('by_event', ['eventId'])
+    .index('by_status', ['status']),
+
+  // Budget Items - Track event spending
+  budgetItems: defineTable({
+    eventId: v.id('events'),
+    category: v.string(), // venue, catering, av, marketing, staffing, permits, misc
+    name: v.string(),
+    description: v.optional(v.string()),
+    estimatedAmount: v.number(),
+    actualAmount: v.optional(v.number()),
+    status: v.union(
+      v.literal('planned'),    // Budget allocated but not spent
+      v.literal('committed'),  // Contract signed, committed to spend
+      v.literal('paid'),       // Payment made
+      v.literal('cancelled')   // Budget item cancelled
+    ),
+    // Vendor/sponsor association (optional)
+    vendorId: v.optional(v.id('vendors')),
+    sponsorId: v.optional(v.id('sponsors')),
+    // Payment tracking
+    paidAt: v.optional(v.number()),
+    paidMethod: v.optional(v.string()), // card, bank, cash, invoice
+    invoiceNumber: v.optional(v.string()),
+    receiptUrl: v.optional(v.string()),
+    // Notes
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_event', ['eventId'])
+    .index('by_category', ['category'])
+    .index('by_status', ['status'])
+    .index('by_event_category', ['eventId', 'category']),
+
+  // Event Tasks - Checklist for event planning
+  eventTasks: defineTable({
+    eventId: v.id('events'),
+    title: v.string(),
+    description: v.optional(v.string()),
+    category: v.optional(v.string()), // venue, vendors, marketing, logistics, etc.
+    priority: v.union(
+      v.literal('low'),
+      v.literal('medium'),
+      v.literal('high'),
+      v.literal('urgent')
+    ),
+    status: v.union(
+      v.literal('todo'),
+      v.literal('in_progress'),
+      v.literal('blocked'),
+      v.literal('completed')
+    ),
+    // Due date tracking
+    dueDate: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    // Assignment (for future multi-user support)
+    assignedTo: v.optional(v.id('users')),
+    // Dependencies
+    blockedBy: v.optional(v.array(v.id('eventTasks'))), // Tasks that must be done first
+    // Linked entities
+    linkedVendorId: v.optional(v.id('vendors')),
+    linkedSponsorId: v.optional(v.id('sponsors')),
+    linkedBudgetItemId: v.optional(v.id('budgetItems')),
+    // Ordering for manual sorting
+    sortOrder: v.optional(v.number()),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_event', ['eventId'])
+    .index('by_status', ['status'])
+    .index('by_priority', ['priority'])
+    .index('by_due_date', ['dueDate'])
+    .index('by_event_status', ['eventId', 'status'])
+    .index('by_assigned', ['assignedTo']),
+
+  // Moderation Logs - Audit trail for all admin actions
+  moderationLogs: defineTable({
+    // Who performed the action
+    adminId: v.id('users'),
+
+    // What action was performed
+    action: v.union(
+      // User moderation
+      v.literal('user_suspended'),
+      v.literal('user_unsuspended'),
+      v.literal('user_role_changed'),
+      // Admin management
+      v.literal('admin_created'),
+      v.literal('admin_removed'),
+      // Vendor/sponsor moderation
+      v.literal('vendor_approved'),
+      v.literal('vendor_rejected'),
+      v.literal('sponsor_approved'),
+      v.literal('sponsor_rejected'),
+      // Event moderation
+      v.literal('event_flagged'),
+      v.literal('event_unflagged'),
+      v.literal('event_removed')
+    ),
+
+    // Target of the action (polymorphic)
+    targetType: v.union(
+      v.literal('user'),
+      v.literal('vendor'),
+      v.literal('sponsor'),
+      v.literal('event')
+    ),
+    targetId: v.string(), // ID of the target entity
+
+    // Additional context
+    reason: v.optional(v.string()),
+    metadata: v.optional(v.any()), // Additional action-specific data
+
+    createdAt: v.number(),
+  })
+    .index('by_admin', ['adminId'])
+    .index('by_target', ['targetType', 'targetId'])
+    .index('by_action', ['action'])
+    .index('by_date', ['createdAt']),
 })

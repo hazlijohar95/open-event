@@ -3,6 +3,7 @@ import { useConvexAuth } from 'convex/react'
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
@@ -19,13 +20,25 @@ export function SignIn() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [magicLinkSent, setMagicLinkSent] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   // Redirect if already authenticated (e.g., after OAuth callback)
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate('/dashboard', { replace: true })
+      setRedirecting(true)
+      navigate('/auth/redirect', { replace: true })
     }
   }, [isAuthenticated, isLoading, navigate])
+
+  // Show loading screen while checking auth or redirecting
+  if (isLoading || redirecting) {
+    return (
+      <LoadingSpinner
+        message={redirecting ? 'Signing you in...' : 'Loading...'}
+        fullScreen
+      />
+    )
+  }
 
   const handlePasswordSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,7 +49,7 @@ export function SignIn() {
     setLoading(true)
     try {
       await signIn('password', { email, password, flow: 'signIn' })
-      navigate('/dashboard')
+      navigate('/auth/redirect')
     } catch {
       toast.error('Invalid email or password')
     } finally {
@@ -65,7 +78,7 @@ export function SignIn() {
   const handleGoogleSignIn = async () => {
     setLoading(true)
     try {
-      await signIn('google', { redirectTo: '/dashboard' })
+      await signIn('google', { redirectTo: '/auth/redirect' })
     } catch {
       toast.error('Failed to sign in with Google')
       setLoading(false)

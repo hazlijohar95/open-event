@@ -4,64 +4,71 @@ import { api } from '../../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import {
   House,
-  Calendar,
+  Users,
   Storefront,
   Handshake,
-  ChartLine,
-  Gear,
-  Plus,
   ShieldCheck,
+  Gear,
+  ArrowLeft,
 } from '@phosphor-icons/react'
 
 const navigationItems = [
-  { label: 'Overview', icon: House, path: '/dashboard' },
-  { label: 'Events', icon: Calendar, path: '/dashboard/events' },
-  { label: 'Vendors', icon: Storefront, path: '/dashboard/vendors' },
-  { label: 'Sponsors', icon: Handshake, path: '/dashboard/sponsors' },
-  { label: 'Analytics', icon: ChartLine, path: '/dashboard/analytics' },
+  { label: 'Overview', icon: House, path: '/admin' },
+  { label: 'Users', icon: Users, path: '/admin/users' },
+  { label: 'Vendors', icon: Storefront, path: '/admin/vendors' },
+  { label: 'Sponsors', icon: Handshake, path: '/admin/sponsors' },
+  { label: 'Moderation', icon: ShieldCheck, path: '/admin/moderation' },
 ]
 
 const bottomItems = [
-  { label: 'Settings', icon: Gear, path: '/dashboard/settings' },
+  { label: 'Settings', icon: Gear, path: '/admin/settings' },
 ]
 
-export function DashboardSidebar() {
+export function AdminSidebar() {
   const location = useLocation()
   const currentUser = useQuery(api.queries.auth.getCurrentUser)
-  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin'
+
+  // Only show "Back to Dashboard" for admins who also act as organizers
+  // Superadmins are pure platform managers, they don't need organizer dashboard
+  const showBackToDashboard = currentUser?.role === 'admin'
 
   const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/dashboard'
+    if (path === '/admin') {
+      return location.pathname === '/admin'
     }
     return location.pathname.startsWith(path)
   }
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r border-border bg-background">
-      {/* Logo */}
-      <div className="flex items-center h-16 px-6 border-b border-border">
-        <Link to="/" className="font-mono text-lg font-bold">
+      {/* Logo with Admin Badge */}
+      <div className="flex items-center justify-between h-16 px-6 border-b border-border">
+        <Link to="/admin" className="font-mono text-lg font-bold">
           <span className="text-foreground">open</span>
           <span className="text-primary">-</span>
           <span className="text-foreground">event</span>
         </Link>
+        <span className="px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md">
+          Admin
+        </span>
       </div>
 
-      {/* Create Event Button */}
-      <div className="p-4">
-        <Link
-          to="/dashboard/events/new"
-          className={cn(
-            'flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg',
-            'bg-primary text-primary-foreground font-medium text-sm',
-            'hover:bg-primary/90 transition-colors cursor-pointer'
-          )}
-        >
-          <Plus size={18} weight="bold" />
-          Create Event
-        </Link>
-      </div>
+      {/* Back to Dashboard Link - Only show for admins (not superadmins) */}
+      {showBackToDashboard && (
+        <div className="p-4">
+          <Link
+            to="/dashboard"
+            className={cn(
+              'flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg',
+              'bg-muted text-muted-foreground font-medium text-sm',
+              'hover:bg-muted/80 transition-colors cursor-pointer'
+            )}
+          >
+            <ArrowLeft size={18} weight="bold" />
+            Back to Dashboard
+          </Link>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
@@ -75,7 +82,7 @@ export function DashboardSidebar() {
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 active
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
             >
@@ -87,20 +94,7 @@ export function DashboardSidebar() {
       </nav>
 
       {/* Bottom Navigation */}
-      <div className="px-3 py-4 border-t border-border space-y-1">
-        {/* Admin Panel Link - Only for admin/superadmin */}
-        {isAdmin && (
-          <Link
-            to="/admin"
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-              'bg-amber-500/10 text-amber-600 hover:bg-amber-500/20'
-            )}
-          >
-            <ShieldCheck size={20} weight="duotone" />
-            Admin Panel
-          </Link>
-        )}
+      <div className="px-3 py-4 border-t border-border">
         {bottomItems.map((item) => {
           const Icon = item.icon
           const active = isActive(item.path)
@@ -111,7 +105,7 @@ export function DashboardSidebar() {
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
                 active
-                  ? 'bg-primary/10 text-primary'
+                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               )}
             >
