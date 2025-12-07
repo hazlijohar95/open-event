@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[]
@@ -11,6 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISS_KEY = 'pwa-install-dismissed'
 const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
+const PROMPT_DELAY = 5000 // 5 seconds
 
 export function usePWA() {
   const [isInstalled, setIsInstalled] = useState(false)
@@ -18,6 +19,18 @@ export function usePWA() {
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
+
+  // Detect platform
+  const platform = useMemo((): 'ios' | 'android' | 'desktop' | 'unknown' => {
+    const userAgent = navigator.userAgent.toLowerCase()
+    const isIOS = /iphone|ipad|ipod/.test(userAgent)
+    const isAndroid = /android/.test(userAgent)
+
+    if (isIOS) return 'ios'
+    if (isAndroid) return 'android'
+    if (window.matchMedia('(min-width: 768px)').matches) return 'desktop'
+    return 'unknown'
+  }, [])
 
   // Check if running as installed PWA
   useEffect(() => {
@@ -28,26 +41,31 @@ export function usePWA() {
     setIsInstalled(isStandalone)
   }, [])
 
-  // Listen for install prompt event
+  // Check if dismissed recently
+  const wasDismissedRecently = useCallback(() => {
+    const dismissedAt = localStorage.getItem(DISMISS_KEY)
+    if (dismissedAt) {
+      const dismissedTime = parseInt(dismissedAt, 10)
+      if (Date.now() - dismissedTime < DISMISS_DURATION) {
+        return true
+      }
+    }
+    return false
+  }, [])
+
+  // Listen for install prompt event (Android/Desktop Chrome)
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
       setIsInstallable(true)
 
-      // Check if user has dismissed recently
-      const dismissedAt = localStorage.getItem(DISMISS_KEY)
-      if (dismissedAt) {
-        const dismissedTime = parseInt(dismissedAt, 10)
-        if (Date.now() - dismissedTime < DISMISS_DURATION) {
-          return // Don't show prompt if dismissed within 7 days
-        }
-      }
+      if (wasDismissedRecently()) return
 
-      // Show prompt after 30 seconds for new users
+      // Show prompt after short delay
       setTimeout(() => {
         setShowPrompt(true)
-      }, 30000)
+      }, PROMPT_DELAY)
     }
 
     const handleAppInstalled = () => {
@@ -64,7 +82,21 @@ export function usePWA() {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
-  }, [])
+  }, [wasDismissedRecently])
+
+  // For iOS: Show manual install instructions after delay
+  // iOS doesn't fire beforeinstallprompt, so we need to handle it separately
+  useEffect(() => {
+    if (platform !== 'ios') return
+    if (isInstalled) return
+    if (wasDismissedRecently()) return
+
+    const timer = setTimeout(() => {
+      setShowPrompt(true)
+    }, PROMPT_DELAY)
+
+    return () => clearTimeout(timer)
+  }, [platform, isInstalled, wasDismissedRecently])
 
   // Listen for online/offline status
   useEffect(() => {
@@ -106,22 +138,11 @@ export function usePWA() {
 
   const resetDismiss = useCallback(() => {
     localStorage.removeItem(DISMISS_KEY)
-    if (isInstallable) {
-      setShowPrompt(true)
-    }
-  }, [isInstallable])
-
-  // Detect platform for platform-specific instructions
-  const getPlatform = useCallback((): 'ios' | 'android' | 'desktop' | 'unknown' => {
-    const userAgent = navigator.userAgent.toLowerCase()
-    const isIOS = /iphone|ipad|ipod/.test(userAgent)
-    const isAndroid = /android/.test(userAgent)
-
-    if (isIOS) return 'ios'
-    if (isAndroid) return 'android'
-    if (window.matchMedia('(min-width: 768px)').matches) return 'desktop'
-    return 'unknown'
+    setShowPrompt(true)
   }, [])
+
+  // Wrapper for backward compatibility
+  const getPlatform = useCallback(() => platform, [platform])
 
   return {
     isInstalled,
@@ -132,5 +153,6 @@ export function usePWA() {
     dismissPrompt,
     resetDismiss,
     getPlatform,
+    platform,
   }
 }

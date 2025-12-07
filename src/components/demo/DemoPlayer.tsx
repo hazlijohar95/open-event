@@ -98,6 +98,7 @@ export function DemoPlayer({ onClose }: DemoPlayerProps) {
           sceneCount={SCENES.length}
           sceneTitle={SCENES[currentScene].title}
           onPlayPause={handlePlayPause}
+          onClose={onClose}
         />
       </div>
     </div>
