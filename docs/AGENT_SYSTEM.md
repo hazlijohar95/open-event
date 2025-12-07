@@ -21,7 +21,7 @@
 
 ## Overview
 
-The AI Agent System enables natural language event creation through an intelligent assistant powered by **OpenAI GPT-4o-mini** with **Vercel AI SDK** for streaming responses.
+The AI Agent System enables natural language event creation through an intelligent assistant powered by **OpenAI GPT-4o-mini** with **AI SDK** for streaming responses.
 
 ### Capabilities
 
@@ -48,9 +48,9 @@ The AI Agent System enables natural language event creation through an intellige
 │                        Convex HTTP Endpoint                              │
 │                                                                          │
 │   POST /api/chat                                                         │
-│   ├── Authenticate user via Clerk                                       │
+│   ├── Authenticate user via Convex Auth                                 │
 │   ├── Load user profile for context                                     │
-│   └── Stream response with Vercel AI SDK                                │
+│   └── Stream response with AI SDK                                       │
 │                                    │                                     │
 └────────────────────────────────────┼─────────────────────────────────────┘
                                      │
@@ -172,7 +172,7 @@ The AI Agent System enables natural language event creation through an intellige
 │                          AI & Streaming                                  │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  OpenAI GPT-4o-mini    │  Language model for natural language           │
-│  Vercel AI SDK         │  Streaming responses & tool handling           │
+│  AI SDK                │  Streaming responses & tool handling           │
 │  @ai-sdk/openai        │  OpenAI provider for AI SDK                    │
 └─────────────────────────────────────────────────────────────────────────┘
 
@@ -188,7 +188,7 @@ The AI Agent System enables natural language event creation through an intellige
 │                            Frontend                                      │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  React 19              │  UI framework                                  │
-│  useChat hook          │  Vercel AI SDK React integration               │
+│  useChat hook          │  AI SDK React integration                      │
 │  ShadCN UI             │  Component library                             │
 │  Phosphor Icons        │  Consistent iconography                        │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -597,7 +597,7 @@ The recommendation tools use scoring algorithms to find the best matches:
 │                              users                                       │
 ├─────────────────────────────────────────────────────────────────────────┤
 │  _id           │  Id<'users'>                                           │
-│  clerkId       │  string           │  Clerk user ID                     │
+│  clerkId       │  string           │  Auth provider user ID             │
 │  email         │  string           │  User email                        │
 │  name          │  string           │  Display name                      │
 │  imageUrl      │  string?          │  Profile image                     │
@@ -659,7 +659,7 @@ The recommendation tools use scoring algorithms to find the best matches:
 
 ```typescript
 // users
-by_clerk_id: ['clerkId']  // Fast lookup by Clerk ID
+by_clerk_id: ['clerkId']  // Fast lookup by auth provider ID
 
 // events
 by_organizer: ['organizerId']  // User's events
@@ -787,8 +787,8 @@ Modal for confirming sensitive actions.
 # Required - Convex
 VITE_CONVEX_URL=https://your-project.convex.cloud
 
-# Required - Clerk Authentication
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
+# Authentication is handled by Convex Auth
+# No additional auth keys required for basic setup
 
 # Required - OpenAI (set in Convex Dashboard → Settings → Environment Variables)
 OPENAI_API_KEY=sk-...
@@ -889,7 +889,7 @@ All agent tool executions are protected with multiple layers of security:
 
 | Issue | Cause | Solution |
 |-------|-------|----------|
-| "Unauthorized" error | Missing Clerk auth | Ensure user is signed in |
+| "Unauthorized" error | Missing auth | Ensure user is signed in |
 | "No OpenAI API key" | Missing env var | Set `OPENAI_API_KEY` in Convex Dashboard |
 | Tool not executing | Requires confirmation | Check if tool needs user confirmation |
 | Empty search results | No data | Seed database with test vendors/sponsors |

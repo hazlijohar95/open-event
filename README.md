@@ -494,7 +494,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Convex](https://convex.dev) - Real-time backend platform
 - [ShadCN UI](https://ui.shadcn.com) - UI component library
 - [Phosphor Icons](https://phosphoricons.com) - Icon library
-- [Vercel](https://vercel.com) - Geist font family
+- [Geist](https://vercel.com/font) - Font family
 - [OpenAI](https://openai.com) - AI capabilities
 
 ---
