@@ -208,7 +208,7 @@ This starts:
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Authentication                               │
 ├─────────────────────────────────────────────────────────────────┤
-│  Convex Auth  │  Google OAuth  │  Magic Links  │  Email/Pass   │
+│  Convex Auth  │  Google OAuth  │  Email/Pass                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -216,7 +216,7 @@ This starts:
 |-------|-------------|
 | **Frontend** | React 19, TypeScript, Vite 7, TailwindCSS 4, ShadCN UI |
 | **Backend** | Convex (queries, mutations, real-time subscriptions) |
-| **Auth** | Convex Auth with Google OAuth, Magic Links, Email/Password |
+| **Auth** | Convex Auth with Google OAuth, Email/Password |
 | **Icons** | Phosphor Icons (duotone weight) |
 | **Fonts** | Geist Sans & Geist Mono |
 | **Testing** | Vitest, React Testing Library, Playwright |
@@ -308,7 +308,7 @@ See [`.env.example`](.env.example) for all available configuration options.
 | `SITE_URL` | Your production URL (for OAuth redirects) |
 | `AUTH_GOOGLE_ID` | Google OAuth client ID |
 | `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
-| `AUTH_RESEND_KEY` | Resend API key for magic links |
+| `AUTH_RESEND_KEY` | Resend API key for password reset emails |
 | `EMAIL_FROM` | Email sender address |
 | `OPENAI_API_KEY` | OpenAI API key (for AI features) |
 
@@ -504,7 +504,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <p align="center">
-  Made with ❤️ by an accountant
+  Researched & designed by <a href="https://github.com/hazlijohar95">Hazli</a> · Built by <a href="https://github.com/azmir32">Azmir</a>
 </p>
 
 <p align="center">

@@ -14,22 +14,15 @@ import {
   Certificate,
   ClipboardText,
   ArrowRight,
-  type Icon,
 } from '@phosphor-icons/react'
-
-interface Benefit {
-  icon: Icon
-  text: string
-}
 
 const stakeholders = [
   {
     title: 'For Sponsors',
     subtitle: 'Measurable ROI, not just logo placement',
-    accent: 'amber',
-    gradientFrom: 'from-amber-500',
-    gradientTo: 'to-orange-600',
     icon: Handshake,
+    iconBg: 'bg-amber-100 dark:bg-amber-950/50',
+    iconColor: 'text-amber-600 dark:text-amber-400',
     benefits: [
       { icon: ChartLineUp, text: 'Real engagement metrics and booth analytics' },
       { icon: Target, text: 'Audience match scoring before commitment' },
@@ -41,10 +34,9 @@ const stakeholders = [
   {
     title: 'For Vendors',
     subtitle: 'Inbound opportunities, not cold outreach',
-    accent: 'emerald',
-    gradientFrom: 'from-emerald-500',
-    gradientTo: 'to-green-600',
     icon: Storefront,
+    iconBg: 'bg-emerald-100 dark:bg-emerald-950/50',
+    iconColor: 'text-emerald-600 dark:text-emerald-400',
     benefits: [
       { icon: Calendar, text: 'Inbound opportunities in your category' },
       { icon: CurrencyDollar, text: 'Transparent pricing — no bidding wars' },
@@ -56,10 +48,9 @@ const stakeholders = [
   {
     title: 'For Organizers',
     subtitle: 'One dashboard to rule them all',
-    accent: 'indigo',
-    gradientFrom: 'from-indigo-500',
-    gradientTo: 'to-violet-600',
     icon: Calendar,
+    iconBg: 'bg-indigo-100 dark:bg-indigo-950/50',
+    iconColor: 'text-indigo-600 dark:text-indigo-400',
     benefits: [
       { icon: Storefront, text: 'Pre-vetted sponsor & vendor marketplace' },
       { icon: Sparkle, text: 'AI-powered matching and recommendations' },
@@ -100,10 +91,19 @@ export function FeaturesByUser() {
           </p>
         </div>
 
-        {/* Stakeholder Grid - single column on mobile */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Stakeholder Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-5">
           {stakeholders.map((stakeholder, index) => (
-            <StakeholderCard key={stakeholder.title} {...stakeholder} index={index} />
+            <StakeholderCard
+              key={stakeholder.title}
+              title={stakeholder.title}
+              subtitle={stakeholder.subtitle}
+              icon={stakeholder.icon}
+              iconBg={stakeholder.iconBg}
+              iconColor={stakeholder.iconColor}
+              benefits={stakeholder.benefits}
+              index={index}
+            />
           ))}
         </div>
       </div>
@@ -114,20 +114,18 @@ export function FeaturesByUser() {
 function StakeholderCard({
   title,
   subtitle,
-  accent,
-  gradientFrom,
-  gradientTo,
   icon: HeaderIcon,
+  iconBg,
+  iconColor,
   benefits,
   index,
 }: {
   title: string
   subtitle: string
-  accent: string
-  gradientFrom: string
-  gradientTo: string
-  icon: Icon
-  benefits: Benefit[]
+  icon: typeof Handshake
+  iconBg: string
+  iconColor: string
+  benefits: { icon: typeof Handshake; text: string }[]
   index: number
 }) {
   const { ref, isVisible } = useScrollAnimation()
@@ -136,82 +134,48 @@ function StakeholderCard({
     <div
       ref={ref}
       className={cn(
-        'group relative p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-border/50 bg-card',
-        'transition-all duration-500 hover:shadow-xl hover:border-border',
-        'sm:hover:-translate-y-1 active:scale-[0.99] touch-manipulation',
+        'group relative p-5 sm:p-6 rounded-xl sm:rounded-2xl bg-card border border-border/40',
+        'transition-all duration-500',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
-      style={{ transitionDelay: `${index * 150}ms` }}
+      style={{ transitionDelay: `${index * 100}ms` }}
     >
-      {/* Header with gradient icon */}
-      <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
+      {/* Clean header with soft icon */}
+      <div className="flex items-center gap-3 mb-5">
         <div className={cn(
-          'w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shrink-0',
-          `bg-gradient-to-br ${gradientFrom} ${gradientTo}`,
-          accent === 'amber' && 'shadow-amber-500/25',
-          accent === 'emerald' && 'shadow-emerald-500/25',
-          accent === 'indigo' && 'shadow-indigo-500/25',
+          'w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+          iconBg
         )}>
-          <HeaderIcon size={20} className="sm:hidden text-white" weight="fill" />
-          <HeaderIcon size={24} className="hidden sm:block text-white" weight="fill" />
+          <HeaderIcon size={20} className={iconColor} weight="duotone" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-lg sm:text-xl font-semibold">{title}</h3>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">{subtitle}</p>
+          <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
+          <p className="text-xs text-muted-foreground">{subtitle}</p>
         </div>
       </div>
 
-      {/* Benefits List */}
-      <ul className="space-y-3 sm:space-y-4">
+      {/* Clean benefits list */}
+      <ul className="space-y-2.5">
         {benefits.map((benefit, i) => {
           const IconComponent = benefit.icon
           return (
-            <li key={i} className="flex items-start gap-2.5 sm:gap-3 group/item">
-              <div className={cn(
-                'w-7 h-7 sm:w-8 sm:h-8 rounded-md sm:rounded-lg flex items-center justify-center shrink-0 transition-colors',
-                accent === 'amber' && 'bg-amber-500/10 group-hover/item:bg-amber-500/20',
-                accent === 'emerald' && 'bg-emerald-500/10 group-hover/item:bg-emerald-500/20',
-                accent === 'indigo' && 'bg-indigo-500/10 group-hover/item:bg-indigo-500/20',
-              )}>
-                <IconComponent
-                  size={14}
-                  className={cn(
-                    'sm:hidden',
-                    accent === 'amber' && 'text-amber-600 dark:text-amber-400',
-                    accent === 'emerald' && 'text-emerald-600 dark:text-emerald-400',
-                    accent === 'indigo' && 'text-indigo-600 dark:text-indigo-400',
-                  )}
-                  weight="duotone"
-                />
-                <IconComponent
-                  size={16}
-                  className={cn(
-                    'hidden sm:block',
-                    accent === 'amber' && 'text-amber-600 dark:text-amber-400',
-                    accent === 'emerald' && 'text-emerald-600 dark:text-emerald-400',
-                    accent === 'indigo' && 'text-indigo-600 dark:text-indigo-400',
-                  )}
-                  weight="duotone"
-                />
-              </div>
-              <span className="text-xs sm:text-sm text-muted-foreground leading-relaxed pt-1 sm:pt-1.5 group-hover/item:text-foreground transition-colors">
-                {benefit.text}
-              </span>
+            <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+              <IconComponent
+                size={16}
+                className="shrink-0 mt-0.5 text-muted-foreground/60"
+                weight="duotone"
+              />
+              <span className="leading-relaxed">{benefit.text}</span>
             </li>
           )
         })}
       </ul>
 
-      {/* CTA Link - larger touch target on mobile */}
-      <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border/50">
-        <button className={cn(
-          'flex items-center gap-2 text-sm font-medium transition-colors group/btn min-h-[44px] sm:min-h-0 touch-manipulation',
-          accent === 'amber' && 'text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300',
-          accent === 'emerald' && 'text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300',
-          accent === 'indigo' && 'text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300',
-        )}>
+      {/* Subtle CTA */}
+      <div className="mt-5 pt-4 border-t border-border/30">
+        <button className="flex items-center gap-1.5 text-sm font-medium text-foreground/70 hover:text-foreground transition-colors group/btn">
           Learn more
-          <ArrowRight size={14} weight="bold" className="transition-transform group-hover/btn:translate-x-1" />
+          <ArrowRight size={14} weight="bold" className="transition-transform group-hover/btn:translate-x-0.5" />
         </button>
       </div>
     </div>

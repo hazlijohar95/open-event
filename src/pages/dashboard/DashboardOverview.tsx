@@ -117,12 +117,13 @@ export function DashboardOverview() {
       {/* Stats Row - Minimal Typeform style */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { label: 'Events', value: stats?.totalEvents ?? 0, icon: Calendar, accent: 'violet' },
-          { label: 'Vendors', value: stats?.confirmedVendors ?? 0, icon: Storefront, accent: 'emerald' },
-          { label: 'Sponsors', value: stats?.confirmedSponsors ?? 0, icon: Handshake, accent: 'amber' },
-          { label: 'Attendees', value: stats?.activeEvents ?? 0, icon: Users, accent: 'blue' },
+          { label: 'Events', value: stats?.totalEvents, icon: Calendar, accent: 'violet' },
+          { label: 'Vendors', value: stats?.confirmedVendors, icon: Storefront, accent: 'emerald' },
+          { label: 'Sponsors', value: stats?.confirmedSponsors, icon: Handshake, accent: 'amber' },
+          { label: 'Attendees', value: stats?.activeEvents, icon: Users, accent: 'blue' },
         ].map((stat) => {
           const Icon = stat.icon
+          const displayValue = stat.value === undefined ? '—' : stat.value === 0 ? '—' : stat.value
           return (
             <div
               key={stat.label}
@@ -155,7 +156,10 @@ export function DashboardOverview() {
                   weight="duotone"
                 />
               </div>
-              <p className="text-2xl sm:text-3xl font-semibold tracking-tight">{stat.value}</p>
+              <p className={cn(
+                "text-2xl sm:text-3xl font-semibold tracking-tight",
+                displayValue === '—' && "text-muted-foreground/50"
+              )}>{displayValue}</p>
               <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{stat.label}</p>
             </div>
           )
@@ -193,7 +197,7 @@ export function DashboardOverview() {
             ))}
           </div>
         ) : isNewUser ? (
-          /* Empty State - Typeform style with AI suggestions */
+          /* Empty State - Typeform style with witty messaging */
           <div className="grid md:grid-cols-2 gap-4">
             {/* AI Suggestion Card 1 */}
             <div className="group relative rounded-xl border border-border/50 bg-card p-6 hover:border-violet-200 dark:hover:border-violet-800/50 hover:shadow-md transition-all duration-200">
@@ -208,14 +212,15 @@ export function DashboardOverview() {
                   <Sparkle size={18} weight="fill" className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground mb-1 leading-snug">
-                    Create a Conference for tech industry networking and knowledge sharing.
+                  <p className="text-xs text-muted-foreground mb-1">ai suggestion</p>
+                  <h3 className="font-medium text-foreground leading-snug">
+                    a tech conference. networking, talks, the whole thing.
                   </h3>
                 </div>
               </div>
 
               <button className="mt-4 px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted transition-colors">
-                Use this template
+                use this
               </button>
             </div>
 
@@ -232,14 +237,15 @@ export function DashboardOverview() {
                   <Sparkle size={18} weight="fill" className="text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground mb-1 leading-snug">
-                    Create a Workshop focusing on hands-on learning and skill development.
+                  <p className="text-xs text-muted-foreground mb-1">ai suggestion</p>
+                  <h3 className="font-medium text-foreground leading-snug">
+                    a hands-on workshop. people learn stuff. you look smart.
                   </h3>
                 </div>
               </div>
 
               <button className="mt-4 px-4 py-2 text-sm font-medium border border-border rounded-lg hover:bg-muted transition-colors">
-                Use this template
+                use this
               </button>
             </div>
 
@@ -253,8 +259,8 @@ export function DashboardOverview() {
                   <Plus size={24} weight="bold" className="text-violet-600 dark:text-violet-400" />
                 </div>
                 <div>
-                  <p className="font-medium text-foreground">Create a new event</p>
-                  <p className="text-sm text-muted-foreground">Start from scratch or use AI assistance</p>
+                  <p className="font-medium text-foreground">start from scratch</p>
+                  <p className="text-sm text-muted-foreground">you know what you're doing. probably.</p>
                 </div>
               </Link>
             </div>
@@ -384,10 +390,14 @@ export function DashboardOverview() {
 
                 {/* Quick Actions on Hover */}
                 <div className="mt-4 pt-4 border-t border-border/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button className="w-full px-4 py-2 text-sm font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 hover:bg-violet-100 dark:hover:bg-violet-900/50 rounded-lg transition-colors flex items-center justify-center gap-2">
+                  <Link
+                    to={`/dashboard/events/${event._id}/edit`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-full px-4 py-2 text-sm font-medium text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 hover:bg-violet-100 dark:hover:bg-violet-900/50 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  >
                     <Lightning size={14} weight="fill" />
-                    Quick edit
-                  </button>
+                    quick edit
+                  </Link>
                 </div>
               </Link>
             ))}

@@ -64,7 +64,7 @@ export function AuthLayout({
               ))}
             </div>
             <p className="text-white/60 text-sm">
-              Join 500+ event organizers
+              Early adopters welcome
             </p>
           </div>
         </div>

@@ -191,9 +191,9 @@ export function EventsPage() {
     <div className="space-y-4 sm:space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl sm:text-2xl font-bold font-mono">Events</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Events</h1>
         <p className="text-sm sm:text-base text-muted-foreground mt-1">
-          Manage all your events in one place
+          all your events in one place. finally.
         </p>
       </div>
 
@@ -282,13 +282,13 @@ export function EventsPage() {
           />
           <h3 className="text-lg font-semibold mb-2">
             {statusFilter === 'all'
-              ? 'No events yet'
-              : `No ${eventStatusConfig[statusFilter]?.label.toLowerCase() || statusFilter} events`}
+              ? 'no events yet'
+              : `no ${eventStatusConfig[statusFilter]?.label.toLowerCase() || statusFilter} events`}
           </h3>
           <p className="text-muted-foreground max-w-sm mx-auto">
             {statusFilter === 'all'
-              ? 'Use the sidebar to create your first event'
-              : `You don't have any events in the "${eventStatusConfig[statusFilter]?.label || statusFilter}" stage`}
+              ? "that's okay, everyone starts somewhere. use the sidebar to create your first one."
+              : `nothing in "${eventStatusConfig[statusFilter]?.label || statusFilter}" right now. check back later.`}
           </p>
         </div>
       ) : (

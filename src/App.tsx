@@ -40,7 +40,9 @@ import {
   AdminSettings,
   AdminPublicApplications,
 } from '@/pages/admin'
-import { PrivacyPolicy, TermsOfService } from '@/pages/legal'
+import { PrivacyPolicy, TermsOfService, CookiePolicy } from '@/pages/legal'
+import { DocsPage } from '@/pages/docs'
+import { OpenSourcePage } from '@/pages/opensource'
 import { EventDirectory, EventDetailPublic } from '@/pages/public'
 import {
   VendorApplicationPage,
@@ -103,10 +105,13 @@ function App() {
             <Route path="settings" element={<AdminSettings />} />
           </Route>
           {/* Public Routes */}
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/contributors" element={<OpenSourcePage />} />
           <Route path="/events" element={<EventDirectory />} />
           <Route path="/events/:eventId" element={<EventDetailPublic />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/cookies" element={<CookiePolicy />} />
           {/* Apply Routes (Public - No Auth Required) */}
           <Route path="/apply/vendor" element={<VendorApplicationPage />} />
           <Route path="/apply/sponsor" element={<SponsorApplicationPage />} />

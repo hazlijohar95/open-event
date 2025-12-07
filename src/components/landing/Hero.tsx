@@ -14,6 +14,7 @@ import {
   CheckCircle,
   List,
   X,
+  SignIn,
 } from '@phosphor-icons/react'
 
 export function Hero() {
@@ -26,13 +27,8 @@ export function Hero() {
     navigate('/sign-up')
   }
 
-  const handleSignIn = () => {
-    setMobileMenuOpen(false)
-    navigate('/sign-in')
-  }
-
   return (
-    <section className="relative min-h-screen flex flex-col overflow-hidden">
+    <section className="relative min-h-[100dvh] flex flex-col overflow-hidden">
       {/* Subtle, balanced gradient background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-background to-background dark:from-slate-950/50 dark:via-background" />
@@ -68,12 +64,28 @@ export function Hero() {
 
           {/* Menu items */}
           <nav className="flex flex-col gap-2 mt-8">
-            <button
-              onClick={handleSignIn}
+            <Link
+              to="/docs"
+              onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-3 px-4 py-3 text-base font-medium text-foreground hover:bg-muted rounded-xl transition-colors touch-target"
             >
-              Sign in
-            </button>
+              Docs
+            </Link>
+            <Link
+              to="/contributors"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-foreground hover:bg-muted rounded-xl transition-colors touch-target"
+            >
+              Contributors
+            </Link>
+            <Link
+              to="/sign-in"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 text-base font-medium text-foreground hover:bg-muted rounded-xl transition-colors touch-target"
+            >
+              <SignIn size={20} weight="bold" />
+              Login
+            </Link>
             <button
               onClick={() => {
                 setMobileMenuOpen(false)
@@ -99,36 +111,45 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Navigation - Clean, minimal */}
-      <nav className="relative z-20 flex items-center justify-between px-4 sm:px-6 lg:px-12 py-4 sm:py-5 max-w-7xl mx-auto w-full safe-area-top">
-        <Link to="/" className="hover:opacity-80 transition-opacity">
-          <Logo />
-        </Link>
-
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* Desktop nav */}
-          <Link
-            to="/sign-in"
-            className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
-          >
-            Sign in
+      {/* Navigation - Clean, minimal, pixel-perfect */}
+      <nav className="relative z-20">
+        <div className="flex items-center justify-between px-4 sm:px-6 lg:px-12 h-16 sm:h-[72px] max-w-7xl mx-auto w-full">
+          <Link to="/" className="hover:opacity-80 transition-opacity">
+            <Logo />
           </Link>
-          <ThemeToggle />
-          <button
-            onClick={handleGetStarted}
-            className="hidden sm:flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-foreground text-background hover:bg-foreground/90 transition-all rounded-lg shadow-sm hover:shadow-md"
-          >
-            Get Started
-          </button>
 
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMobileMenuOpen(true)}
-            className="sm:hidden p-2 touch-target rounded-lg hover:bg-muted transition-colors"
-            aria-label="Open menu"
-          >
-            <List size={24} weight="bold" />
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Desktop nav */}
+            <Link
+              to="/docs"
+              className="hidden sm:flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
+            >
+              Docs
+            </Link>
+            <Link
+              to="/contributors"
+              className="hidden sm:flex items-center px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-muted/50"
+            >
+              Contributors
+            </Link>
+            <ThemeToggle />
+            <Link
+              to="/sign-in"
+              className="hidden sm:flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground bg-foreground/5 hover:bg-foreground/10 border border-border/60 hover:border-border transition-all rounded-lg"
+            >
+              <SignIn size={16} weight="bold" />
+              Login
+            </Link>
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="sm:hidden p-2 touch-target rounded-lg hover:bg-muted transition-colors"
+              aria-label="Open menu"
+            >
+              <List size={24} weight="bold" />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -228,7 +249,7 @@ export function Hero() {
               <div className="flex-1 flex justify-center">
                 <div className="px-4 py-1.5 rounded-lg bg-background/80 border border-border/50 text-xs text-muted-foreground font-mono flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-emerald-500" />
-                  open-event.app/dashboard
+                  openevent.my/dashboard
                 </div>
               </div>
             </div>

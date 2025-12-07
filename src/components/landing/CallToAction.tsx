@@ -72,17 +72,17 @@ export function CallToAction() {
           <span className="flex items-center gap-1.5 sm:gap-2">
             <CheckCircle size={14} className="sm:hidden text-emerald-500" weight="fill" />
             <CheckCircle size={16} className="hidden sm:block text-emerald-500" weight="fill" />
-            Free and open-source
+            MIT Licensed
           </span>
           <span className="flex items-center gap-1.5 sm:gap-2">
             <CheckCircle size={14} className="sm:hidden text-emerald-500" weight="fill" />
             <CheckCircle size={16} className="hidden sm:block text-emerald-500" weight="fill" />
-            No credit card required
+            Self-hostable
           </span>
           <span className="flex items-center gap-1.5 sm:gap-2">
             <CheckCircle size={14} className="sm:hidden text-emerald-500" weight="fill" />
             <CheckCircle size={16} className="hidden sm:block text-emerald-500" weight="fill" />
-            Deploy anywhere
+            Active community
           </span>
         </div>
       </div>

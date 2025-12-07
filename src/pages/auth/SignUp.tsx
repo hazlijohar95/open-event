@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { Logo } from '@/components/ui/logo'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
@@ -11,23 +12,23 @@ import {
   Envelope,
   Lock,
   GoogleLogo,
-  MagicWand,
   CircleNotch,
+  ArrowRight,
   User,
+  Rocket,
+  Shield,
+  Heart,
+  CheckCircle,
 } from '@phosphor-icons/react'
-
-type AuthFlow = 'password' | 'magicLink'
 
 export function SignUp() {
   const { signIn } = useAuthActions()
   const { isAuthenticated, isLoading } = useConvexAuth()
   const navigate = useNavigate()
-  const [flow, setFlow] = useState<AuthFlow>('password')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [magicLinkSent, setMagicLinkSent] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
   // Redirect if already authenticated (e.g., after OAuth callback)
@@ -69,24 +70,6 @@ export function SignUp() {
     }
   }
 
-  const handleMagicLink = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email) {
-      toast.error('Please enter your email')
-      return
-    }
-    setLoading(true)
-    try {
-      await signIn('resend', { email })
-      setMagicLinkSent(true)
-      toast.success('Check your email for the magic link!')
-    } catch {
-      toast.error('Failed to send magic link')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleGoogleSignUp = async () => {
     setLoading(true)
     try {
@@ -98,87 +81,125 @@ export function SignUp() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Image Background (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden">
-        {/* Background Image */}
-        <img
-          src="/auth-bg.jpg"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+    <div className="h-[100dvh] flex overflow-hidden">
+      {/* Left Panel - Decorative (hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden bg-slate-50 dark:bg-slate-950/50">
+        {/* Gradient background matching landing page */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-100 via-background to-slate-50 dark:from-slate-900 dark:via-background dark:to-slate-950" />
+          <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-gradient-to-br from-emerald-100/50 to-transparent dark:from-emerald-900/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-indigo-100/40 to-transparent dark:from-indigo-900/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 right-1/4 w-[300px] h-[300px] bg-gradient-to-l from-cyan-100/30 to-transparent dark:from-cyan-900/10 rounded-full blur-3xl" />
+        </div>
+
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.015] dark:opacity-[0.03]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}
         />
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-transparent to-black/60" />
-
-        {/* Content Overlay */}
+        {/* Content */}
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           {/* Logo */}
-          <Link
-            to="/"
-            className="font-mono text-2xl font-bold text-white hover:opacity-80 transition-opacity"
-          >
-            open-event
+          <Link to="/" className="hover:opacity-80 transition-opacity">
+            <Logo />
           </Link>
 
-          {/* Tagline */}
-          <div className="max-w-md">
-            <h2 className="font-mono text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
-              Start managing events today.
+          {/* Main content */}
+          <div className="max-w-lg">
+            <h2 className="text-4xl xl:text-5xl font-semibold tracking-tight leading-[1.1] mb-6">
+              finally.
+              <br />
+              <span className="relative inline-block mt-1">
+                <span className="bg-gradient-to-r from-slate-800 via-slate-600 to-slate-800 dark:from-slate-200 dark:via-slate-400 dark:to-slate-200 bg-clip-text text-transparent">
+                  event ops that don't suck.
+                </span>
+                <svg className="absolute -bottom-1 left-0 w-full" height="8" viewBox="0 0 200 10" preserveAspectRatio="none">
+                  <path d="M0 8 Q50 0 100 8 T200 8" stroke="url(#signup-underline)" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                  <defs>
+                    <linearGradient id="signup-underline" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#10b981" />
+                      <stop offset="50%" stopColor="#06b6d4" />
+                      <stop offset="100%" stopColor="#6366f1" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>
             </h2>
-            <p className="text-white/70 text-lg">
-              Join thousands of organizers who use Open-Event to find sponsors,
-              manage vendors, and run seamless events.
+            <p className="text-lg text-muted-foreground leading-relaxed">
+              we just launched. you could be one of the first to ditch the spreadsheet chaos forever.
             </p>
+
+            {/* Feature highlights */}
+            <div className="mt-10 space-y-4">
+              {[
+                { icon: Rocket, text: 'Get started in minutes', color: 'text-emerald-500' },
+                { icon: Shield, text: 'Enterprise-grade security', color: 'text-indigo-500' },
+                { icon: Heart, text: 'Free forever, open source', color: 'text-rose-500' },
+              ].map((feature) => {
+                const Icon = feature.icon
+                return (
+                  <div key={feature.text} className="flex items-center gap-3 text-muted-foreground">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center">
+                      <Icon size={16} weight="duotone" className={feature.color} />
+                    </div>
+                    <span className="text-sm">{feature.text}</span>
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
-          {/* Bottom decoration */}
+          {/* Bottom social proof - the team */}
           <div className="flex items-center gap-4">
             <div className="flex -space-x-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="w-8 h-8 rounded-full bg-white/20 border-2 border-white/30 backdrop-blur-sm"
-                />
-              ))}
+              <img
+                src="https://github.com/hazlijohar95.png"
+                alt="Hazli"
+                className="w-8 h-8 rounded-full border-2 border-background shadow-sm"
+              />
+              <img
+                src="https://github.com/azmir32.png"
+                alt="Azmir"
+                className="w-8 h-8 rounded-full border-2 border-background shadow-sm"
+              />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-cyan-500 border-2 border-background shadow-sm flex items-center justify-center text-white text-xs font-medium">
+                You
+              </div>
             </div>
-            <p className="text-white/60 text-sm">Join 500+ event organizers</p>
+            <p className="text-sm text-muted-foreground">
+              be among the <span className="font-medium text-foreground">first</span>
+            </p>
           </div>
         </div>
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex flex-col bg-background relative">
-        {/* Mobile Background Image */}
+      <div className="flex-1 flex flex-col bg-background relative overflow-hidden">
+        {/* Mobile gradient background */}
         <div className="lg:hidden absolute inset-0 -z-10">
-          <img
-            src="/auth-bg.jpg"
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover opacity-20 dark:opacity-10"
-          />
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-background to-background dark:from-slate-950/50 dark:via-background" />
+          <div className="absolute top-0 left-0 w-[300px] h-[300px] bg-gradient-to-br from-emerald-100/40 to-transparent dark:from-emerald-900/20 rounded-full blur-3xl" />
         </div>
 
         {/* Header */}
-        <header className="flex items-center justify-between px-6 py-4 lg:px-12">
-          <Link
-            to="/"
-            className="font-mono text-lg font-semibold hover:opacity-80 transition-opacity lg:opacity-0 lg:pointer-events-none"
-          >
-            open-event
+        <header className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-14 sm:h-16 flex-shrink-0">
+          <Link to="/" className="lg:opacity-0 lg:pointer-events-none hover:opacity-80 transition-opacity">
+            <Logo />
           </Link>
           <ThemeToggle />
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 flex items-center justify-center px-6 py-8 lg:px-12">
+        <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-y-auto">
           <div className="w-full max-w-md">
-            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl p-8">
-              <div className="text-center mb-8">
-                <h1 className="font-mono text-2xl font-bold mb-2">
-                  Create Account
-                </h1>
-                <p className="text-muted-foreground">
+            {/* Card with glass effect */}
+            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl shadow-xl p-5 sm:p-6">
+              <div className="text-center mb-5">
+                <h1 className="text-xl sm:text-2xl font-semibold tracking-tight mb-1">Create Account</h1>
+                <p className="text-muted-foreground text-sm">
                   Get started with your free account today.
                 </p>
               </div>
@@ -187,60 +208,30 @@ export function SignUp() {
               <button
                 onClick={handleGoogleSignUp}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-3 border border-border bg-background hover:bg-muted rounded-lg py-3 px-4 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-6"
+                className="w-full flex items-center justify-center gap-3 border border-border bg-background hover:bg-muted rounded-xl py-2.5 px-4 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed mb-4 group"
               >
-                <GoogleLogo size={20} weight="bold" />
-                Continue with Google
+                <GoogleLogo size={18} weight="bold" className="text-foreground" />
+                <span className="text-sm">Continue with Google</span>
               </button>
 
               {/* Divider */}
-              <div className="relative mb-6">
+              <div className="relative mb-4">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">
+                  <span className="bg-card px-3 text-muted-foreground">
                     Or continue with
                   </span>
                 </div>
               </div>
 
-              {/* Toggle between password and magic link */}
-              <div className="flex rounded-lg border border-border p-1 mb-6">
-                <button
-                  onClick={() => setFlow('password')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                    flow === 'password'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <Lock size={16} weight="duotone" />
-                  Password
-                </button>
-                <button
-                  onClick={() => {
-                    setFlow('magicLink')
-                    setMagicLinkSent(false)
-                  }}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                    flow === 'magicLink'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  <MagicWand size={16} weight="duotone" />
-                  Magic Link
-                </button>
-              </div>
-
-              {flow === 'password' ? (
-                <form onSubmit={handlePasswordSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+              <form onSubmit={handlePasswordSignUp} className="space-y-2.5">
+                  <div className="space-y-1">
+                    <Label htmlFor="name" className="text-sm font-medium">Name</Label>
                     <div className="relative">
                       <User
-                        size={18}
+                        size={16}
                         weight="duotone"
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                       />
@@ -250,15 +241,15 @@ export function SignUp() {
                         placeholder="Your name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 h-10 rounded-xl text-sm"
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                     <div className="relative">
                       <Envelope
-                        size={18}
+                        size={16}
                         weight="duotone"
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                       />
@@ -268,16 +259,16 @@ export function SignUp() {
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 h-10 rounded-xl text-sm"
                         required
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">Password</Label>
+                  <div className="space-y-1">
+                    <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                     <div className="relative">
                       <Lock
-                        size={18}
+                        size={16}
                         weight="duotone"
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                       />
@@ -287,7 +278,7 @@ export function SignUp() {
                         placeholder="Min. 8 characters"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 h-10 rounded-xl text-sm"
                         required
                         minLength={8}
                       />
@@ -296,7 +287,7 @@ export function SignUp() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-foreground hover:bg-foreground/90 text-background py-2.5 px-4 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl group text-sm mt-1"
                   >
                     {loading ? (
                       <>
@@ -308,97 +299,52 @@ export function SignUp() {
                         Creating account...
                       </>
                     ) : (
-                      'Create Account'
-                    )}
-                  </button>
-                </form>
-              ) : magicLinkSent ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Envelope
-                      size={32}
-                      weight="duotone"
-                      className="text-primary"
-                    />
-                  </div>
-                  <h3 className="font-semibold mb-2">Check your email</h3>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    We sent a magic link to <strong>{email}</strong>
-                  </p>
-                  <button
-                    onClick={() => setMagicLinkSent(false)}
-                    className="text-primary text-sm hover:underline"
-                  >
-                    Use a different email
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleMagicLink} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="magic-email">Email</Label>
-                    <div className="relative">
-                      <Envelope
-                        size={18}
-                        weight="duotone"
-                        className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                      />
-                      <Input
-                        id="magic-email"
-                        type="email"
-                        placeholder="you@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
                       <>
-                        <CircleNotch
-                          size={18}
-                          weight="bold"
-                          className="animate-spin"
-                        />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <MagicWand size={18} weight="duotone" />
-                        Send Magic Link
+                        Create Account
+                        <ArrowRight size={18} weight="bold" className="transition-transform group-hover:translate-x-1" />
                       </>
                     )}
                   </button>
                 </form>
-              )}
 
-              <p className="text-center text-sm text-muted-foreground mt-6">
+              <p className="text-center text-sm text-muted-foreground mt-4">
                 Already have an account?{' '}
                 <Link
                   to="/sign-in"
-                  className="text-primary hover:underline font-medium"
+                  className="text-foreground hover:text-emerald-500 font-medium transition-colors"
                 >
                   Sign in
                 </Link>
               </p>
             </div>
+
+            {/* Trust indicators */}
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-4 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <CheckCircle size={12} weight="fill" className="text-emerald-500" />
+                Free forever
+              </span>
+              <span className="flex items-center gap-1">
+                <CheckCircle size={12} weight="fill" className="text-emerald-500" />
+                No credit card
+              </span>
+              <span className="flex items-center gap-1">
+                <CheckCircle size={12} weight="fill" className="text-emerald-500" />
+                Open source
+              </span>
+            </div>
           </div>
         </main>
 
         {/* Footer */}
-        <footer className="px-6 py-4 lg:px-12 text-center lg:text-left">
-          <p className="text-xs text-muted-foreground">
+        <footer className="px-4 sm:px-6 py-3 text-center flex-shrink-0">
+          <p className="text-[11px] text-muted-foreground">
             By continuing, you agree to our{' '}
-            <Link to="/terms" className="underline hover:text-foreground">
-              Terms of Service
+            <Link to="/terms" className="underline hover:text-foreground transition-colors">
+              Terms
             </Link>{' '}
             and{' '}
-            <Link to="/privacy" className="underline hover:text-foreground">
+            <Link to="/privacy" className="underline hover:text-foreground transition-colors">
               Privacy Policy
             </Link>
           </p>

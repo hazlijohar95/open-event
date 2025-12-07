@@ -36,7 +36,7 @@ We use a **diverse accent palette** rather than monotone theming:
 - **Slate** for neutral, sophisticated headlines
 
 ### 3. Honest Personality
-We're a new product and we embrace it. Our copy is authentic ("hopefully, soon"), our animations are playful but not distracting, and our footer says "Built with love by an accountant."
+We're a new product and we embrace it. Our copy is authentic ("hopefully, soon"), our animations are playful but not distracting, and our footer credits the real people behind the project.
 
 ---
 
@@ -490,7 +490,7 @@ We have two card styles:
 | Why Open Source | `WhyOpenSource.tsx` | Benefits of open source |
 | FAQ | `FAQ.tsx` | Accordion-style Q&A |
 | Call to Action | `CallToAction.tsx` | Final CTA with trust indicators |
-| Footer | `Footer.tsx` | Links, theme toggle, "Built by an accountant" |
+| Footer | `Footer.tsx` | Links, theme toggle, team attribution |
 
 ### Section Structure
 
@@ -525,8 +525,7 @@ const dreamLogos = [
 ]
 
 <p className="text-center text-sm text-muted-foreground">
-  Trusted by event teams worldwide
-  <span className="text-muted-foreground/50"> (hopefully, soon)</span>
+  trusted by... well, we just launched. you could be first.
 </p>
 
 // Infinite scroll with pause on hover
@@ -653,4 +652,4 @@ When adding new components or patterns:
 
 ---
 
-*Built with love by an accountant.*
+*Researched & designed by Hazli · Built by Azmir*

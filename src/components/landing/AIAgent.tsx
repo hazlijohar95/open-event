@@ -20,7 +20,6 @@ const capabilities = [
     title: 'Sponsor Intelligence',
     description: 'AI recommends sponsors based on your event type, audience, and budget.',
     example: 'Find fintech sponsors with $50k+ budgets for a 500-person tech conference',
-    emoji: '🎯',
     color: 'amber',
   },
   {
@@ -28,7 +27,6 @@ const capabilities = [
     title: 'Vendor Comparison',
     description: 'Compare pricing, reviews, and availability across vendors in seconds.',
     example: 'Compare catering vendors for 300 pax under $15k in KL',
-    emoji: '📊',
     color: 'blue',
   },
   {
@@ -36,7 +34,6 @@ const capabilities = [
     title: 'Logistics Planner',
     description: 'Auto-generate task lists, dependencies, and realistic timelines.',
     example: 'Create a 3-day conference setup checklist with deadlines',
-    emoji: '📋',
     color: 'violet',
   },
   {
@@ -44,7 +41,6 @@ const capabilities = [
     title: 'Sponsor Reports',
     description: 'Generate post-event reports with real engagement metrics.',
     example: 'Generate ROI report for Gold sponsors with booth traffic',
-    emoji: '📈',
     color: 'emerald',
   },
   {
@@ -52,7 +48,6 @@ const capabilities = [
     title: 'Certificate Engine',
     description: 'Issue beautiful certificates for volunteers, speakers, and attendees.',
     example: 'Generate volunteer certificates with hours logged',
-    emoji: '🏆',
     color: 'orange',
   },
 ]
@@ -253,9 +248,8 @@ export function AIAgent() {
 
             {/* Coming soon teaser */}
             <div className="p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-dashed border-border/50 bg-muted/10 text-center">
-              <p className="text-xs sm:text-sm text-muted-foreground flex items-center justify-center gap-1.5 sm:gap-2 flex-wrap">
-                <span className="text-base sm:text-lg">🔮</span>
-                <span>More superpowers coming: budget forecasting, attendee predictions...</span>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                more superpowers coming. we're not done yet.
               </p>
             </div>
           </div>
@@ -276,7 +270,6 @@ function CapabilityCard({
   icon: IconComponent,
   title,
   description,
-  emoji,
   color,
   index,
   isActive,
@@ -286,7 +279,6 @@ function CapabilityCard({
   title: string
   description: string
   example: string
-  emoji: string
   color: string
   index: number
   isActive: boolean
@@ -348,14 +340,8 @@ function CapabilityCard({
 
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm sm:text-base font-semibold flex items-center gap-1.5 sm:gap-2">
+          <h3 className="text-sm sm:text-base font-semibold">
             {title}
-            <span className={cn(
-              'text-sm sm:text-base transition-transform duration-300',
-              isActive && 'scale-110'
-            )}>
-              {emoji}
-            </span>
           </h3>
           <p className={cn(
             'text-xs sm:text-sm mt-0.5 sm:mt-1 transition-colors duration-300 line-clamp-2',

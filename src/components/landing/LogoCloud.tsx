@@ -26,13 +26,12 @@ export function LogoCloud() {
             <RocketLaunch size={12} className="sm:hidden text-amber-600 dark:text-amber-400" weight="fill" />
             <RocketLaunch size={14} className="hidden sm:block text-amber-600 dark:text-amber-400" weight="fill" />
             <span className="text-[10px] sm:text-xs font-medium text-amber-700 dark:text-amber-300">
-              Just launched
+              just launched
             </span>
           </div>
           <p className="text-xs sm:text-sm text-muted-foreground">
-            Trusted by event teams worldwide
-            <span className="text-muted-foreground/50 hidden sm:inline"> (hopefully, soon)</span>
-            <span className="text-muted-foreground/50 sm:hidden"> (soon)</span>
+            trusted by... well, we just launched.
+            <span className="text-muted-foreground/60"> you could be first.</span>
           </p>
         </div>
 
