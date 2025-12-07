@@ -8,9 +8,11 @@ import {
   Wrench,
   MagnifyingGlass,
   CalendarPlus,
+  PencilSimple,
+  Calendar,
   User,
   Storefront,
-  HandCoins
+  Handshake,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
@@ -42,18 +44,18 @@ export interface ToolProps {
 const toolIcons: Record<string, typeof Wrench> = {
   searchVendors: MagnifyingGlass,
   searchSponsors: MagnifyingGlass,
+  getRecommendedVendors: MagnifyingGlass,
+  getRecommendedSponsors: MagnifyingGlass,
   createEvent: CalendarPlus,
-  updateEvent: CalendarPlus,
-  getEvent: CalendarPlus,
+  updateEvent: PencilSimple,
+  getEvent: Calendar,
   getUserProfile: User,
   getVendorDetails: Storefront,
-  getSponsorDetails: HandCoins,
+  getSponsorDetails: Handshake,
+  addVendorToEvent: Storefront,
+  addSponsorToEvent: Handshake,
 }
 
-function getToolIcon(name: string) {
-  const Icon = toolIcons[name] || Wrench
-  return Icon
-}
 
 // ============================================================================
 // Tool Display Names
@@ -62,12 +64,16 @@ function getToolIcon(name: string) {
 const toolDisplayNames: Record<string, string> = {
   searchVendors: 'Search Vendors',
   searchSponsors: 'Search Sponsors',
+  getRecommendedVendors: 'Find Vendors',
+  getRecommendedSponsors: 'Find Sponsors',
   createEvent: 'Create Event',
   updateEvent: 'Update Event',
-  getEvent: 'Get Event Details',
-  getUserProfile: 'Get User Profile',
-  getVendorDetails: 'Get Vendor Details',
-  getSponsorDetails: 'Get Sponsor Details',
+  getEvent: 'Event Details',
+  getUserProfile: 'Your Profile',
+  getVendorDetails: 'Vendor Details',
+  getSponsorDetails: 'Sponsor Details',
+  addVendorToEvent: 'Add Vendor',
+  addSponsorToEvent: 'Add Sponsor',
 }
 
 function getToolDisplayName(name: string): string {
@@ -92,11 +98,11 @@ export function Tool({
     setIsExpanded((prev) => !prev)
   }, [])
 
-  const Icon = getToolIcon(name)
+  const ToolIcon = toolIcons[name] || Wrench
   const displayName = getToolDisplayName(name)
 
-  // Status indicator with animations
-  const StatusIndicator = () => {
+  // Status indicator element
+  const statusIndicator = (() => {
     switch (status) {
       case 'executing':
         return (
@@ -121,7 +127,7 @@ export function Tool({
           <CircleNotch size={16} weight="duotone" className="text-muted-foreground" />
         )
     }
-  }
+  })()
 
   return (
     <div
@@ -147,28 +153,34 @@ export function Tool({
         onClick={toggleExpanded}
         className={cn(
           'w-full flex items-center gap-3 px-3 py-2.5 text-left',
-          'hover:bg-muted/50 transition-colors duration-[var(--duration-fast)]'
+          'hover:bg-muted/30 transition-colors duration-150'
         )}
       >
-        {/* Expand/collapse icon */}
-        <span className="text-muted-foreground">
-          {isExpanded ? (
-            <CaretDown size={14} weight="bold" />
-          ) : (
-            <CaretRight size={14} weight="bold" />
-          )}
-        </span>
-
-        {/* Tool icon */}
-        <span className="text-muted-foreground">
-          <Icon size={16} weight="duotone" />
+        {/* Tool icon with subtle background */}
+        <span className={cn(
+          'p-1.5 rounded-md',
+          status === 'executing' && 'bg-primary/10 text-primary',
+          status === 'success' && 'bg-emerald-500/10 text-emerald-600',
+          status === 'error' && 'bg-destructive/10 text-destructive',
+          status === 'pending' && 'bg-muted text-muted-foreground',
+        )}>
+          <ToolIcon size={14} weight="duotone" />
         </span>
 
         {/* Tool name */}
         <span className="flex-1 text-sm font-medium">{displayName}</span>
 
-        {/* Status */}
-        <StatusIndicator />
+        {/* Status + expand indicator */}
+        <div className="flex items-center gap-2">
+          {statusIndicator}
+          <span className="text-muted-foreground/60">
+            {isExpanded ? (
+              <CaretDown size={12} weight="bold" />
+            ) : (
+              <CaretRight size={12} weight="bold" />
+            )}
+          </span>
+        </div>
       </button>
 
       {/* Expanded content */}

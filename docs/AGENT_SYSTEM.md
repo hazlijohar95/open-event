@@ -133,7 +133,6 @@ The AI Agent System enables natural language event creation through an intellige
 │   │   ├── tools.ts                 # 13 tool schemas                     │
 │   │   └── handlers.ts              # Execution handlers                  │
 │   │                                                                      │
-│   ├── aiConversations.ts           # Conversation CRUD                   │
 │   ├── events.ts                    # Event mutations                     │
 │   ├── vendors.ts                   # Vendor queries                      │
 │   ├── sponsors.ts                  # Sponsor queries                     │
@@ -630,47 +629,21 @@ The recommendation tools use scoring algorithms to find the best matches:
 │  updatedAt         │  number?         │  Timestamp                      │
 └─────────────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         aiConversations                                  │
-├─────────────────────────────────────────────────────────────────────────┤
-│  _id           │  Id<'aiConversations'>                                 │
-│  userId        │  Id<'users'>       │  Conversation owner               │
-│  eventId       │  Id<'events'>?     │  Linked event (if created)        │
-│  status        │  'active' | 'completed' | 'abandoned'                  │
-│  purpose       │  string?           │  'event-creation', etc.           │
-│  createdAt     │  number            │  Timestamp                        │
-│  updatedAt     │  number?           │  Timestamp                        │
-└─────────────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────────────┐
-│                            aiMessages                                    │
-├─────────────────────────────────────────────────────────────────────────┤
-│  _id             │  Id<'aiMessages'>                                    │
-│  conversationId  │  Id<'aiConversations'>                               │
-│  role            │  'user' | 'assistant' | 'system'                     │
-│  content         │  string           │  Message content                 │
-│  toolCalls       │  ToolCall[]?      │  Tool invocations                │
-│  isStreaming     │  boolean?         │  Currently streaming             │
-│  createdAt       │  number           │  Timestamp                       │
-└─────────────────────────────────────────────────────────────────────────┘
 ```
+
+> **Note:** Agent conversations are ephemeral and stored in the browser's localStorage.
+> This keeps the database lean since agent conversations are task-oriented rather than
+> persistent chat history.
 
 ### Indexes
 
 ```typescript
 // users
-by_clerk_id: ['clerkId']  // Fast lookup by auth provider ID
+by_email: ['email']            // Fast lookup by email
 
 // events
 by_organizer: ['organizerId']  // User's events
 by_status: ['status']          // Filter by status
-
-// aiConversations
-by_user: ['userId']            // User's conversations
-by_event: ['eventId']          // Linked conversations
-
-// aiMessages
-by_conversation: ['conversationId']  // Messages in conversation
 ```
 
 ---

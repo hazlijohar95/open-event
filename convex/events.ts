@@ -220,6 +220,50 @@ export const update = mutation({
   },
 })
 
+// Duplicate event - owner only (creates a copy as draft)
+export const duplicate = mutation({
+  args: { id: v.id('events') },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx)
+    if (!user) {
+      throw new Error('Authentication required')
+    }
+
+    const event = await ctx.db.get(args.id)
+    if (!event) {
+      throw new Error('Event not found')
+    }
+
+    // Only owner or superadmin can duplicate
+    if (user.role !== 'superadmin' && event.organizerId !== user._id) {
+      throw new Error('Access denied - you can only duplicate your own events')
+    }
+
+    // Create new event with copied data as draft
+    const newEventId = await ctx.db.insert('events', {
+      organizerId: user._id,
+      title: `${event.title} (Copy)`,
+      description: event.description,
+      eventType: event.eventType,
+      status: 'draft', // Always start as draft
+      startDate: event.startDate,
+      endDate: event.endDate,
+      timezone: event.timezone,
+      locationType: event.locationType,
+      venueName: event.venueName,
+      venueAddress: event.venueAddress,
+      virtualPlatform: event.virtualPlatform,
+      expectedAttendees: event.expectedAttendees,
+      budget: event.budget,
+      budgetCurrency: event.budgetCurrency,
+      requirements: event.requirements,
+      createdAt: Date.now(),
+    })
+
+    return newEventId
+  },
+})
+
 // Delete event - owner or superadmin only
 // CASCADE DELETES: Removes all related records to prevent orphaned data
 export const remove = mutation({
@@ -311,23 +355,6 @@ export const remove = mutation({
       .collect()
     for (const inquiry of inquiries) {
       await ctx.db.delete(inquiry._id)
-    }
-
-    // CASCADE DELETE: AI conversations and messages
-    const aiConversations = await ctx.db
-      .query('aiConversations')
-      .withIndex('by_event', (q) => q.eq('eventId', args.id))
-      .collect()
-    for (const conv of aiConversations) {
-      // Delete all messages in the conversation
-      const messages = await ctx.db
-        .query('aiMessages')
-        .withIndex('by_conversation', (q) => q.eq('conversationId', conv._id))
-        .collect()
-      for (const msg of messages) {
-        await ctx.db.delete(msg._id)
-      }
-      await ctx.db.delete(conv._id)
     }
 
     await ctx.db.delete(args.id)

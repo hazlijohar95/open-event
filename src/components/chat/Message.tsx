@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { User, Robot, Check, Checks, CircleNotch } from '@phosphor-icons/react'
+import { User, Sparkle, Check, Checks, CircleNotch } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
 // ============================================================================
@@ -30,7 +30,7 @@ export function Message({
   children,
   avatar,
   isStreaming = false,
-  isNew: _isNew = false,
+  isNew = false,
   status,
   timestamp,
   className,
@@ -46,8 +46,8 @@ export function Message({
       <User size={16} weight="fill" className="text-muted-foreground" />
     </div>
   ) : isAssistant ? (
-    <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shadow-sm">
-      <Robot size={16} weight="fill" className="text-background" />
+    <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm">
+      <Sparkle size={16} weight="duotone" className="text-primary" />
     </div>
   ) : null
 
@@ -77,7 +77,7 @@ export function Message({
         'group flex gap-3',
         isUser && 'flex-row-reverse',
         // Spring entrance animation with scale + slide
-        'message-entrance',
+        isNew && 'message-entrance',
         // Subtle opacity for sending state
         isSending && 'opacity-80',
         className
@@ -223,13 +223,12 @@ export function TypingIndicator({ className }: TypingIndicatorProps) {
       )}
     >
       <div className="avatar-streaming">
-        <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center shadow-sm">
-          <Robot size={16} weight="fill" className="text-background" />
+        <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shadow-sm">
+          <Sparkle size={16} weight="duotone" className="text-primary" />
         </div>
       </div>
       <div className="flex items-center">
-        <span className="text-sm text-muted-foreground">Thinking</span>
-        <span className="inline-flex ml-1">
+        <span className="inline-flex">
           <span className="animate-[bounce_1.4s_infinite_0s] text-muted-foreground">.</span>
           <span className="animate-[bounce_1.4s_infinite_0.2s] text-muted-foreground">.</span>
           <span className="animate-[bounce_1.4s_infinite_0.4s] text-muted-foreground">.</span>

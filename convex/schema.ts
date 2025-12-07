@@ -110,9 +110,6 @@ export default defineSchema({
       })
     ),
 
-    // AI context
-    aiConversationId: v.optional(v.id('aiConversations')),
-
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
@@ -355,66 +352,6 @@ export default defineSchema({
     .index('by_event', ['eventId'])
     .index('by_sponsor', ['sponsorId'])
     .index('by_status', ['status']),
-
-  // AI Conversations for event creation assistance
-  aiConversations: defineTable({
-    userId: v.id('users'),
-    eventId: v.optional(v.id('events')), // null until event is created
-    status: v.string(), // active, completed, abandoned
-    purpose: v.optional(v.string()), // event-creation, vendor-search, sponsor-search
-    context: v.optional(
-      v.object({
-        eventType: v.optional(v.string()),
-        extractedData: v.optional(v.any()), // Structured data extracted by AI
-      })
-    ),
-    createdAt: v.number(),
-    updatedAt: v.optional(v.number()),
-  })
-    .index('by_user', ['userId'])
-    .index('by_event', ['eventId'])
-    .index('by_status', ['status']),
-
-  // AI Messages within conversations
-  aiMessages: defineTable({
-    conversationId: v.id('aiConversations'),
-    role: v.string(), // user, assistant, system, tool
-    content: v.string(),
-
-    // Streaming metadata
-    isStreaming: v.optional(v.boolean()),
-    streamStartedAt: v.optional(v.number()),
-
-    // Tool calls for this message
-    toolCalls: v.optional(
-      v.array(
-        v.object({
-          id: v.string(),
-          name: v.string(),
-          arguments: v.any(),
-          status: v.string(), // pending, confirmed, executing, completed, error
-          result: v.optional(v.any()),
-        })
-      )
-    ),
-
-    metadata: v.optional(
-      v.object({
-        extractedFields: v.optional(v.array(v.string())),
-        suggestedActions: v.optional(v.array(v.string())),
-        model: v.optional(v.string()),
-        tokens: v.optional(
-          v.object({
-            input: v.number(),
-            output: v.number(),
-          })
-        ),
-      })
-    ),
-
-    createdAt: v.number(),
-    updatedAt: v.optional(v.number()),
-  }).index('by_conversation', ['conversationId']),
 
   // Event Applications - Vendors/Sponsors applying to events
   eventApplications: defineTable({

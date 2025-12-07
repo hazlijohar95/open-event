@@ -108,7 +108,6 @@ Complete AI-powered event creation assistant with tool calling.
   - Automatic navigation on event creation
 
 - **Convex Backend Extensions**
-  - `convex/aiConversations.ts` - AI conversation CRUD
   - `convex/vendors.ts` - Vendor queries for agent
   - `convex/sponsors.ts` - Sponsor queries for agent
   - Extended `convex/events.ts` with full field support
@@ -179,10 +178,8 @@ OPENAI_API_KEY=sk-...
 ┌─────────────────────────────────────────────────────────────┐
 │                      Core Tables                             │
 ├─────────────────────────────────────────────────────────────┤
-│  users              │  clerkId, email, name, role           │
+│  users              │  email, name, role                    │
 │  events             │  organizerId, title, dates, location  │
-│  aiConversations    │  userId, eventId, status, purpose     │
-│  aiMessages         │  conversationId, role, content        │
 │  vendors            │  name, category, location, rating     │
 │  sponsors           │  name, industry, tier, budget         │
 │  organizerProfiles  │  userId, organization, preferences    │
@@ -193,14 +190,13 @@ OPENAI_API_KEY=sk-...
 
 ```
 convex/                         src/
-├── http.ts           ← NEW     ├── pages/dashboard/
-├── actions/agent.ts            │   ├── EventCreatePage.tsx
-├── lib/agent/                  │   ├── EventDetailPage.tsx  ← NEW
-│   ├── types.ts                │   └── ...
-│   ├── tools.ts                ├── components/agent/
-│   └── handlers.ts             │   ├── ToolExecutionCard.tsx
-├── aiConversations.ts          │   ├── ToolConfirmationDialog.tsx
-├── events.ts                   │   └── SearchResultsCard.tsx
-├── vendors.ts                  └── lib/agent-tools.ts
-└── sponsors.ts
+├── http.ts           ← SSE     ├── pages/dashboard/
+├── lib/agent/                  │   ├── EventCreatePage.tsx
+│   ├── types.ts                │   ├── EventDetailPage.tsx
+│   ├── tools.ts                │   └── ...
+│   └── handlers.ts             ├── components/agent/
+├── events.ts                   │   ├── ToolExecutionCard.tsx
+├── vendors.ts                  │   ├── ToolConfirmationDialog.tsx
+└── sponsors.ts                 │   └── SearchResultsCard.tsx
+                                └── lib/agent-tools.ts
 ```

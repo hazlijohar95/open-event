@@ -3,7 +3,6 @@ import { httpAction } from './_generated/server'
 import { auth } from './auth'
 import OpenAI from 'openai'
 import { api } from './_generated/api'
-import type { Id } from './_generated/dataModel'
 import { getOpenAITools, toolRequiresConfirmation } from './lib/agent/tools'
 import { executeToolHandler } from './lib/agent/handlers'
 import type { ToolName, ToolCall, ToolResult } from './lib/agent/types'
@@ -41,7 +40,8 @@ const SYSTEM_PROMPT = `You are an expert AI event planning assistant for open-ev
 1. **Create and manage events** - You can create new events, update existing ones, and retrieve event details
 2. **Search for vendors** - Find catering, AV, photography, and other service providers
 3. **Search for sponsors** - Find companies interested in sponsoring events
-4. **Access user profile** - Understand the organizer's preferences and history
+4. **Get recommendations** - Get AI-matched vendor and sponsor recommendations for events
+5. **Access user profile** - Understand the organizer's preferences and history
 
 ## How to help users:
 
@@ -65,38 +65,68 @@ const SYSTEM_PROMPT = `You are an expert AI event planning assistant for open-ev
 - When the user mentions needing a service, call searchVendors to find options
 - Be proactive about suggesting next steps`
 
+// Message type for conversation history
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+  toolCalls?: ToolCall[]
+}
+
+// CORS headers for cross-origin requests
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+// Handle preflight OPTIONS request for CORS
+http.route({
+  path: '/api/chat/stream',
+  method: 'OPTIONS',
+  handler: httpAction(async () => {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders,
+    })
+  }),
+})
+
 http.route({
   path: '/api/chat/stream',
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
     // Parse request body
     const body = await request.json()
-    const { conversationId, userMessage, confirmedToolCalls } = body as {
-      conversationId: string
+    const { messages: clientMessages, userMessage, confirmedToolCalls } = body as {
+      messages?: ChatMessage[]
       userMessage: string
       confirmedToolCalls?: string[]
     }
 
-    if (!conversationId || !userMessage) {
-      return new Response(JSON.stringify({ error: 'Missing required fields' }), {
+    if (!userMessage) {
+      return new Response(JSON.stringify({ error: 'Missing user message' }), {
         status: 400,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Get user from auth
-    const user = await ctx.runQuery(api.queries.auth.getCurrentUser)
-    if (!user) {
+    // Get user identity from the Authorization header (Bearer token)
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Get conversation history
-    const messages = await ctx.runQuery(api.aiConversations.getMessages, {
-      conversationId: conversationId as Id<'aiConversations'>,
-    })
+    // Get the user from the database using the identity subject (user ID)
+    const user = await ctx.runQuery(api.queries.auth.getCurrentUser)
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'User not found' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     // Get user profile for context
     const profile = await ctx.runQuery(api.organizerProfiles.getMyProfile)
@@ -111,25 +141,21 @@ http.route({
       },
     ]
 
-    // Add conversation history
-    for (const msg of messages) {
-      if (msg.role === 'user' || msg.role === 'assistant') {
-        chatHistory.push({
-          role: msg.role,
-          content: msg.content,
-        })
+    // Add previous conversation history from client
+    if (clientMessages && clientMessages.length > 0) {
+      for (const msg of clientMessages) {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          chatHistory.push({
+            role: msg.role,
+            content: msg.content,
+          })
+        }
       }
     }
 
     // Add the new user message
     chatHistory.push({
       role: 'user',
-      content: userMessage,
-    })
-
-    // Save user message to database
-    await ctx.runMutation(api.aiConversations.sendMessage, {
-      conversationId: conversationId as Id<'aiConversations'>,
       content: userMessage,
     })
 
@@ -179,7 +205,7 @@ http.route({
             })
 
             let currentContent = ''
-            let currentToolCalls: Array<{
+            const currentToolCalls: Array<{
               id: string
               function: { name: string; arguments: string }
             }> = []
@@ -341,32 +367,9 @@ http.route({
             }
           }
 
-          // Build final response
-          let responseContent = finalMessage
-          if (allToolResults.length > 0) {
-            const executedResults = allToolResults.filter(
-              (r) => r.error !== 'Awaiting user confirmation'
-            )
-            if (executedResults.length > 0 && !finalMessage.includes('successfully')) {
-              const summaries = executedResults.map((r) => `- ${r.summary}`).join('\n')
-              responseContent = `${finalMessage}\n\n**Actions taken:**\n${summaries}`
-            }
-          }
-
-          // Save assistant response
-          await ctx.runMutation(api.aiConversations.addAssistantMessage, {
-            conversationId: conversationId as Id<'aiConversations'>,
-            content: responseContent,
-            metadata: {
-              model: 'gpt-4o-mini',
-              extractedFields: allToolCalls.map((tc) => tc.name),
-              suggestedActions: pendingConfirmations.map((tc) => tc.name),
-            },
-          })
-
           // Send completion event
           sendEvent('done', {
-            message: responseContent,
+            message: finalMessage,
             toolCalls: allToolCalls,
             toolResults: allToolResults,
             pendingConfirmations,
@@ -385,6 +388,7 @@ http.route({
 
     return new Response(stream, {
       headers: {
+        ...corsHeaders,
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',

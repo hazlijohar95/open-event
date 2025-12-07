@@ -1,11 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation, useAction } from 'convex/react'
-import { api } from '../../../convex/_generated/api'
-import type { Id } from '../../../convex/_generated/dataModel'
+import { useConvexAuth } from 'convex/react'
+import { useAuthToken } from '@convex-dev/auth/react'
 import {
   ArrowLeft,
-  Lightning,
   CalendarPlus,
   Storefront,
   Handshake,
@@ -33,15 +31,11 @@ import { toast } from 'sonner'
 // Types
 // ============================================================================
 
-interface DBMessage {
-  _id: Id<'aiMessages'>
-  role: string
+interface ChatMessage {
+  id: string
+  role: 'user' | 'assistant'
   content: string
-  createdAt: number
-  metadata?: {
-    extractedFields?: string[]
-    suggestedActions?: string[]
-  }
+  toolCalls?: ToolCall[]
 }
 
 interface ToolCall {
@@ -59,14 +53,8 @@ interface ToolResult {
   summary: string
 }
 
-interface AgentResponse {
-  message: string
-  toolCalls: ToolCall[]
-  toolResults: ToolResult[]
-  pendingConfirmations: ToolCall[]
-  isComplete: boolean
-  entityId?: Id<'events'>
-}
+// LocalStorage key for persisting messages
+const STORAGE_KEY = 'open-event-agent-chat'
 
 // ============================================================================
 // Component
@@ -74,150 +62,356 @@ interface AgentResponse {
 
 export function EventCreatePage() {
   const navigate = useNavigate()
-  const [conversationId, setConversationId] = useState<Id<'aiConversations'> | null>(null)
+  const { isAuthenticated } = useConvexAuth()
+  const authToken = useAuthToken()
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    // Initialize from localStorage
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY)
+      if (saved) {
+        return JSON.parse(saved)
+      }
+    } catch {
+      // Ignore parse errors
+    }
+    return []
+  })
   const [isLoading, setIsLoading] = useState(false)
+  const [isStreaming, setIsStreaming] = useState(false)
   const [pendingConfirmation, setPendingConfirmation] = useState<ToolCall | null>(null)
   const [executingTools, setExecutingTools] = useState<ToolCall[]>([])
   const [toolResults, setToolResults] = useState<ToolResult[]>([])
-  const [pendingMessageContent, setPendingMessageContent] = useState<string | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [isComplete, setIsComplete] = useState(false)
+  const [confirmedToolCalls, setConfirmedToolCalls] = useState<string[]>([])
 
-  // Queries and mutations
-  const activeConversation = useQuery(api.aiConversations.getActiveForEventCreation)
-  const messages = useQuery(
-    api.aiConversations.getMessages,
-    conversationId ? { conversationId } : 'skip'
-  )
-  const createConversation = useMutation(api.aiConversations.create)
-  const agentChat = useAction(api.actions.agent.chat)
-  const confirmAndExecute = useAction(api.actions.agent.confirmAndExecute)
+  const abortControllerRef = useRef<AbortController | null>(null)
+  const convexUrl = import.meta.env.VITE_CONVEX_URL as string
 
-  // Set conversation ID when active conversation loads
+  // Save messages to localStorage whenever they change
   useEffect(() => {
-    if (activeConversation) {
-      setConversationId(activeConversation._id)
-    }
-  }, [activeConversation])
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(messages))
+  }, [messages])
 
-  // Clear pending message when it appears in DB messages
-  useEffect(() => {
-    if (pendingMessageContent && messages) {
-      const messageInDb = messages.some(
-        (msg) => msg.role === 'user' && msg.content === pendingMessageContent
-      )
-      if (messageInDb) {
-        setPendingMessageContent(null)
-      }
-    }
-  }, [messages, pendingMessageContent])
+  // Clear chat history
+  const handleClearHistory = useCallback(() => {
+    setMessages([])
+    localStorage.removeItem(STORAGE_KEY)
+    toast.info('Chat history cleared')
+  }, [])
 
-  // Send a message
+  // Send a message with streaming
   const handleSend = useCallback(async (userMessage: string) => {
-    if (isLoading) return
+    if (isLoading || !isAuthenticated || !authToken) return
 
     setError(null)
     setIsLoading(true)
-
-    // Start conversation if needed
-    let currentConversationId = conversationId
-    if (!currentConversationId) {
-      try {
-        currentConversationId = await createConversation({ purpose: 'event-creation' })
-        setConversationId(currentConversationId)
-      } catch {
-        setIsLoading(false)
-        toast.error('Failed to start conversation')
-        return
-      }
-    }
-
-    // Track pending message content (will be cleared when DB updates)
-    setPendingMessageContent(userMessage)
+    setIsStreaming(false)
     setExecutingTools([])
     setToolResults([])
+    setPendingConfirmation(null)
+    setIsComplete(false)
+
+    // Add user message to local state
+    const userMsgId = `user-${Date.now()}`
+    const newUserMessage: ChatMessage = {
+      id: userMsgId,
+      role: 'user',
+      content: userMessage,
+    }
+
+    const updatedMessages = [...messages, newUserMessage]
+    setMessages(updatedMessages)
+
+    // Create abort controller
+    abortControllerRef.current = new AbortController()
 
     try {
-      const response: AgentResponse = await agentChat({
-        conversationId: currentConversationId,
-        userMessage,
+      // Get the HTTP URL from Convex URL
+      const httpUrl = convexUrl.replace('.convex.cloud', '.convex.site')
+
+      const response = await fetch(`${httpUrl}/api/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          messages: updatedMessages.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          userMessage,
+          confirmedToolCalls,
+        }),
+        signal: abortControllerRef.current.signal,
       })
 
-      // Clear pending message (in case effect didn't fire yet)
-      setPendingMessageContent(null)
-
-      // Handle tool results
-      setToolResults(response.toolResults)
-
-      // Handle pending confirmations
-      if (response.pendingConfirmations.length > 0) {
-        setPendingConfirmation(response.pendingConfirmations[0])
+      if (!response.ok) {
+        const errorText = await response.text()
+        throw new Error(errorText || `HTTP error! status: ${response.status}`)
       }
 
-      // Handle completion
-      if (response.isComplete && response.entityId) {
-        setIsComplete(true)
-        toast.success('Event created successfully!')
-        setTimeout(() => {
-          navigate(`/dashboard/events/${response.entityId}`)
-        }, 1500)
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No response body')
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let fullContent = ''
+
+      // Add assistant message placeholder
+      const assistantMsgId = `assistant-${Date.now()}`
+      setMessages(prev => [...prev, {
+        id: assistantMsgId,
+        role: 'assistant',
+        content: '',
+      }])
+      setIsStreaming(true)
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+
+        // Parse SSE events
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        let currentEvent = ''
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7)
+          } else if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            try {
+              const parsed = JSON.parse(data)
+
+              // Handle different event types
+              switch (currentEvent) {
+                case 'text': {
+                  const textData = parsed as { content: string }
+                  fullContent += textData.content
+                  setMessages(prev =>
+                    prev.map(m =>
+                      m.id === assistantMsgId ? { ...m, content: fullContent } : m
+                    )
+                  )
+                  break
+                }
+
+                case 'tool_start': {
+                  const toolData = parsed as ToolCall
+                  setExecutingTools(prev => [...prev, toolData])
+                  break
+                }
+
+                case 'tool_pending': {
+                  const toolData = parsed as ToolCall
+                  setPendingConfirmation(toolData)
+                  setExecutingTools(prev => prev.filter(t => t.id !== toolData.id))
+                  // Stop loading so confirmation UI can appear
+                  setIsLoading(false)
+                  setIsStreaming(false)
+                  break
+                }
+
+                case 'tool_result': {
+                  const resultData = parsed as ToolResult & { id: string; name: string }
+                  const result: ToolResult = {
+                    toolCallId: resultData.id,
+                    name: resultData.name,
+                    success: resultData.success,
+                    summary: resultData.summary,
+                    data: resultData.data,
+                    error: resultData.error,
+                  }
+                  setToolResults(prev => [...prev, result])
+                  setExecutingTools(prev => prev.filter(t => t.id !== resultData.id))
+                  break
+                }
+
+                case 'done': {
+                  const doneData = parsed as {
+                    message: string
+                    toolCalls: ToolCall[]
+                    toolResults: ToolResult[]
+                    pendingConfirmations: ToolCall[]
+                    isComplete: boolean
+                    entityId?: string
+                  }
+
+                  if (doneData.isComplete && doneData.entityId) {
+                    setIsComplete(true)
+                    toast.success('Event created successfully!')
+                    setTimeout(() => {
+                      navigate(`/dashboard/events/${doneData.entityId}`)
+                    }, 1500)
+                  }
+
+                  if (doneData.pendingConfirmations.length > 0) {
+                    setPendingConfirmation(doneData.pendingConfirmations[0])
+                    // Stop loading so confirmation UI can appear
+                    setIsLoading(false)
+                    setIsStreaming(false)
+                  }
+                  break
+                }
+
+                case 'error': {
+                  const errorData = parsed as { message: string }
+                  throw new Error(errorData.message)
+                }
+              }
+            } catch (parseError) {
+              // Ignore parse errors for incomplete chunks
+              if (parseError instanceof Error && parseError.message !== 'Unexpected end of JSON input') {
+                throw parseError
+              }
+            }
+          }
+        }
       }
     } catch (err) {
-      const error = err instanceof Error ? err : new Error('Unknown error')
-      setError(error)
-      setPendingMessageContent(null)
-
-      if (error.message.includes('rate limit')) {
-        toast.error('Too many requests. Please wait a moment.')
-      } else if (error.message.includes('API key') || error.message.includes('OPENAI')) {
-        toast.error('AI service unavailable. Please check configuration.')
+      if (err instanceof Error && err.name === 'AbortError') {
+        // User aborted - remove the pending messages
+        setMessages(prev => prev.filter(m => m.id !== userMsgId))
       } else {
-        toast.error('Something went wrong. Please try again.')
+        const error = err instanceof Error ? err : new Error('Unknown error')
+        setError(error)
+
+        if (error.message.includes('rate limit')) {
+          toast.error('Too many requests. Please wait a moment.')
+        } else if (error.message.includes('API key') || error.message.includes('OPENAI')) {
+          toast.error('AI service unavailable. Please check configuration.')
+        } else if (error.message.includes('Unauthorized')) {
+          toast.error('Please sign in to use the AI assistant.')
+        } else {
+          toast.error('Something went wrong. Please try again.')
+        }
       }
     } finally {
       setIsLoading(false)
+      setIsStreaming(false)
+      abortControllerRef.current = null
     }
-  }, [conversationId, isLoading, createConversation, agentChat, navigate])
+  }, [messages, isLoading, isAuthenticated, authToken, convexUrl, confirmedToolCalls, navigate])
 
   // Confirm pending tool
   const handleConfirm = useCallback(async () => {
-    if (!pendingConfirmation || !conversationId) return
+    if (!pendingConfirmation || !authToken) return
 
+    // Add this tool call to confirmed list
+    setConfirmedToolCalls(prev => [...prev, pendingConfirmation.id])
     setIsLoading(true)
     setExecutingTools([pendingConfirmation])
 
     try {
-      const result = await confirmAndExecute({
-        conversationId,
-        toolCallId: pendingConfirmation.id,
-        toolName: pendingConfirmation.name,
-        toolArguments: pendingConfirmation.arguments,
+      // Get the HTTP URL from Convex URL
+      const httpUrl = convexUrl.replace('.convex.cloud', '.convex.site')
+
+      // Re-send the last user message with the confirmed tool call
+      const lastUserMessage = [...messages].reverse().find(m => m.role === 'user')
+      if (!lastUserMessage) {
+        throw new Error('No user message found')
+      }
+
+      const response = await fetch(`${httpUrl}/api/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+        },
+        body: JSON.stringify({
+          messages: messages.map(m => ({
+            role: m.role,
+            content: m.content,
+          })),
+          userMessage: lastUserMessage.content,
+          confirmedToolCalls: [...confirmedToolCalls, pendingConfirmation.id],
+        }),
       })
 
-      setToolResults([result])
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No response body')
+      }
+
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+
+        // Parse SSE events
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || ''
+
+        let currentEvent = ''
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            currentEvent = line.slice(7)
+          } else if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+            try {
+              const parsed = JSON.parse(data)
+
+              if (currentEvent === 'tool_result') {
+                const resultData = parsed as ToolResult & { id: string; name: string }
+                const result: ToolResult = {
+                  toolCallId: resultData.id,
+                  name: resultData.name,
+                  success: resultData.success,
+                  summary: resultData.summary,
+                  data: resultData.data,
+                  error: resultData.error,
+                }
+                setToolResults([result])
+
+                if (result.success) {
+                  toast.success(result.summary)
+                } else {
+                  toast.error(result.error || 'Action failed')
+                }
+              }
+
+              if (currentEvent === 'done') {
+                const doneData = parsed as {
+                  isComplete: boolean
+                  entityId?: string
+                }
+
+                if (doneData.isComplete && doneData.entityId) {
+                  setIsComplete(true)
+                  setTimeout(() => {
+                    navigate(`/dashboard/events/${doneData.entityId}`)
+                  }, 1500)
+                }
+              }
+            } catch {
+              // Ignore parse errors
+            }
+          }
+        }
+      }
+
       setPendingConfirmation(null)
-
-      if (result.success) {
-        toast.success(result.summary)
-      } else {
-        toast.error(result.error || 'Action failed')
-      }
-
-      // Navigate to event if created
-      if (result.name === 'createEvent' && result.success && result.data) {
-        setIsComplete(true)
-        const eventId = (result.data as { eventId: string }).eventId
-        setTimeout(() => {
-          navigate(`/dashboard/events/${eventId}`)
-        }, 1500)
-      }
     } catch {
       toast.error('Failed to confirm action')
     } finally {
       setIsLoading(false)
       setExecutingTools([])
     }
-  }, [pendingConfirmation, conversationId, confirmAndExecute, navigate])
+  }, [pendingConfirmation, authToken, messages, confirmedToolCalls, convexUrl, navigate])
 
   // Cancel pending tool
   const handleCancel = useCallback(() => {
@@ -230,6 +424,16 @@ export function EventCreatePage() {
     setError(null)
   }, [])
 
+  // Abort the current request
+  const handleAbort = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    setIsLoading(false)
+    setIsStreaming(false)
+  }, [])
+
   // Determine tool status
   const getToolStatus = (toolName: string): ToolStatus => {
     if (executingTools.some((t) => t.name === toolName)) return 'executing'
@@ -238,8 +442,7 @@ export function EventCreatePage() {
     return 'pending'
   }
 
-  const dbMessages = (messages || []) as DBMessage[]
-  const isEmpty = dbMessages.length === 0 && !pendingMessageContent
+  const isEmpty = messages.length === 0
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -252,29 +455,25 @@ export function EventCreatePage() {
           <ArrowLeft size={20} weight="bold" />
         </Link>
         <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold font-mono">AI Event Assistant</h1>
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium">
-              <Lightning size={12} weight="fill" />
-              Agentic
-            </span>
-          </div>
+          <h1 className="text-2xl font-bold font-mono">Create Event</h1>
           <p className="text-muted-foreground mt-1">
-            Create events, find vendors, and discover sponsors with AI assistance
+            Describe your event and I'll help you set it up
           </p>
         </div>
+        {messages.length > 0 && (
+          <button
+            onClick={handleClearHistory}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Clear history
+          </button>
+        )}
       </div>
 
       {/* Chat Container */}
       <ChatContainer
-        title="Event Assistant"
-        subtitle="AI-powered event planning"
-        badge={
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 text-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            Online
-          </span>
-        }
+        title="Your Assistant"
+        subtitle="Event planning made simple"
       >
         {/* Conversation */}
         <Conversation
@@ -303,22 +502,22 @@ export function EventCreatePage() {
           {isEmpty && !isLoading && (
             <Message role="assistant">
               <MessageContent
-                content={`Hi! I'm your AI event planning assistant. I can help you:
+                content={`Hey! I'm here to help you plan events. I can:
 
-- **Create events** - Just describe your event and I'll set it up
-- **Find vendors** - Search for catering, AV, photography, and more
-- **Discover sponsors** - Find companies interested in sponsoring your event
+- **Create events** – Just describe what you're planning
+- **Find vendors** – Search for catering, AV, photography, and more
+- **Discover sponsors** – Connect with companies interested in your event
 
-What would you like to do today?`}
+What would you like to do?`}
               />
             </Message>
           )}
 
-          {/* Database messages */}
-          {dbMessages.map((msg) => (
-            <div key={msg._id} className="space-y-3">
+          {/* Messages */}
+          {messages.map((msg) => (
+            <div key={msg.id} className="space-y-3">
               <Message
-                role={msg.role as 'user' | 'assistant'}
+                role={msg.role}
                 actions={
                   msg.role === 'assistant' ? (
                     <MessageActions
@@ -330,23 +529,23 @@ What would you like to do today?`}
                 }
               >
                 <MessageContent
-                  content={msg.content}
+                  content={msg.content || (isStreaming && msg.id.startsWith('assistant-') ? '...' : '')}
                   isUser={msg.role === 'user'}
                 />
               </Message>
 
               {/* Tool results for this message */}
-              {msg.metadata?.extractedFields && msg.metadata.extractedFields.length > 0 && (
+              {msg.toolCalls && msg.toolCalls.length > 0 && (
                 <div className="ml-11">
                   <ToolList>
-                    {msg.metadata.extractedFields.map((toolName, i) => {
-                      const result = toolResults.find((r) => r.name === toolName)
+                    {msg.toolCalls.map((tool, i) => {
+                      const result = toolResults.find((r) => r.name === tool.name)
                       return (
                         <Tool
-                          key={`${msg._id}-${toolName}-${i}`}
-                          id={`${msg._id}-${toolName}-${i}`}
-                          name={toolName}
-                          status={getToolStatus(toolName)}
+                          key={`${msg.id}-${tool.name}-${i}`}
+                          id={`${msg.id}-${tool.name}-${i}`}
+                          name={tool.name}
+                          status={getToolStatus(tool.name)}
                           result={result ? {
                             success: result.success,
                             summary: result.summary,
@@ -361,13 +560,6 @@ What would you like to do today?`}
               )}
             </div>
           ))}
-
-          {/* Pending user message (optimistic) */}
-          {pendingMessageContent && (
-            <Message role="user" status="sending">
-              <MessageContent content={pendingMessageContent} isUser />
-            </Message>
-          )}
 
           {/* Executing tools */}
           {executingTools.length > 0 && (
@@ -391,8 +583,6 @@ What would you like to do today?`}
             <div className="ml-11">
               <Confirmation
                 id={pendingConfirmation.id}
-                title="Confirm Action"
-                description="The AI wants to perform the following action:"
                 toolName={pendingConfirmation.name}
                 arguments={pendingConfirmation.arguments}
                 onConfirm={handleConfirm}
@@ -442,6 +632,14 @@ What would you like to do today?`}
             disabled={!!pendingConfirmation}
             placeholder="Tell me about your event, or ask me to find vendors/sponsors..."
           />
+          {isStreaming && (
+            <button
+              onClick={handleAbort}
+              className="mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Stop generating
+            </button>
+          )}
         </div>
       </ChatContainer>
 

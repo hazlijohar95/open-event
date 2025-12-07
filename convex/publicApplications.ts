@@ -220,7 +220,7 @@ export const listForAdmin = query({
       applications = await ctx.db
         .query('publicApplications')
         .withIndex('by_type_status', (q) =>
-          q.eq('applicationType', args.type!).eq('status', args.status as any)
+          q.eq('applicationType', args.type!).eq('status', args.status as 'submitted' | 'under_review' | 'approved' | 'rejected' | 'converted')
         )
         .order('desc')
         .take(limit)
@@ -233,7 +233,7 @@ export const listForAdmin = query({
     } else if (args.status) {
       applications = await ctx.db
         .query('publicApplications')
-        .withIndex('by_status', (q) => q.eq('status', args.status as any))
+        .withIndex('by_status', (q) => q.eq('status', args.status as 'submitted' | 'under_review' | 'approved' | 'rejected' | 'converted'))
         .order('desc')
         .take(limit)
     } else {

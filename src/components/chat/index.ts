@@ -4,7 +4,8 @@ export { Conversation, ConversationEmptyState, type ConversationProps, type Conv
 export { PromptInput, type PromptInputProps } from './PromptInput'
 
 // Chat Components - Premium Input UX
-export { SlashCommandMenu, createDefaultCommands, type SlashCommand, type SlashCommandMenuProps } from './SlashCommandMenu'
+export { SlashCommandMenu, type SlashCommandMenuProps } from './SlashCommandMenu'
+export { createDefaultCommands, type SlashCommand } from './slashCommands'
 export { SuggestionChips, CompactSuggestionChips, type SuggestionChip, type SuggestionChipsProps, type CompactSuggestionChipsProps } from './SuggestionChips'
 
 // Chat Components - Streaming & Animation

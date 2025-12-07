@@ -1,12 +1,15 @@
 import {
-  Warning,
+  Sparkle,
   CheckCircle,
   XCircle,
   CalendarPlus,
   Storefront,
-  HandCoins,
+  Handshake,
   Wrench,
-  CircleNotch
+  CircleNotch,
+  PencilSimple,
+  User,
+  MagnifyingGlass,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
@@ -16,8 +19,6 @@ import { cn } from '@/lib/utils'
 
 export interface ConfirmationProps {
   id: string
-  title: string
-  description?: string
   toolName: string
   arguments?: Record<string, unknown>
   onConfirm: () => void
@@ -30,15 +31,68 @@ export interface ConfirmationProps {
 // Tool Icon Map
 // ============================================================================
 
-const toolIcons: Record<string, typeof Wrench> = {
-  createEvent: CalendarPlus,
-  updateEvent: CalendarPlus,
-  addVendor: Storefront,
-  addSponsor: HandCoins,
+const toolConfig: Record<string, { icon: typeof Wrench; label: string; confirmTitle: string }> = {
+  createEvent: {
+    icon: CalendarPlus,
+    label: 'Create Event',
+    confirmTitle: 'Ready to create this event?',
+  },
+  updateEvent: {
+    icon: PencilSimple,
+    label: 'Update Event',
+    confirmTitle: 'Save these changes?',
+  },
+  addVendorToEvent: {
+    icon: Storefront,
+    label: 'Add Vendor',
+    confirmTitle: 'Add this vendor?',
+  },
+  addSponsorToEvent: {
+    icon: Handshake,
+    label: 'Add Sponsor',
+    confirmTitle: 'Add this sponsor?',
+  },
+  searchVendors: {
+    icon: MagnifyingGlass,
+    label: 'Search Vendors',
+    confirmTitle: 'Search for vendors?',
+  },
+  searchSponsors: {
+    icon: MagnifyingGlass,
+    label: 'Search Sponsors',
+    confirmTitle: 'Search for sponsors?',
+  },
+  getUserProfile: {
+    icon: User,
+    label: 'Get Profile',
+    confirmTitle: 'Access your profile?',
+  },
 }
 
-function getToolIcon(name: string) {
-  return toolIcons[name] || Wrench
+function getToolConfig(name: string) {
+  return toolConfig[name] || {
+    icon: Wrench,
+    label: name.replace(/([A-Z])/g, ' $1').trim(),
+    confirmTitle: 'Proceed with this action?',
+  }
+}
+
+// Format a key name to be human-readable
+function formatKey(key: string): string {
+  return key
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .trim()
+}
+
+// Format a value for display
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined) return '—'
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (typeof value === 'number') return value.toLocaleString()
+  if (Array.isArray(value)) return value.join(', ')
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
 }
 
 // ============================================================================
@@ -46,8 +100,6 @@ function getToolIcon(name: string) {
 // ============================================================================
 
 export function Confirmation({
-  title,
-  description,
   toolName,
   arguments: args,
   onConfirm,
@@ -55,46 +107,48 @@ export function Confirmation({
   isLoading = false,
   className,
 }: ConfirmationProps) {
-  const Icon = getToolIcon(toolName)
+  const config = getToolConfig(toolName)
+  const Icon = config.icon
 
   return (
     <div
       className={cn(
-        'rounded-xl border-2 border-amber-500/50 bg-amber-500/5 p-4',
+        'rounded-xl border border-border bg-card p-4',
         'animate-in fade-in slide-in-from-bottom-2 duration-300',
+        'shadow-sm',
         className
       )}
     >
       {/* Header */}
       <div className="flex items-start gap-3 mb-4">
-        <div className="p-2 rounded-lg bg-amber-500/10">
-          <Warning size={20} weight="fill" className="text-amber-500" />
+        <div className="p-2 rounded-lg bg-primary/10">
+          <Sparkle size={20} weight="duotone" className="text-primary" />
         </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-foreground">{title}</h3>
-          {description && (
-            <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
-          )}
+          <h3 className="font-semibold text-foreground">{config.confirmTitle}</h3>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Please review the details below
+          </p>
         </div>
       </div>
 
       {/* Action details */}
       {args && Object.keys(args).length > 0 && (
-        <div className="mb-4 p-3 rounded-lg bg-muted/50">
-          <div className="flex items-center gap-2 mb-2">
-            <Icon size={16} weight="duotone" className="text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              {toolName.replace(/([A-Z])/g, ' $1').trim()}
+        <div className="mb-4 p-3 rounded-lg bg-muted/30 border border-border/50">
+          <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/50">
+            <Icon size={16} weight="duotone" className="text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              {config.label}
             </span>
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {Object.entries(args).map(([key, value]) => (
-              <div key={key} className="flex items-start gap-2 text-sm">
-                <span className="text-muted-foreground min-w-[80px]">
-                  {key.replace(/([A-Z])/g, ' $1').trim()}:
+              <div key={key} className="flex items-start gap-3 text-sm">
+                <span className="text-muted-foreground min-w-[100px] capitalize">
+                  {formatKey(key)}
                 </span>
-                <span className="text-foreground font-medium">
-                  {typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                <span className="text-foreground font-medium flex-1">
+                  {formatValue(value)}
                 </span>
               </div>
             ))}
@@ -117,12 +171,12 @@ export function Confirmation({
           {isLoading ? (
             <>
               <CircleNotch size={16} weight="bold" className="animate-spin" />
-              <span>Processing...</span>
+              <span>Creating...</span>
             </>
           ) : (
             <>
               <CheckCircle size={16} weight="bold" />
-              <span>Confirm</span>
+              <span>Looks good</span>
             </>
           )}
         </button>
@@ -130,9 +184,9 @@ export function Confirmation({
           onClick={onCancel}
           disabled={isLoading}
           className={cn(
-            'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg',
-            'border border-border bg-background text-foreground font-medium',
-            'hover:bg-muted transition-colors',
+            'flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg',
+            'border border-border bg-background text-muted-foreground font-medium',
+            'hover:bg-muted hover:text-foreground transition-colors',
             'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
         >
@@ -167,11 +221,11 @@ export function InlineConfirmation({
     <div
       className={cn(
         'inline-flex items-center gap-2 px-3 py-2 rounded-lg',
-        'border border-amber-500/50 bg-amber-500/5',
+        'border border-border bg-card',
         className
       )}
     >
-      <Warning size={14} weight="fill" className="text-amber-500 flex-shrink-0" />
+      <Sparkle size={14} weight="duotone" className="text-primary flex-shrink-0" />
       <span className="text-sm">{message}</span>
       <div className="flex items-center gap-1 ml-2">
         <button

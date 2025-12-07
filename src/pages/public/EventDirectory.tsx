@@ -42,14 +42,14 @@ export function EventDirectory() {
     })
   }
 
-  const getLocationIcon = (locationType?: string) => {
+  const renderLocationIcon = (locationType?: string) => {
     switch (locationType) {
       case 'virtual':
-        return Monitor
+        return <Monitor size={14} weight="duotone" />
       case 'hybrid':
-        return Globe
+        return <Globe size={14} weight="duotone" />
       default:
-        return Buildings
+        return <Buildings size={14} weight="duotone" />
     }
   }
 
@@ -197,10 +197,7 @@ export function EventDirectory() {
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {events.map((event) => {
-              const LocationIcon = getLocationIcon(event.locationType)
-
-              return (
+            {events.map((event) => (
                 <Link
                   key={event._id}
                   to={`/events/${event._id}`}
@@ -258,7 +255,7 @@ export function EventDirectory() {
 
                     {event.locationType && (
                       <div className="flex items-center gap-2">
-                        <LocationIcon size={14} weight="duotone" />
+                        {renderLocationIcon(event.locationType)}
                         <span className="capitalize">{event.locationType}</span>
                       </div>
                     )}
@@ -305,8 +302,7 @@ export function EventDirectory() {
                     />
                   </div>
                 </Link>
-              )
-            })}
+            ))}
           </div>
         )}
       </main>

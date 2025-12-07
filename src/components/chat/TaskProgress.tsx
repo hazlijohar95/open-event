@@ -77,7 +77,7 @@ interface TaskItemProps {
 }
 
 function TaskItem({ task }: TaskItemProps) {
-  const StatusIcon = () => {
+  const statusIcon = (() => {
     switch (task.status) {
       case 'completed':
         return <CheckCircle size={18} weight="fill" className="text-green-500" />
@@ -88,7 +88,7 @@ function TaskItem({ task }: TaskItemProps) {
       default:
         return <Circle size={18} weight="duotone" className="text-muted-foreground" />
     }
-  }
+  })()
 
   return (
     <div
@@ -97,7 +97,7 @@ function TaskItem({ task }: TaskItemProps) {
         task.status === 'in_progress' && 'bg-primary/5'
       )}
     >
-      <StatusIcon />
+      {statusIcon}
       <div className="flex-1 min-w-0">
         <span
           className={cn(

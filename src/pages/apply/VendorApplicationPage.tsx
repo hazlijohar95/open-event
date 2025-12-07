@@ -75,7 +75,7 @@ export function VendorApplicationPage() {
           return false
         }
         break
-      case 'contact':
+      case 'contact': {
         if (!formData.contactName.trim()) {
           setError('Contact name is required')
           return false
@@ -90,6 +90,7 @@ export function VendorApplicationPage() {
           return false
         }
         break
+      }
     }
     return true
   }

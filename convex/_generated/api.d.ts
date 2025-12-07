@@ -8,10 +8,7 @@
  * @module
  */
 
-import type * as actions_agent from "../actions/agent.js";
-import type * as actions_ai from "../actions/ai.js";
 import type * as admin from "../admin.js";
-import type * as aiConversations from "../aiConversations.js";
 import type * as aiTools from "../aiTools.js";
 import type * as auth from "../auth.js";
 import type * as budgetItems from "../budgetItems.js";
@@ -45,10 +42,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
-  "actions/agent": typeof actions_agent;
-  "actions/ai": typeof actions_ai;
   admin: typeof admin;
-  aiConversations: typeof aiConversations;
   aiTools: typeof aiTools;
   auth: typeof auth;
   budgetItems: typeof budgetItems;

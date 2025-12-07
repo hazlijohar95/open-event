@@ -1,28 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import {
-  Question,
-  Plus,
-  Trash,
-  Gear,
-  ArrowClockwise,
-  Command,
-} from '@phosphor-icons/react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { Command } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
-import type { ComponentType, KeyboardEvent } from 'react'
-import type { IconProps } from '@phosphor-icons/react'
+import type { SlashCommand } from './slashCommands'
 
 // ============================================================================
 // Types
 // ============================================================================
-
-export interface SlashCommand {
-  id: string
-  name: string
-  description: string
-  icon: ComponentType<IconProps>
-  shortcut?: string
-  action: () => void
-}
 
 export interface SlashCommandMenuProps {
   isOpen: boolean
@@ -34,115 +17,61 @@ export interface SlashCommandMenuProps {
 }
 
 // ============================================================================
-// Default Commands
+// Inner Component with key-based reset
 // ============================================================================
 
-export const createDefaultCommands = (handlers: {
-  onNewChat?: () => void
-  onClearChat?: () => void
-  onShowHelp?: () => void
-  onShowSettings?: () => void
-  onRetry?: () => void
-}): SlashCommand[] => [
-  {
-    id: 'help',
-    name: 'Help',
-    description: 'View help & shortcuts',
-    icon: Question,
-    shortcut: '?',
-    action: handlers.onShowHelp || (() => {}),
-  },
-  {
-    id: 'new',
-    name: 'New Chat',
-    description: 'Start a new conversation',
-    icon: Plus,
-    shortcut: 'N',
-    action: handlers.onNewChat || (() => {}),
-  },
-  {
-    id: 'clear',
-    name: 'Clear',
-    description: 'Clear current conversation',
-    icon: Trash,
-    action: handlers.onClearChat || (() => {}),
-  },
-  {
-    id: 'retry',
-    name: 'Retry',
-    description: 'Retry last message',
-    icon: ArrowClockwise,
-    shortcut: 'R',
-    action: handlers.onRetry || (() => {}),
-  },
-  {
-    id: 'settings',
-    name: 'Settings',
-    description: 'Open settings',
-    icon: Gear,
-    action: handlers.onShowSettings || (() => {}),
-  },
-]
-
-// ============================================================================
-// Component
-// ============================================================================
-
-export function SlashCommandMenu({
+function SlashCommandMenuInner({
   isOpen,
-  searchQuery,
+  filteredCommands,
   onSelect,
   onClose,
-  commands = [],
   className,
-}: SlashCommandMenuProps) {
-  const [selectedIndex, setSelectedIndex] = useState(0)
+}: {
+  isOpen: boolean
+  filteredCommands: SlashCommand[]
+  onSelect: (command: SlashCommand) => void
+  onClose: () => void
+  className?: string
+}) {
   const menuRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
-  // Filter commands based on search query (remove leading slash)
-  const query = searchQuery.startsWith('/') ? searchQuery.slice(1).toLowerCase() : ''
-  const filteredCommands = commands.filter(
-    (cmd) =>
-      cmd.name.toLowerCase().includes(query) ||
-      cmd.description.toLowerCase().includes(query)
-  )
-
-  // Reset selection when filtered commands change
-  useEffect(() => {
-    setSelectedIndex(0)
-  }, [query])
+  // Derive safe selected index
+  const safeSelectedIndex = selectedIndex >= filteredCommands.length ? 0 : selectedIndex
 
   // Scroll selected item into view
   useEffect(() => {
-    const selectedItem = itemRefs.current[selectedIndex]
+    const selectedItem = itemRefs.current[safeSelectedIndex]
     if (selectedItem) {
       selectedItem.scrollIntoView({ block: 'nearest' })
     }
-  }, [selectedIndex])
+  }, [safeSelectedIndex])
 
-  // Handle keyboard navigation
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (!isOpen) return
+  // Expose keyboard handler
+  useEffect(() => {
+    if (!isOpen) return
 
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault()
-          setSelectedIndex((prev) =>
-            prev < filteredCommands.length - 1 ? prev + 1 : 0
-          )
+          setSelectedIndex((prev) => {
+            const next = prev + 1
+            return next >= filteredCommands.length ? 0 : next
+          })
           break
         case 'ArrowUp':
           e.preventDefault()
-          setSelectedIndex((prev) =>
-            prev > 0 ? prev - 1 : filteredCommands.length - 1
-          )
+          setSelectedIndex((prev) => {
+            const next = prev - 1
+            return next < 0 ? filteredCommands.length - 1 : next
+          })
           break
         case 'Enter':
           e.preventDefault()
-          if (filteredCommands[selectedIndex]) {
-            onSelect(filteredCommands[selectedIndex])
+          if (filteredCommands[safeSelectedIndex]) {
+            onSelect(filteredCommands[safeSelectedIndex])
           }
           break
         case 'Escape':
@@ -150,21 +79,11 @@ export function SlashCommandMenu({
           onClose()
           break
       }
-    },
-    [isOpen, filteredCommands, selectedIndex, onSelect, onClose]
-  )
-
-  // Expose keyboard handler
-  useEffect(() => {
-    if (!isOpen) return
-
-    const handler = (e: globalThis.KeyboardEvent) => {
-      handleKeyDown(e as unknown as KeyboardEvent)
     }
 
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
-  }, [isOpen, handleKeyDown])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, filteredCommands, safeSelectedIndex, onSelect, onClose])
 
   if (!isOpen || filteredCommands.length === 0) return null
 
@@ -196,7 +115,7 @@ export function SlashCommandMenu({
       <div className="max-h-[240px] overflow-y-auto py-1 custom-scrollbar">
         {filteredCommands.map((command, index) => {
           const Icon = command.icon
-          const isSelected = index === selectedIndex
+          const isSelected = index === safeSelectedIndex
 
           return (
             <button
@@ -254,5 +173,42 @@ export function SlashCommandMenu({
         </div>
       )}
     </div>
+  )
+}
+
+// ============================================================================
+// Wrapper Component
+// ============================================================================
+
+export function SlashCommandMenu({
+  isOpen,
+  searchQuery,
+  onSelect,
+  onClose,
+  commands = [],
+  className,
+}: SlashCommandMenuProps) {
+  // Filter commands based on search query (remove leading slash)
+  const query = searchQuery.startsWith('/') ? searchQuery.slice(1).toLowerCase() : ''
+  const filteredCommands = useMemo(
+    () =>
+      commands.filter(
+        (cmd) =>
+          cmd.name.toLowerCase().includes(query) ||
+          cmd.description.toLowerCase().includes(query)
+      ),
+    [commands, query]
+  )
+
+  // Use key to reset state when searchQuery changes (per React best practices)
+  return (
+    <SlashCommandMenuInner
+      key={searchQuery}
+      isOpen={isOpen}
+      filteredCommands={filteredCommands}
+      onSelect={onSelect}
+      onClose={onClose}
+      className={className}
+    />
   )
 }

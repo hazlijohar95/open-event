@@ -1,7 +1,8 @@
 import { useState, useRef, useCallback, useEffect, useMemo, type KeyboardEvent, type ChangeEvent } from 'react'
 import { PaperPlaneTilt, Stop, CircleNotch } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
-import { SlashCommandMenu, createDefaultCommands, type SlashCommand } from './SlashCommandMenu'
+import { SlashCommandMenu } from './SlashCommandMenu'
+import { createDefaultCommands, type SlashCommand } from './slashCommands'
 
 // ============================================================================
 // Types
@@ -35,7 +36,7 @@ export function PromptInput({
   onAbort,
   isLoading = false,
   isStreaming = false,
-  placeholder = 'Type a message...',
+  placeholder = 'What would you like to do?',
   disabled = false,
   className,
   maxLength = 4000,
@@ -50,7 +51,6 @@ export function PromptInput({
 }: PromptInputProps) {
   const [value, setValue] = useState('')
   const [isFocused, setIsFocused] = useState(false)
-  const [showSlashMenu, setShowSlashMenu] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   // Create slash commands with handlers
@@ -66,11 +66,8 @@ export function PromptInput({
     [onNewChat, onClearChat, onShowHelp, onShowSettings, onRetry]
   )
 
-  // Detect slash command input
-  useEffect(() => {
-    const shouldShow = value.startsWith('/') && value.length < 20 && !value.includes(' ')
-    setShowSlashMenu(shouldShow)
-  }, [value])
+  // Derive slash menu visibility from value (no effect needed)
+  const showSlashMenu = value.startsWith('/') && value.length < 20 && !value.includes(' ')
 
   // Auto-resize textarea
   const adjustHeight = useCallback(() => {
@@ -145,13 +142,12 @@ export function PromptInput({
   // Handle slash command selection
   const handleSlashCommandSelect = useCallback((command: SlashCommand) => {
     setValue('')
-    setShowSlashMenu(false)
     command.action()
   }, [])
 
-  // Handle slash menu close
+  // Handle slash menu close (clear the slash to hide menu)
   const handleSlashMenuClose = useCallback(() => {
-    setShowSlashMenu(false)
+    setValue('')
   }, [])
 
   const canSubmit = value.trim().length > 0 && !isLoading && !disabled && !showSlashMenu

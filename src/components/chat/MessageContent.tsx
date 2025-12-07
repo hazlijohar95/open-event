@@ -28,10 +28,9 @@ const MAX_COLLAPSED_LINES = 15
 interface CodeBlockProps {
   language: string
   code: string
-  isUser?: boolean
 }
 
-function CodeBlock({ language, code, isUser: _isUser }: CodeBlockProps) {
+function CodeBlock({ language, code }: CodeBlockProps) {
   const [copied, setCopied] = useState(false)
   const [expanded, setExpanded] = useState(true)
 
@@ -258,7 +257,6 @@ export const MessageContent = memo(function MessageContent({
                 <CodeBlock
                   language={match[1]}
                   code={String(children)}
-                  isUser={isUser}
                 />
               )
             }

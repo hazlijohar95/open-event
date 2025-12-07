@@ -50,14 +50,15 @@ export function EventDetailPublic() {
     })
   }
 
-  const getLocationIcon = (locationType?: string) => {
+  const renderLocationIcon = (locationType?: string, size = 14) => {
+    const className = 'shrink-0'
     switch (locationType) {
       case 'virtual':
-        return Monitor
+        return <Monitor size={size} weight="duotone" className={className} />
       case 'hybrid':
-        return Globe
+        return <Globe size={size} weight="duotone" className={className} />
       default:
-        return Buildings
+        return <Buildings size={size} weight="duotone" className={className} />
     }
   }
 
@@ -104,8 +105,6 @@ export function EventDetailPublic() {
       </div>
     )
   }
-
-  const LocationIcon = getLocationIcon(event.locationType)
 
   return (
     <div className="min-h-screen bg-background">
@@ -164,7 +163,7 @@ export function EventDetailPublic() {
                 )}
                 {event.locationType && (
                   <span className="flex items-center gap-1.5 px-3 py-1 text-sm font-medium bg-muted text-muted-foreground rounded-full">
-                    <LocationIcon size={14} weight="duotone" />
+                    {renderLocationIcon(event.locationType)}
                     <span className="capitalize">{event.locationType}</span>
                   </span>
                 )}

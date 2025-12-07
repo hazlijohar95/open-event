@@ -32,6 +32,7 @@ export function EventsPage() {
   const events = useQuery(api.events.getMyEvents, { status: statusFilter === 'all' ? undefined : statusFilter })
   const deleteEvent = useMutation(api.events.remove)
   const updateEvent = useMutation(api.events.update)
+  const duplicateEvent = useMutation(api.events.duplicate)
 
   const handleDelete = async () => {
     if (!deleteEventId) return
@@ -53,9 +54,14 @@ export function EventsPage() {
     }
   }
 
-  const handleDuplicate = () => {
-    // Navigate to create page with pre-filled data
-    toast.info('Duplicate feature coming soon')
+  const handleDuplicate = async (eventId: Id<'events'>) => {
+    try {
+      const newEventId = await duplicateEvent({ id: eventId })
+      toast.success('Event duplicated successfully')
+      navigate(`/dashboard/events/${newEventId}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to duplicate event')
+    }
   }
 
   return (
@@ -200,7 +206,7 @@ export function EventsPage() {
                         <PencilSimple size={16} weight="duotone" className="mr-2" />
                         Edit Event
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDuplicate()}>
+                      <DropdownMenuItem onClick={() => handleDuplicate(event._id)}>
                         <Copy size={16} weight="duotone" className="mr-2" />
                         Duplicate
                       </DropdownMenuItem>

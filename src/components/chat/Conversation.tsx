@@ -25,7 +25,6 @@ export function Conversation({
   className,
   emptyState,
   isEmpty = false,
-  onSuggestionSelect: _onSuggestionSelect,
 }: ConversationProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
