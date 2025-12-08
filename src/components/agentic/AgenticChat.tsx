@@ -506,6 +506,9 @@ export function AgenticChat({
   const promptsRemaining = localRemaining ?? aiUsage?.promptsRemaining ?? 5
   const promptsLimit = aiUsage?.dailyLimit ?? 5
   const isRateLimited = promptsRemaining <= 0
+  const isAdmin = aiUsage?.isAdmin ?? false
+  const usageStatus = aiUsage?.status ?? 'normal'
+  const timeUntilReset = aiUsage?.timeUntilReset?.formatted ?? ''
 
   // Chat state
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
@@ -582,8 +585,13 @@ export function AgenticChat({
     if (isLoading || !isAuthenticated || !authToken || !userMessage.trim()) return
 
     // Check rate limit before sending
-    if (isRateLimited) {
-      toast.error('Daily limit reached. Your prompts reset at midnight UTC.')
+    if (isRateLimited && !isAdmin) {
+      toast.error(`Daily limit reached. Resets in ${timeUntilReset || 'a few hours'}.`, {
+        action: {
+          label: 'View Usage',
+          onClick: () => navigate('/dashboard/settings'),
+        },
+      })
       return
     }
 
@@ -791,7 +799,7 @@ export function AgenticChat({
       setCurrentActivity(null)
       abortControllerRef.current = null
     }
-  }, [messages, isLoading, isAuthenticated, authToken, convexUrl, confirmedToolCalls, navigate, onComplete, isRateLimited])
+  }, [messages, isLoading, isAuthenticated, authToken, convexUrl, confirmedToolCalls, navigate, onComplete, isRateLimited, isAdmin, timeUntilReset])
 
   // Confirm tool - execute directly via dedicated endpoint
   const handleConfirm = useCallback(async () => {
@@ -899,18 +907,28 @@ export function AgenticChat({
             <p className="text-muted-foreground text-sm font-medium">{title}</p>
             {/* Prompts remaining indicator */}
             {isAuthenticated && (
-              <div className={cn(
-                'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
-                'transition-all duration-300',
-                isRateLimited
-                  ? 'bg-red-500/10 text-red-600 dark:text-red-400'
-                  : promptsRemaining <= 2
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    : 'bg-primary/10 text-primary'
-              )}>
+              <button
+                onClick={() => navigate('/dashboard/settings')}
+                className={cn(
+                  'flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium',
+                  'transition-all duration-300 hover:scale-105',
+                  isAdmin
+                    ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                    : isRateLimited || usageStatus === 'exceeded'
+                      ? 'bg-red-500/10 text-red-600 dark:text-red-400'
+                      : usageStatus === 'critical'
+                        ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400'
+                        : usageStatus === 'warning'
+                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                          : 'bg-primary/10 text-primary'
+                )}
+                title={isAdmin ? 'Unlimited access' : `Click to view usage details. Resets in ${timeUntilReset}`}
+              >
                 <Lightning size={12} weight="fill" />
-                <span>{promptsRemaining}/{promptsLimit} prompts</span>
-              </div>
+                <span>
+                  {isAdmin ? 'Unlimited' : `${promptsRemaining}/${promptsLimit}`}
+                </span>
+              </button>
             )}
           </div>
           <h1 className={cn(
@@ -919,10 +937,18 @@ export function AgenticChat({
           )}>
             {isRateLimited ? 'Daily limit reached' : hasMessages ? 'Continue your conversation' : subtitle}
           </h1>
-          {isRateLimited && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Your prompts reset at midnight UTC. Come back tomorrow!
-            </p>
+          {isRateLimited && !isAdmin && (
+            <div className="mt-2">
+              <p className="text-sm text-muted-foreground">
+                Your quota resets in <span className="font-medium text-foreground">{timeUntilReset || 'a few hours'}</span>
+              </p>
+              <button
+                onClick={() => navigate('/dashboard/settings')}
+                className="text-xs text-primary hover:underline mt-1"
+              >
+                View usage details →
+              </button>
+            </div>
           )}
         </div>
 
@@ -1108,8 +1134,12 @@ export function AgenticChat({
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={isRateLimited ? 'Daily limit reached. Come back tomorrow!' : placeholder}
-                disabled={isLoading || !!pendingConfirmation || isRateLimited}
+                placeholder={
+                  isRateLimited && !isAdmin
+                    ? `Daily limit reached. Resets in ${timeUntilReset || 'a few hours'}`
+                    : placeholder
+                }
+                disabled={isLoading || !!pendingConfirmation || (isRateLimited && !isAdmin)}
                 rows={2}
                 className="agentic-textarea"
               />
@@ -1126,10 +1156,10 @@ export function AgenticChat({
 
                 <button
                   onClick={handleSubmit}
-                  disabled={!inputValue.trim() || isLoading || !!pendingConfirmation || isRateLimited}
+                  disabled={!inputValue.trim() || isLoading || !!pendingConfirmation || (isRateLimited && !isAdmin)}
                   className={cn(
                     'p-2.5 rounded-xl transition-all duration-200',
-                    inputValue.trim() && !isLoading && !isRateLimited
+                    inputValue.trim() && !isLoading && (!isRateLimited || isAdmin)
                       ? 'bg-foreground text-background hover:scale-105 shadow-lg'
                       : 'bg-muted/50 text-muted-foreground/50 cursor-not-allowed'
                   )}

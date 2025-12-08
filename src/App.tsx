@@ -41,6 +41,7 @@ import {
   AdminModeration,
   AdminSettings,
   AdminPublicApplications,
+  AdminAIUsage,
 } from '@/pages/admin'
 import { PrivacyPolicy, TermsOfService, CookiePolicy } from '@/pages/legal'
 import { DocsPage } from '@/pages/docs'
@@ -126,6 +127,7 @@ function App() {
             <Route path="sponsors" element={<AdminSponsors />} />
             <Route path="applications" element={<AdminPublicApplications />} />
             <Route path="moderation" element={<AdminModeration />} />
+            <Route path="ai-usage" element={<AdminAIUsage />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
           {/* Public Routes */}

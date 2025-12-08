@@ -11,6 +11,7 @@ import {
   Gear,
   ArrowLeft,
   ClipboardText,
+  Sparkle,
 } from '@phosphor-icons/react'
 
 const navigationItems = [
@@ -20,6 +21,7 @@ const navigationItems = [
   { label: 'Sponsors', icon: Handshake, path: '/admin/sponsors' },
   { label: 'Applications', icon: ClipboardText, path: '/admin/applications' },
   { label: 'Moderation', icon: ShieldCheck, path: '/admin/moderation' },
+  { label: 'AI Usage', icon: Sparkle, path: '/admin/ai-usage' },
 ]
 
 const bottomItems = [

@@ -18,6 +18,9 @@ import {
   DeviceMobile,
   WifiHigh,
   CheckSquare,
+  Sparkle,
+  Lightning,
+  Clock,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useState, useEffect } from 'react'
@@ -439,6 +442,15 @@ export function SettingsPage() {
               )}
             </div>
           </div>
+
+          {/* AI Usage Section */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h3 className="font-semibold mb-6 flex items-center gap-2">
+              <Sparkle size={18} weight="duotone" className="text-primary" />
+              AI Assistant Usage
+            </h3>
+            <AIUsageStats />
+          </div>
         </TabsContent>
 
         {/* Organization Tab */}
@@ -671,5 +683,110 @@ function OrgStats() {
         </p>
       )}
     </>
+  )
+}
+
+// AI Usage Stats Component
+function AIUsageStats() {
+  const usage = useQuery(api.aiUsage.getMyUsage)
+
+  if (usage === undefined) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-4 bg-muted rounded w-1/3" />
+        <div className="h-2 bg-muted rounded w-full" />
+        <div className="h-4 bg-muted rounded w-1/4" />
+      </div>
+    )
+  }
+
+  if (usage === null) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Sign in to view your AI usage statistics.
+      </p>
+    )
+  }
+
+  const { promptsUsed, promptsRemaining, dailyLimit, totalPrompts, status, timeUntilReset, isAdmin } = usage
+  const percentage = Math.min(100, Math.round((promptsUsed / dailyLimit) * 100))
+
+  // Status colors
+  const statusColors = {
+    normal: { bg: 'bg-emerald-500', text: 'text-emerald-600' },
+    warning: { bg: 'bg-amber-500', text: 'text-amber-600' },
+    critical: { bg: 'bg-orange-500', text: 'text-orange-600' },
+    exceeded: { bg: 'bg-red-500', text: 'text-red-600' },
+  }
+  const colors = statusColors[status as keyof typeof statusColors] || statusColors.normal
+
+  return (
+    <div className="space-y-4">
+      {/* Usage Bar */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium">Today's Usage</span>
+          <span className={cn('text-sm font-mono', colors.text)}>
+            {isAdmin ? (
+              <span className="text-purple-600">Unlimited</span>
+            ) : (
+              `${promptsUsed} / ${dailyLimit}`
+            )}
+          </span>
+        </div>
+        {!isAdmin && (
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className={cn('h-full rounded-full transition-all duration-500', colors.bg)}
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="p-3 rounded-lg bg-muted/50 text-center">
+          <Lightning size={18} weight="duotone" className="text-primary mx-auto mb-1" />
+          <p className="text-lg font-bold font-mono">
+            {isAdmin ? '∞' : promptsRemaining}
+          </p>
+          <p className="text-[10px] text-muted-foreground">Remaining</p>
+        </div>
+        <div className="p-3 rounded-lg bg-muted/50 text-center">
+          <Sparkle size={18} weight="duotone" className="text-primary mx-auto mb-1" />
+          <p className="text-lg font-bold font-mono">{totalPrompts}</p>
+          <p className="text-[10px] text-muted-foreground">All Time</p>
+        </div>
+        <div className="p-3 rounded-lg bg-muted/50 text-center">
+          <Clock size={18} weight="duotone" className="text-primary mx-auto mb-1" />
+          <p className="text-lg font-bold font-mono">{timeUntilReset?.formatted || '-'}</p>
+          <p className="text-[10px] text-muted-foreground">Until Reset</p>
+        </div>
+      </div>
+
+      {/* Status Message */}
+      {!isAdmin && status === 'exceeded' && (
+        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+          <p className="text-xs text-red-600">
+            You've reached your daily limit. Your quota will reset in {timeUntilReset?.formatted}.
+          </p>
+        </div>
+      )}
+      {!isAdmin && status === 'critical' && (
+        <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+          <p className="text-xs text-orange-600">
+            You're running low on prompts. {promptsRemaining} remaining today.
+          </p>
+        </div>
+      )}
+      {isAdmin && (
+        <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+          <p className="text-xs text-purple-600">
+            As an admin, you have unlimited AI access.
+          </p>
+        </div>
+      )}
+    </div>
   )
 }

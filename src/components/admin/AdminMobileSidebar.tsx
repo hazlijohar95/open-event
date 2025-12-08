@@ -6,10 +6,11 @@ import {
   Storefront,
   Handshake,
   ShieldCheck,
-  ChartBar,
   Gear,
   X,
   ArrowLeft,
+  ClipboardText,
+  Sparkle,
 } from '@phosphor-icons/react'
 
 const navigationItems = [
@@ -17,8 +18,9 @@ const navigationItems = [
   { label: 'Users', icon: Users, path: '/admin/users' },
   { label: 'Vendors', icon: Storefront, path: '/admin/vendors' },
   { label: 'Sponsors', icon: Handshake, path: '/admin/sponsors' },
+  { label: 'Applications', icon: ClipboardText, path: '/admin/applications' },
   { label: 'Moderation', icon: ShieldCheck, path: '/admin/moderation' },
-  { label: 'Analytics', icon: ChartBar, path: '/admin/analytics' },
+  { label: 'AI Usage', icon: Sparkle, path: '/admin/ai-usage' },
 ]
 
 const bottomItems = [
