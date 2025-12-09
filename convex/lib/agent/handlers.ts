@@ -105,8 +105,16 @@ async function handleCreateEvent(
   const budgetCurrency = (args.budgetCurrency as string) || 'USD'
   const timezone = args.timezone as string | undefined
 
-  // Parse date/time
-  const startTimestamp = new Date(`${startDateStr}T${startTimeStr}`).getTime()
+  // Parse date/time - ensure we get a future date
+  let startTimestamp = new Date(`${startDateStr}T${startTimeStr}`).getTime()
+
+  // If the date is in the past, assume the user meant next year
+  const now = Date.now()
+  if (startTimestamp < now) {
+    const parsedDate = new Date(`${startDateStr}T${startTimeStr}`)
+    parsedDate.setFullYear(parsedDate.getFullYear() + 1)
+    startTimestamp = parsedDate.getTime()
+  }
 
   // Create the event via mutation with all fields
   // Note: organizerId is automatically set from the authenticated user in the mutation

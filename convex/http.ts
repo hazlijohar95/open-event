@@ -6,6 +6,44 @@ import { api, internal } from './_generated/api'
 import { getOpenAITools, toolRequiresConfirmation } from './lib/agent/tools'
 import { executeToolHandler } from './lib/agent/handlers'
 import type { ToolName, ToolCall, ToolResult } from './lib/agent/types'
+import { z } from 'zod'
+
+// ============================================================================
+// Request Validation Schemas
+// ============================================================================
+
+const VALID_TOOL_NAMES = [
+  'createEvent',
+  'updateEvent',
+  'getEventDetails',
+  'getUpcomingEvents',
+  'searchVendors',
+  'addVendorToEvent',
+  'searchSponsors',
+  'addSponsorToEvent',
+  'getUserProfile',
+  'getRecommendedVendors',
+  'getRecommendedSponsors',
+  'getEventVendors',
+  'getEventSponsors',
+] as const
+
+const executeToolSchema = z.object({
+  toolName: z.enum(VALID_TOOL_NAMES),
+  toolArguments: z.record(z.string(), z.unknown()).default({}),
+})
+
+const chatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().max(50000),
+  toolCalls: z.array(z.unknown()).optional(),
+})
+
+const chatStreamSchema = z.object({
+  messages: z.array(chatMessageSchema).optional(),
+  userMessage: z.string().min(1).max(10000),
+  confirmedToolCalls: z.array(z.string()).optional(),
+})
 
 // ============================================================================
 // HTTP Router
@@ -35,58 +73,94 @@ http.route({
 // Streaming Chat Endpoint
 // ============================================================================
 
-const SYSTEM_PROMPT = `You are an expert AI event planning assistant for open-event, a platform that helps organizers create and manage events. You have access to tools that allow you to:
+const SYSTEM_PROMPT = `You are an AI event creation assistant for Open Event. Your PRIMARY job is to quickly help users CREATE events.
 
-1. **Create and manage events** - You can create new events, update existing ones, and retrieve event details
-2. **Search for vendors** - Find catering, AV, photography, and other service providers
-3. **Search for sponsors** - Find companies interested in sponsoring events
-4. **Get recommendations** - Get AI-matched vendor and sponsor recommendations for events
-5. **Access user profile** - Understand the organizer's preferences and history
+## Your Approach:
 
-## How to help users:
+1. **Be concise** - Keep responses to 2-3 sentences max
+2. **Act quickly** - After getting basic info (title, date, type), CREATE the event immediately
+3. **Ask only essential questions** - Don't overwhelm users with long lists of what they COULD provide
 
-1. **Understand their needs** - Ask clarifying questions about event type, date, size, budget, etc.
-2. **Take action** - Use your tools to create events, search for vendors/sponsors, and help plan
-3. **Be proactive** - Suggest relevant vendors or sponsors based on event details
-4. **Confirm before acting** - For important actions (creating events, adding vendors), confirm with the user first
+## Event Creation Flow:
 
-## Guidelines:
+When a user wants to create an event:
+1. If they give you enough info (event type + rough date), call createEvent immediately
+2. If missing critical info, ask ONE quick question like: "What date are you planning for?"
+3. Use sensible defaults for optional fields - don't ask about every possible detail
 
-- Be conversational and helpful
-- When you have enough information, USE YOUR TOOLS to take action
-- Always confirm before creating events or adding vendors/sponsors
-- Provide specific, actionable recommendations
-- If searching returns no results, explain that the marketplace is growing
-- Keep responses concise but informative
+## Minimum Info Needed to Create Event:
+- Title or event type (required)
+- Approximate date (required)
+- Everything else can use defaults or be added later
 
-## Important:
-- You MUST use your tools to perform actions. Don't just describe what could be done - actually do it!
-- After gathering event details, call createEvent with the information
-- When the user mentions needing a service, call searchVendors to find options
-- Be proactive about suggesting next steps`
+## Response Style:
 
-// Message type for conversation history
-interface ChatMessage {
-  role: 'user' | 'assistant'
-  content: string
-  toolCalls?: ToolCall[]
-}
+- SHORT responses (1-3 sentences)
+- NO bullet lists of tips or suggestions unless asked
+- NO lengthy explanations of what info you need
+- DIRECT action: "I'll create that for you now" or "What date works for you?"
 
-// CORS headers for cross-origin requests
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+## Example Good Responses:
+
+User: "I want to create a workshop"
+Good: "Got it! What date are you thinking for the workshop?"
+
+User: "A tech meetup next Friday"
+Good: "I'll create your tech meetup for next Friday now."
+[Then call createEvent]
+
+User: "Conference in January for 200 people"
+Good: "Creating your conference for January with 200 expected attendees."
+[Then call createEvent with title, date, expectedAttendees]
+
+## What NOT to do:
+
+- DON'T list 10 things the user could tell you
+- DON'T give generic event planning advice
+- DON'T explain all your capabilities
+- DON'T ask multiple questions at once
+
+## Tools Available:
+
+- createEvent: Create events (requires confirmation)
+- searchVendors/searchSponsors: Find service providers
+- getRecommendedVendors/getRecommendedSponsors: Get AI-matched recommendations
+- getUserProfile: Get user context
+
+Remember: Your job is to CREATE events quickly, not to be an event planning consultant.`
+
+// ============================================================================
+// CORS Configuration
+// ============================================================================
+
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://open-event.vercel.app',
+  'https://openevent.app',
+  // Add production domains as needed
+]
+
+function getCorsHeaders(request: Request) {
+  const origin = request.headers.get('Origin')
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
+  }
 }
 
 // Handle preflight OPTIONS request for CORS
 http.route({
   path: '/api/chat/stream',
   method: 'OPTIONS',
-  handler: httpAction(async () => {
+  handler: httpAction(async (_, request) => {
     return new Response(null, {
       status: 204,
-      headers: corsHeaders,
+      headers: getCorsHeaders(request),
     })
   }),
 })
@@ -95,10 +169,10 @@ http.route({
 http.route({
   path: '/api/chat/execute-tool',
   method: 'OPTIONS',
-  handler: httpAction(async () => {
+  handler: httpAction(async (_, request) => {
     return new Response(null, {
       status: 204,
-      headers: corsHeaders,
+      headers: getCorsHeaders(request),
     })
   }),
 })
@@ -111,26 +185,38 @@ http.route({
   path: '/api/chat/execute-tool',
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
-    // Parse request body
-    const body = await request.json()
-    const { toolName, toolArguments } = body as {
-      toolName: ToolName
-      toolArguments: Record<string, unknown>
-    }
+    const headers = { ...getCorsHeaders(request), 'Content-Type': 'application/json' }
 
-    if (!toolName) {
-      return new Response(JSON.stringify({ error: 'Missing tool name' }), {
+    // Parse and validate request body
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers,
       })
     }
+
+    const parsed = executeToolSchema.safeParse(body)
+    if (!parsed.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid request body',
+          details: parsed.error.issues.map((i) => i.message),
+        }),
+        { status: 400, headers }
+      )
+    }
+
+    const { toolName, toolArguments } = parsed.data
 
     // Get user identity from the Authorization header
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers,
       })
     }
 
@@ -139,8 +225,22 @@ http.route({
     if (!user) {
       return new Response(JSON.stringify({ error: 'User not found' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers,
       })
+    }
+
+    // Check rate limit (uses same limit as chat endpoint)
+    const rateLimit = await ctx.runQuery(api.aiUsage.checkRateLimit, { userId: user._id })
+    if (!rateLimit.allowed) {
+      return new Response(
+        JSON.stringify({
+          error: 'Rate limit exceeded',
+          message: `You've used all ${rateLimit.limit} AI prompts for today.`,
+          remaining: 0,
+          limit: rateLimit.limit,
+        }),
+        { status: 429, headers }
+      )
     }
 
     try {
@@ -149,13 +249,13 @@ http.route({
         ctx,
         user._id,
         `confirmed-${Date.now()}`,
-        toolName,
+        toolName as ToolName,
         toolArguments
       )
 
       return new Response(JSON.stringify(result), {
         status: result.success ? 200 : 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers,
       })
     } catch (error) {
       return new Response(
@@ -164,10 +264,7 @@ http.route({
           error: error instanceof Error ? error.message : 'Unknown error',
           summary: 'Tool execution failed',
         }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        { status: 500, headers }
       )
     }
   }),
@@ -177,27 +274,38 @@ http.route({
   path: '/api/chat/stream',
   method: 'POST',
   handler: httpAction(async (ctx, request) => {
-    // Parse request body
-    const body = await request.json()
-    const { messages: clientMessages, userMessage, confirmedToolCalls } = body as {
-      messages?: ChatMessage[]
-      userMessage: string
-      confirmedToolCalls?: string[]
-    }
+    const headers = { ...getCorsHeaders(request), 'Content-Type': 'application/json' }
 
-    if (!userMessage) {
-      return new Response(JSON.stringify({ error: 'Missing user message' }), {
+    // Parse and validate request body
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON body' }), {
         status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers,
       })
     }
+
+    const parsed = chatStreamSchema.safeParse(body)
+    if (!parsed.success) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid request body',
+          details: parsed.error.issues.map((i) => i.message),
+        }),
+        { status: 400, headers }
+      )
+    }
+
+    const { messages: clientMessages, userMessage, confirmedToolCalls } = parsed.data
 
     // Get user identity from the Authorization header (Bearer token)
     const identity = await ctx.auth.getUserIdentity()
     if (!identity) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers,
       })
     }
 
@@ -206,7 +314,7 @@ http.route({
     if (!user) {
       return new Response(JSON.stringify({ error: 'User not found' }), {
         status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        headers,
       })
     }
 
@@ -222,7 +330,7 @@ http.route({
         }),
         {
           status: 429,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          headers,
         }
       )
     }
@@ -231,12 +339,16 @@ http.route({
     const profile = await ctx.runQuery(api.organizerProfiles.getMyProfile)
 
     // Build message history for OpenAI
+    // Include current date so AI uses correct year for dates
+    const today = new Date()
+    const dateContext = `\n\n## Current Date:\nToday is ${today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}. When users mention dates like "December 25th" without a year, use the NEXT upcoming occurrence (which would be ${today.getFullYear()} or ${today.getFullYear() + 1} depending on whether it has passed).`
+
     const chatHistory: OpenAI.Chat.ChatCompletionMessageParam[] = [
       {
         role: 'system',
         content: profile
-          ? `${SYSTEM_PROMPT}\n\n## User Context:\n- Organization: ${profile.organizationName || 'Not set'}\n- Event Types: ${profile.eventTypes?.join(', ') || 'Not specified'}\n- Experience: ${profile.experienceLevel || 'Unknown'}`
-          : SYSTEM_PROMPT,
+          ? `${SYSTEM_PROMPT}${dateContext}\n\n## User Context:\n- Organization: ${profile.organizationName || 'Not set'}\n- Event Types: ${profile.eventTypes?.join(', ') || 'Not specified'}\n- Experience: ${profile.experienceLevel || 'Unknown'}`
+          : `${SYSTEM_PROMPT}${dateContext}`,
       },
     ]
 
@@ -498,7 +610,7 @@ http.route({
 
     return new Response(stream, {
       headers: {
-        ...corsHeaders,
+        ...getCorsHeaders(request),
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',

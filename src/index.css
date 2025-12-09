@@ -60,65 +60,86 @@
   --radius-2xl: 1.5rem;
 
   /* ================================================
-     COLOR SYSTEM - Purple Accent (Typeform-style)
+     COLOR SYSTEM - Warm Typeform Design System
+     Soft, warm, production-quality palette
      ================================================ */
 
-  /* Paper (backgrounds) */
-  --background: oklch(0.995 0 0);
-  --foreground: oklch(0.13 0 0);
+  /* Background - Warm cream/beige gray (NOT cool gray) */
+  --background: #f5f3ef;
+  --foreground: #1a1a1a;
 
-  /* Cards & Surfaces */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.13 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.13 0 0);
+  /* Cards & Surfaces - Pure white */
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
 
-  /* Primary - Purple Accent (Typeform signature) */
-  --primary: oklch(0.55 0.2 300);
-  --primary-foreground: oklch(0.99 0 0);
+  /* Primary - Soft black */
+  --primary: #1a1a1a;
+  --primary-foreground: #ffffff;
 
-  /* Secondary */
-  --secondary: oklch(0.965 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  /* Secondary - Warm light gray */
+  --secondary: #f0eeea;
+  --secondary-foreground: #1a1a1a;
 
-  /* Muted */
-  --muted: oklch(0.965 0.005 300);
-  --muted-foreground: oklch(0.45 0 0);
+  /* Muted - Warm tones */
+  --muted: #faf9f7;
+  --muted-foreground: #6b6b6b;
 
-  /* Accent - Light purple tint */
-  --accent: oklch(0.95 0.03 300);
-  --accent-foreground: oklch(0.45 0.15 300);
+  /* Accent - Soft lavender (for AI) */
+  --accent: #f3e8f5;
+  --accent-foreground: #7c5cbb;
 
   /* Destructive */
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: #e53935;
 
-  /* Borders & Input */
-  --border: oklch(0.91 0 0);
-  --input: oklch(0.91 0 0);
-  --ring: oklch(0.55 0.2 300);
+  /* Borders - Warm, subtle */
+  --border: #e8e4df;
+  --input: #ebe7e3;
+  --ring: #7c5cbb;
 
-  /* Chart Colors */
-  --chart-1: oklch(0.55 0.2 300);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  /* Chart Colors - Warm, friendly */
+  --chart-1: #7c5cbb;
+  --chart-2: #26a69a;
+  --chart-3: #42a5f5;
+  --chart-4: #f9e547;
+  --chart-5: #ff7043;
 
-  /* Sidebar (collapsible) */
-  --sidebar: oklch(0.99 0 0);
-  --sidebar-foreground: oklch(0.13 0 0);
-  --sidebar-primary: oklch(0.55 0.2 300);
-  --sidebar-primary-foreground: oklch(0.99 0 0);
-  --sidebar-accent: oklch(0.965 0.01 300);
-  --sidebar-accent-foreground: oklch(0.35 0.1 300);
-  --sidebar-border: oklch(0.93 0 0);
-  --sidebar-ring: oklch(0.55 0.2 300);
+  /* Sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #1a1a1a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #faf9f7;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #ebe7e3;
+  --sidebar-ring: #7c5cbb;
 
-  /* Additional Typeform tokens */
-  --purple: oklch(0.55 0.2 300);
-  --purple-light: oklch(0.85 0.1 300);
-  --purple-dark: oklch(0.45 0.22 300);
-  --purple-muted: oklch(0.95 0.03 300);
+  /* Accent color tokens */
+  --purple: #7c5cbb;
+  --purple-light: #efe4f1;
+  --purple-soft: #f3e8f5;
+  --purple-dark: #5a3da8;
+
+  /* Warm grays for messages */
+  --warm-gray-50: #faf9f7;
+  --warm-gray-100: #f5f3ef;
+  --warm-gray-200: #f0eeea;
+  --warm-gray-300: #e8e4df;
+  --warm-gray-400: #d4d0cb;
+  --warm-gray-500: #9b9590;
+  --warm-gray-600: #6b6560;
+  --warm-gray-700: #4a4540;
+  --warm-gray-800: #2d2a27;
+  --warm-gray-900: #1a1a1a;
+
+  /* Typeform yellow accent */
+  --yellow-accent: #f9e547;
+  --yellow-light: #fef9c3;
+
+  /* Success green */
+  --green-soft: #c5e8c5;
+  --green-text: #2e7d32;
 }
 
 body {
@@ -127,26 +148,22 @@ body {
   min-height: 100vh;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-}
+/* Light mode is default - no media query needed */
 
 @theme inline {
   /* Typography */
   --font-sans: "Geist", system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
 
-  /* Border Radius */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+  /* Border Radius - Generous, soft, friendly */
+  --radius-sm: 0.5rem;    /* 8px */
+  --radius-md: 0.75rem;   /* 12px */
+  --radius-lg: 1rem;      /* 16px */
+  --radius-xl: 1.25rem;   /* 20px */
+  --radius-2xl: 1.5rem;   /* 24px */
+  --radius-full: 9999px;  /* Pill shape */
 
-  /* Colors mapped to Tailwind */
+  /* Core colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -165,11 +182,15 @@ body {
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* Chart colors */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  /* Sidebar */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -179,65 +200,101 @@ body {
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* Purple accent colors for Tailwind */
+  /* Purple accent */
   --color-purple: var(--purple);
   --color-purple-light: var(--purple-light);
+  --color-purple-soft: var(--purple-soft);
   --color-purple-dark: var(--purple-dark);
-  --color-purple-muted: var(--purple-muted);
+
+  /* Warm grays */
+  --color-warm-50: var(--warm-gray-50);
+  --color-warm-100: var(--warm-gray-100);
+  --color-warm-200: var(--warm-gray-200);
+  --color-warm-300: var(--warm-gray-300);
+  --color-warm-400: var(--warm-gray-400);
+  --color-warm-500: var(--warm-gray-500);
+  --color-warm-600: var(--warm-gray-600);
+  --color-warm-700: var(--warm-gray-700);
+  --color-warm-800: var(--warm-gray-800);
+  --color-warm-900: var(--warm-gray-900);
+
+  /* Special accents */
+  --color-yellow: var(--yellow-accent);
+  --color-yellow-light: var(--yellow-light);
+  --color-green-soft: var(--green-soft);
+  --color-green-text: var(--green-text);
 }
 
 .dark {
-  /* Dark theme with purple accent */
-  --background: oklch(0.12 0.005 300);
-  --foreground: oklch(0.97 0 0);
+  /* Dark theme - Warm dark with soft accents */
+  --background: #1c1a18;
+  --foreground: #f5f3ef;
 
-  --card: oklch(0.16 0.008 300);
-  --card-foreground: oklch(0.97 0 0);
+  --card: #252320;
+  --card-foreground: #f5f3ef;
 
-  --popover: oklch(0.18 0.008 300);
-  --popover-foreground: oklch(0.97 0 0);
+  --popover: #2a2825;
+  --popover-foreground: #f5f3ef;
 
-  /* Primary - Brighter purple for dark mode */
-  --primary: oklch(0.7 0.18 300);
-  --primary-foreground: oklch(0.12 0.02 300);
+  /* Primary - Soft lavender for dark mode */
+  --primary: #b8a5d6;
+  --primary-foreground: #1c1a18;
 
-  --secondary: oklch(0.22 0.01 300);
-  --secondary-foreground: oklch(0.97 0 0);
+  --secondary: #353230;
+  --secondary-foreground: #f5f3ef;
 
-  --muted: oklch(0.22 0.01 300);
-  --muted-foreground: oklch(0.65 0 0);
+  --muted: #353230;
+  --muted-foreground: #9b9590;
 
-  --accent: oklch(0.25 0.04 300);
-  --accent-foreground: oklch(0.85 0.1 300);
+  --accent: #3d3550;
+  --accent-foreground: #d4c5e8;
 
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: #ef5350;
 
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.7 0.18 300);
+  --border: rgba(255, 252, 248, 0.1);
+  --input: rgba(255, 252, 248, 0.12);
+  --ring: #b8a5d6;
 
-  /* Chart colors - purple-tinted */
-  --chart-1: oklch(0.7 0.18 300);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.2 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  /* Chart colors */
+  --chart-1: #b8a5d6;
+  --chart-2: #4dd0b8;
+  --chart-3: #64b5f6;
+  --chart-4: #ffd54f;
+  --chart-5: #ff8a65;
 
   /* Sidebar */
-  --sidebar: oklch(0.14 0.008 300);
-  --sidebar-foreground: oklch(0.97 0 0);
-  --sidebar-primary: oklch(0.7 0.18 300);
-  --sidebar-primary-foreground: oklch(0.12 0.02 300);
-  --sidebar-accent: oklch(0.22 0.015 300);
-  --sidebar-accent-foreground: oklch(0.85 0.1 300);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.7 0.18 300);
+  --sidebar: #201e1c;
+  --sidebar-foreground: #f5f3ef;
+  --sidebar-primary: #b8a5d6;
+  --sidebar-primary-foreground: #1c1a18;
+  --sidebar-accent: #353230;
+  --sidebar-accent-foreground: #d4c5e8;
+  --sidebar-border: rgba(255, 252, 248, 0.08);
+  --sidebar-ring: #b8a5d6;
 
   /* Dark mode purple tokens */
-  --purple: oklch(0.7 0.18 300);
-  --purple-light: oklch(0.8 0.12 300);
-  --purple-dark: oklch(0.55 0.2 300);
-  --purple-muted: oklch(0.25 0.04 300);
+  --purple: #b8a5d6;
+  --purple-light: #d4c5e8;
+  --purple-soft: #3d3550;
+  --purple-dark: #7c5cbb;
+
+  /* Warm grays - dark mode */
+  --warm-gray-50: #353230;
+  --warm-gray-100: #2a2825;
+  --warm-gray-200: #252320;
+  --warm-gray-300: #201e1c;
+  --warm-gray-400: #1c1a18;
+  --warm-gray-500: #9b9590;
+  --warm-gray-600: #b5afa8;
+  --warm-gray-700: #d4cfc8;
+  --warm-gray-800: #e8e4df;
+  --warm-gray-900: #f5f3ef;
+
+  /* Accents */
+  --yellow-accent: #ffd54f;
+  --yellow-light: #453d20;
+  --green-soft: #2e4a3a;
+  --green-text: #81c784;
 }
 
 @layer base {
@@ -949,62 +1006,126 @@ body {
 .agentic-chat-container {
   display: flex;
   flex-direction: column;
-  min-height: calc(100vh - 10rem);
+  height: calc(100vh - 6rem);
+  max-height: calc(100vh - 6rem);
+  overflow: hidden;
 }
 
-/* Main Layout - CSS Grid for stability */
+/* Main Layout - Flex column */
 .agentic-chat-layout {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   flex: 1;
   width: 100%;
-  max-width: 42rem;
+  max-width: 48rem;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
+  min-height: 0; /* Critical for flex overflow */
+  overflow: hidden;
+}
+
+/* Empty state - center content */
+.agentic-chat-layout.is-empty {
+  justify-content: center;
+  padding-top: 0;
+}
+
+/* Active state - normal flow, minimize top space */
+.agentic-chat-layout.has-messages {
+  justify-content: flex-start;
+  padding-top: 0.5rem;
 }
 
 /* Header - Smooth text transitions */
 .agentic-header {
   text-align: center;
-  margin-bottom: 1.5rem;
-  transition: all 500ms var(--ease-out);
+  flex-shrink: 0;
+  transition: all 400ms var(--ease-out);
 }
 
-/* Conversation Wrapper - Animated height for no jumping */
-.agentic-conversation-wrapper {
-  width: 100%;
-  overflow: hidden;
-  transition: height 500ms var(--ease-out), opacity 300ms var(--ease-out);
-  margin-bottom: 1rem;
-  contain: layout style;
+.agentic-chat-layout.is-empty .agentic-header {
+  margin-bottom: 2rem;
 }
 
-/* Conversation Container */
+/* Compact header when messages exist */
+.agentic-chat-layout.has-messages .agentic-header {
+  margin-bottom: 0.5rem;
+}
+
+/* Conversation Area - Scrollable, bottom-anchored */
+.agentic-conversation-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--warm-gray-300) transparent;
+  position: relative;
+}
+
+.agentic-conversation-area::-webkit-scrollbar {
+  width: 4px;
+}
+
+.agentic-conversation-area::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.agentic-conversation-area::-webkit-scrollbar-thumb {
+  background: var(--warm-gray-300);
+  border-radius: 2px;
+}
+
+.dark .agentic-conversation-area::-webkit-scrollbar-thumb {
+  background: var(--warm-gray-600);
+}
+
+/* Conversation Container - pushes content to bottom */
 .agentic-conversation {
   width: 100%;
-  border-radius: 1.25rem;
-  border: 1px solid var(--border);
-  background: var(--card);
-  overflow: hidden;
-  box-shadow: 0 1px 3px oklch(0 0 0 / 0.05);
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  justify-content: flex-end;
 }
 
-/* Message entrance animation */
+.agentic-conversation-messages {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0 0.5rem 0;
+  gap: 1rem;
+}
+
+/* Input Area - Always at bottom, never shrinks */
+.agentic-input-area-fixed {
+  flex-shrink: 0;
+  width: 100%;
+  padding-bottom: 0.5rem;
+}
+
+/* Message entrance animation - slides up from bottom */
 @keyframes agentic-message-enter {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(12px) scale(0.98);
+    transform: translateY(20px) scale(0.96);
   }
-  to {
+  60% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
 .agentic-message {
-  animation: agentic-message-enter 400ms var(--ease-spring) both;
+  animation: agentic-message-enter 450ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  will-change: transform, opacity;
 }
 
 /* Input Area - Always visible, stable position */
@@ -1112,29 +1233,27 @@ body {
   animation: activity-pulse 2s ease-in-out infinite;
 }
 
-/* Smooth scrollbar for conversation */
-.agentic-conversation .space-y-4 {
-  max-height: 50vh;
-  overflow-y: auto;
+/* Smooth scrollbar for conversation messages */
+.agentic-conversation-messages {
   scrollbar-width: thin;
-  scrollbar-color: oklch(var(--muted-foreground) / 0.15) transparent;
+  scrollbar-color: var(--warm-gray-300) transparent;
 }
 
-.agentic-conversation .space-y-4::-webkit-scrollbar {
+.agentic-conversation-messages::-webkit-scrollbar {
   width: 4px;
 }
 
-.agentic-conversation .space-y-4::-webkit-scrollbar-track {
+.agentic-conversation-messages::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.agentic-conversation .space-y-4::-webkit-scrollbar-thumb {
-  background: oklch(var(--muted-foreground) / 0.15);
+.agentic-conversation-messages::-webkit-scrollbar-thumb {
+  background: var(--warm-gray-300);
   border-radius: 2px;
 }
 
-.agentic-conversation .space-y-4::-webkit-scrollbar-thumb:hover {
-  background: oklch(var(--muted-foreground) / 0.25);
+.dark .agentic-conversation-messages::-webkit-scrollbar-thumb {
+  background: var(--warm-gray-600);
 }
 
 /* Custom scrollbar utility */
@@ -1295,6 +1414,942 @@ body {
   box-shadow:
     0 0 35px -5px oklch(0.7 0.18 300 / 0.3),
     0 4px 30px -10px oklch(0 0 0 / 0.4);
+}
+
+/* ================================================
+   AGENTIC CHAT V2 - FUTURISTIC UI SYSTEM
+   High-engineering, clean, interactive design
+   ================================================ */
+
+/* ------------------------------------------------
+   Page Enter/Exit Transitions
+   ------------------------------------------------ */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.99);
+  }
+}
+
+.agentic-page-enter {
+  animation: page-enter 600ms var(--ease-out) both;
+}
+
+.agentic-page-exit {
+  animation: page-exit 300ms var(--ease-out) both;
+}
+
+/* Staggered children entrance */
+.agentic-stagger > * {
+  opacity: 0;
+  animation: page-enter 500ms var(--ease-out) both;
+}
+
+.agentic-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.agentic-stagger > *:nth-child(2) { animation-delay: 80ms; }
+.agentic-stagger > *:nth-child(3) { animation-delay: 160ms; }
+.agentic-stagger > *:nth-child(4) { animation-delay: 240ms; }
+.agentic-stagger > *:nth-child(5) { animation-delay: 320ms; }
+
+/* ------------------------------------------------
+   Neural Thinking Orb - Futuristic AI Indicator
+   ------------------------------------------------ */
+.thinking-orb-v2 {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thinking-orb-v2-core {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, oklch(0.65 0.2 280), oklch(0.55 0.25 300));
+  animation: orb-pulse 2s ease-in-out infinite;
+  box-shadow:
+    0 0 20px oklch(0.6 0.2 290 / 0.5),
+    inset 0 0 10px oklch(1 0 0 / 0.2);
+}
+
+@keyframes orb-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.15);
+    filter: brightness(1.2);
+  }
+}
+
+/* Orbiting rings */
+.thinking-orb-v2-ring {
+  position: absolute;
+  border: 1.5px solid oklch(0.6 0.15 290 / 0.4);
+  border-radius: 50%;
+  animation: orb-orbit linear infinite;
+}
+
+.thinking-orb-v2-ring:nth-child(1) {
+  width: 28px;
+  height: 28px;
+  animation-duration: 3s;
+  border-color: oklch(0.6 0.15 290 / 0.3);
+  border-top-color: oklch(0.7 0.2 280 / 0.8);
+}
+
+.thinking-orb-v2-ring:nth-child(2) {
+  width: 36px;
+  height: 36px;
+  animation-duration: 4s;
+  animation-direction: reverse;
+  border-color: oklch(0.5 0.12 300 / 0.2);
+  border-bottom-color: oklch(0.6 0.18 290 / 0.6);
+}
+
+@keyframes orb-orbit {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Neural nodes around orb */
+.thinking-orb-v2-nodes {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  animation: nodes-rotate 8s linear infinite;
+}
+
+.thinking-orb-v2-node {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: oklch(0.7 0.15 280);
+  animation: node-pulse 1.5s ease-in-out infinite;
+}
+
+.thinking-orb-v2-node:nth-child(1) { top: 0; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
+.thinking-orb-v2-node:nth-child(2) { top: 50%; right: 0; transform: translateY(-50%); animation-delay: 0.3s; }
+.thinking-orb-v2-node:nth-child(3) { bottom: 0; left: 50%; transform: translateX(-50%); animation-delay: 0.6s; }
+.thinking-orb-v2-node:nth-child(4) { top: 50%; left: 0; transform: translateY(-50%); animation-delay: 0.9s; }
+
+@keyframes nodes-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes node-pulse {
+  0%, 100% { opacity: 0.4; transform: translateX(-50%) scale(1); }
+  50% { opacity: 1; transform: translateX(-50%) scale(1.5); }
+}
+
+/* ------------------------------------------------
+   Enhanced Avatar with Brand Integration
+   ------------------------------------------------ */
+.agentic-avatar-v2 {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.agentic-avatar-v2-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, oklch(0.55 0.25 280), oklch(0.45 0.3 300));
+  border: none;
+  position: relative;
+  overflow: hidden;
+  transition: all 300ms var(--ease-out);
+  box-shadow: 0 2px 8px oklch(0.5 0.25 290 / 0.3);
+}
+
+.agentic-avatar-v2-inner svg,
+.agentic-avatar-v2-inner .logo-icon {
+  color: white;
+  filter: brightness(1.1);
+}
+
+.dark .agentic-avatar-v2-inner {
+  background: linear-gradient(135deg, oklch(0.6 0.22 280), oklch(0.5 0.28 300));
+  box-shadow: 0 2px 12px oklch(0.55 0.25 290 / 0.4);
+}
+
+/* Animated gradient border on streaming */
+.agentic-avatar-v2.is-streaming .agentic-avatar-v2-inner {
+  border-color: transparent;
+}
+
+.agentic-avatar-v2.is-streaming::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  background: conic-gradient(
+    from 0deg,
+    oklch(0.6 0.2 280),
+    oklch(0.55 0.25 300),
+    oklch(0.5 0.2 320),
+    oklch(0.6 0.2 280)
+  );
+  animation: avatar-border-spin 2s linear infinite;
+  z-index: -1;
+}
+
+.agentic-avatar-v2.is-streaming::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(145deg, oklch(0.16 0.02 280), oklch(0.1 0.01 300));
+  z-index: -1;
+}
+
+@keyframes avatar-border-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Avatar glow pulse */
+.agentic-avatar-v2.is-streaming .agentic-avatar-v2-inner {
+  box-shadow: 0 0 20px oklch(0.6 0.2 290 / 0.3);
+}
+
+/* ------------------------------------------------
+   Message Bubbles - Typeform Soft Style
+   ------------------------------------------------ */
+.agentic-bubble-v2 {
+  position: relative;
+  max-width: 75%;
+  border-radius: 18px;
+  padding: 14px 20px;
+  font-size: 15px;
+  line-height: 1.55;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 200ms ease;
+}
+
+/* AI Message - Soft warm lavender, NO border, fully rounded */
+.agentic-bubble-v2.ai {
+  background: var(--purple-soft, #f3e8f5);
+  border: none;
+  border-radius: 16px;
+  color: var(--warm-gray-900, #1a1a1a);
+}
+
+.dark .agentic-bubble-v2.ai {
+  background: var(--purple-soft, #3d3550);
+  color: var(--warm-gray-900, #f5f3ef);
+}
+
+/* User Message - Warm light gray, NO border, fully rounded */
+.agentic-bubble-v2.user {
+  background: var(--warm-gray-200, #f0eeea);
+  color: var(--warm-gray-900, #1a1a1a);
+  border: none;
+  border-radius: 16px;
+}
+
+.dark .agentic-bubble-v2.user {
+  background: var(--warm-gray-50, #353230);
+  color: var(--warm-gray-900, #f5f3ef);
+}
+
+/* Streaming - subtle pulse animation */
+.agentic-bubble-v2.ai.is-streaming {
+  background: var(--purple-light, #efe4f1);
+  animation: bubble-pulse 2s ease-in-out infinite;
+}
+
+.dark .agentic-bubble-v2.ai.is-streaming {
+  background: rgba(184, 165, 214, 0.25);
+}
+
+@keyframes bubble-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(124, 92, 187, 0);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(124, 92, 187, 0.08);
+  }
+}
+
+/* Micro-interaction on hover */
+.agentic-bubble-v2:hover {
+  transform: translateY(-1px);
+}
+
+/* Quick reply buttons - Typeform style */
+.agentic-quick-reply {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  border: none;
+  animation: quick-reply-slide-up 400ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.agentic-quick-reply:nth-child(1) { animation-delay: 0ms; }
+.agentic-quick-reply:nth-child(2) { animation-delay: 80ms; }
+.agentic-quick-reply:nth-child(3) { animation-delay: 160ms; }
+
+@keyframes quick-reply-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.agentic-quick-reply.primary {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.agentic-quick-reply.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.agentic-quick-reply.primary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.agentic-quick-reply.secondary {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.agentic-quick-reply.secondary:hover {
+  background: var(--warm-gray-300);
+  color: var(--foreground);
+  transform: translateY(-2px);
+}
+
+.dark .agentic-quick-reply.secondary:hover {
+  background: var(--warm-gray-100);
+}
+
+.agentic-quick-reply.secondary:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ------------------------------------------------
+   Streaming Text V2 - Smooth Word Reveal
+   ------------------------------------------------ */
+.streaming-text-v2 {
+  display: inline;
+}
+
+.streaming-word-v2 {
+  display: inline;
+  opacity: 0;
+  animation: word-materialize 200ms var(--ease-out) forwards;
+}
+
+@keyframes word-materialize {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced streaming cursor */
+.streaming-cursor-v2 {
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: linear-gradient(180deg, oklch(0.6 0.2 280), oklch(0.55 0.25 300));
+  border-radius: 1px;
+  animation: cursor-blink-v2 1s ease-in-out infinite;
+}
+
+@keyframes cursor-blink-v2 {
+  0%, 45% { opacity: 1; }
+  50%, 95% { opacity: 0.3; }
+  100% { opacity: 1; }
+}
+
+/* ------------------------------------------------
+   Thinking State V2 - Agentic Process Display
+   ------------------------------------------------ */
+.agentic-thinking-v2 {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.97 0.01 280 / 0.6),
+    oklch(0.95 0.02 300 / 0.4)
+  );
+  border: 1px solid oklch(0.9 0.03 290 / 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.dark .agentic-thinking-v2 {
+  background: linear-gradient(
+    135deg,
+    oklch(0.16 0.02 280 / 0.8),
+    oklch(0.12 0.03 300 / 0.6)
+  );
+  border-color: oklch(0.25 0.05 290 / 0.4);
+}
+
+.agentic-thinking-v2-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.agentic-thinking-v2-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: oklch(0.5 0.1 280);
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark .agentic-thinking-v2-label {
+  color: oklch(0.7 0.12 280);
+}
+
+.agentic-thinking-v2-text {
+  font-size: 0.875rem;
+  color: oklch(0.4 0 0);
+  line-height: 1.5;
+}
+
+.dark .agentic-thinking-v2-text {
+  color: oklch(0.65 0 0);
+}
+
+/* Thinking steps */
+.agentic-thinking-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.agentic-thinking-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: oklch(0.98 0 0 / 0.6);
+  border: 1px solid oklch(0.92 0 0);
+  transition: all 200ms var(--ease-out);
+}
+
+.dark .agentic-thinking-step {
+  background: oklch(0.14 0.01 280 / 0.6);
+  border-color: oklch(0.22 0.03 290 / 0.4);
+}
+
+.agentic-thinking-step.is-active {
+  background: oklch(0.96 0.02 280 / 0.8);
+  border-color: oklch(0.8 0.1 280 / 0.5);
+}
+
+.dark .agentic-thinking-step.is-active {
+  background: oklch(0.18 0.03 280 / 0.8);
+  border-color: oklch(0.35 0.08 280 / 0.6);
+}
+
+.agentic-thinking-step.is-complete {
+  opacity: 0.6;
+}
+
+.agentic-thinking-step-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  background: oklch(0.9 0 0);
+  color: oklch(0.5 0 0);
+}
+
+.dark .agentic-thinking-step-icon {
+  background: oklch(0.22 0 0);
+  color: oklch(0.6 0 0);
+}
+
+.agentic-thinking-step.is-active .agentic-thinking-step-icon {
+  background: oklch(0.6 0.15 280);
+  color: white;
+  animation: step-pulse 1s ease-in-out infinite;
+}
+
+.agentic-thinking-step.is-complete .agentic-thinking-step-icon {
+  background: oklch(0.55 0.15 150);
+  color: white;
+}
+
+@keyframes step-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.6 0.15 280 / 0.5); }
+  50% { box-shadow: 0 0 0 6px oklch(0.6 0.15 280 / 0); }
+}
+
+.agentic-thinking-step-text {
+  font-size: 0.8125rem;
+  color: oklch(0.4 0 0);
+}
+
+.dark .agentic-thinking-step-text {
+  color: oklch(0.65 0 0);
+}
+
+/* ------------------------------------------------
+   Enhanced Input V2 - Typeform Clean Style
+   Pill-shaped, simple border, no gradient glow
+   ------------------------------------------------ */
+.agentic-input-v2 {
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  transition: all 150ms ease;
+}
+
+.agentic-input-v2-wrapper {
+  position: relative;
+  border-radius: 24px;
+  background: #ffffff;
+  border: 1px solid var(--warm-gray-300, #e8e4df);
+  transition: all 150ms ease;
+  overflow: hidden;
+}
+
+.agentic-input-v2:focus-within .agentic-input-v2-wrapper {
+  border-color: var(--warm-gray-400, #d4d0cb);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.dark .agentic-input-v2-wrapper {
+  background: var(--warm-gray-200, #252320);
+  border-color: rgba(255, 252, 248, 0.1);
+}
+
+.dark .agentic-input-v2:focus-within .agentic-input-v2-wrapper {
+  border-color: rgba(255, 252, 248, 0.2);
+}
+
+.agentic-input-v2-inner {
+  background: transparent;
+  border-radius: 23px;
+  overflow: hidden;
+}
+
+.agentic-input-v2-textarea {
+  width: 100%;
+  min-height: 52px;
+  max-height: 160px;
+  padding: 14px 20px 6px 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--warm-gray-900, #1a1a1a);
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+}
+
+.dark .agentic-input-v2-textarea {
+  color: var(--warm-gray-900, #f5f3ef);
+}
+
+.agentic-input-v2-textarea::placeholder {
+  color: var(--warm-gray-500, #9b9590);
+  font-weight: 400;
+}
+
+.dark .agentic-input-v2-textarea::placeholder {
+  color: var(--warm-gray-500, #9b9590);
+}
+
+.agentic-input-v2-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 12px 14px;
+}
+
+.agentic-input-v2-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.agentic-input-v2-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms ease;
+  color: var(--warm-gray-500, #9b9590);
+}
+
+.dark .agentic-input-v2-btn {
+  color: var(--warm-gray-500, #9b9590);
+}
+
+.agentic-input-v2-btn:hover:not(:disabled) {
+  background: var(--warm-gray-100, #f5f3ef);
+  color: var(--warm-gray-700, #4a4540);
+}
+
+.dark .agentic-input-v2-btn:hover:not(:disabled) {
+  background: var(--warm-gray-100, #2a2825);
+  color: var(--warm-gray-700, #d4cfc8);
+}
+
+.agentic-input-v2-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.agentic-input-v2-send {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--warm-gray-400, #d4d0cb);
+  transition: all 150ms ease;
+}
+
+.dark .agentic-input-v2-send {
+  color: var(--warm-gray-500, #9b9590);
+}
+
+.agentic-input-v2-send:hover:not(:disabled) {
+  color: var(--warm-gray-600, #6b6560);
+}
+
+.agentic-input-v2-send:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.agentic-input-v2-send:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Ready state - dark button like Typeform */
+.agentic-input-v2-send.is-ready {
+  background: var(--warm-gray-900, #1a1a1a);
+  color: white;
+}
+
+.dark .agentic-input-v2-send.is-ready {
+  background: var(--warm-gray-900, #f5f3ef);
+  color: var(--warm-gray-900, #1a1a1a);
+}
+
+.agentic-input-v2-send.is-ready:hover {
+  background: var(--warm-gray-800, #2d2a27);
+  transform: scale(1.02);
+}
+
+.dark .agentic-input-v2-send.is-ready:hover {
+  background: var(--warm-gray-800, #e8e4df);
+}
+
+/* ------------------------------------------------
+   Tool Execution V2 - Premium Cards
+   ------------------------------------------------ */
+.agentic-tool-v2 {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    oklch(0.98 0.01 280 / 0.8),
+    oklch(0.96 0.02 300 / 0.6)
+  );
+  border: 1px solid oklch(0.9 0.03 290 / 0.4);
+  transition: all 300ms var(--ease-out);
+}
+
+.dark .agentic-tool-v2 {
+  background: linear-gradient(
+    135deg,
+    oklch(0.16 0.02 280 / 0.9),
+    oklch(0.13 0.03 300 / 0.7)
+  );
+  border-color: oklch(0.25 0.05 290 / 0.5);
+}
+
+.agentic-tool-v2.is-executing {
+  animation: tool-executing 1s ease-in-out infinite;
+}
+
+@keyframes tool-executing {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.6 0.15 280 / 0.3); }
+  50% { box-shadow: 0 0 0 4px oklch(0.6 0.15 280 / 0); }
+}
+
+.agentic-tool-v2.is-success {
+  background: linear-gradient(
+    135deg,
+    oklch(0.97 0.03 150 / 0.8),
+    oklch(0.95 0.04 140 / 0.6)
+  );
+  border-color: oklch(0.7 0.12 150 / 0.4);
+}
+
+.dark .agentic-tool-v2.is-success {
+  background: linear-gradient(
+    135deg,
+    oklch(0.18 0.04 150 / 0.9),
+    oklch(0.15 0.05 140 / 0.7)
+  );
+  border-color: oklch(0.4 0.1 150 / 0.5);
+}
+
+.agentic-tool-v2.is-error {
+  background: linear-gradient(
+    135deg,
+    oklch(0.97 0.04 25 / 0.8),
+    oklch(0.95 0.05 15 / 0.6)
+  );
+  border-color: oklch(0.7 0.15 25 / 0.4);
+}
+
+.dark .agentic-tool-v2.is-error {
+  background: linear-gradient(
+    135deg,
+    oklch(0.18 0.05 25 / 0.9),
+    oklch(0.15 0.06 15 / 0.7)
+  );
+  border-color: oklch(0.4 0.12 25 / 0.5);
+}
+
+.agentic-tool-v2-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(0.95 0.02 280);
+  color: oklch(0.5 0.15 280);
+  flex-shrink: 0;
+}
+
+.dark .agentic-tool-v2-icon {
+  background: oklch(0.22 0.03 280);
+  color: oklch(0.65 0.12 280);
+}
+
+.agentic-tool-v2.is-executing .agentic-tool-v2-icon {
+  animation: icon-spin 1s linear infinite;
+}
+
+@keyframes icon-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.agentic-tool-v2.is-success .agentic-tool-v2-icon {
+  background: oklch(0.55 0.15 150);
+  color: white;
+}
+
+.agentic-tool-v2.is-error .agentic-tool-v2-icon {
+  background: oklch(0.55 0.18 25);
+  color: white;
+}
+
+.agentic-tool-v2-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.agentic-tool-v2-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: oklch(0.3 0 0);
+}
+
+.dark .agentic-tool-v2-name {
+  color: oklch(0.9 0 0);
+}
+
+.agentic-tool-v2-status {
+  font-size: 0.75rem;
+  color: oklch(0.5 0 0);
+  margin-top: 2px;
+}
+
+.dark .agentic-tool-v2-status {
+  color: oklch(0.6 0 0);
+}
+
+/* ------------------------------------------------
+   Confirmation Card V2 - Clean, calm style
+   ------------------------------------------------ */
+.agentic-confirm-v2 {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.dark .agentic-confirm-v2 {
+  border-color: var(--border);
+}
+
+.agentic-confirm-v2-header {
+  padding: 14px 16px;
+  background: var(--muted);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dark .agentic-confirm-v2-header {
+  background: var(--muted);
+  border-color: var(--border);
+}
+
+.agentic-confirm-v2-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--background);
+}
+
+.agentic-confirm-v2-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.dark .agentic-confirm-v2-title {
+  color: var(--foreground);
+}
+
+.agentic-confirm-v2-body {
+  padding: 16px;
+}
+
+.agentic-confirm-v2-actions {
+  padding: 12px 16px;
+  display: flex;
+  gap: 8px;
+  background: var(--muted);
+  border-top: 1px solid var(--border);
+}
+
+.dark .agentic-confirm-v2-actions {
+  background: var(--muted);
+  border-color: var(--border);
+}
+
+.agentic-confirm-v2-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 150ms ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.agentic-confirm-v2-btn.primary {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.agentic-confirm-v2-btn.primary:hover {
+  opacity: 0.9;
+}
+
+.agentic-confirm-v2-btn.primary:active {
+  opacity: 0.8;
+}
+
+.agentic-confirm-v2-btn.secondary {
+  background: var(--background);
+  color: var(--muted-foreground);
+  border: 1px solid var(--border);
+}
+
+.dark .agentic-confirm-v2-btn.secondary {
+  background: var(--background);
+  color: var(--muted-foreground);
+  border-color: var(--border);
+}
+
+.agentic-confirm-v2-btn.secondary:hover {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+.dark .agentic-confirm-v2-btn.secondary:hover {
+  background: var(--muted);
 }
 
 /* ================================================
