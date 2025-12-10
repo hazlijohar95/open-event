@@ -11,6 +11,11 @@
 import type * as admin from "../admin.js";
 import type * as aiTools from "../aiTools.js";
 import type * as aiUsage from "../aiUsage.js";
+import type * as apiKeys from "../apiKeys.js";
+import type * as api_adminHelpers from "../api/adminHelpers.js";
+import type * as api_auth from "../api/auth.js";
+import type * as api_helpers from "../api/helpers.js";
+import type * as api_mutations from "../api/mutations.js";
 import type * as auth from "../auth.js";
 import type * as budgetItems from "../budgetItems.js";
 import type * as eventApplications from "../eventApplications.js";
@@ -35,6 +40,7 @@ import type * as queries_dashboard from "../queries/dashboard.js";
 import type * as sponsors from "../sponsors.js";
 import type * as users from "../users.js";
 import type * as vendors from "../vendors.js";
+import type * as webhooks from "../webhooks.js";
 
 import type {
   ApiFromModules,
@@ -46,6 +52,11 @@ declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   aiTools: typeof aiTools;
   aiUsage: typeof aiUsage;
+  apiKeys: typeof apiKeys;
+  "api/adminHelpers": typeof api_adminHelpers;
+  "api/auth": typeof api_auth;
+  "api/helpers": typeof api_helpers;
+  "api/mutations": typeof api_mutations;
   auth: typeof auth;
   budgetItems: typeof budgetItems;
   eventApplications: typeof eventApplications;
@@ -70,6 +81,7 @@ declare const fullApi: ApiFromModules<{
   sponsors: typeof sponsors;
   users: typeof users;
   vendors: typeof vendors;
+  webhooks: typeof webhooks;
 }>;
 
 /**

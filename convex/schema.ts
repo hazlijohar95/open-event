@@ -629,4 +629,174 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
   })
     .index('by_user', ['userId']),
+
+  // ============================================================================
+  // PUBLIC API INFRASTRUCTURE
+  // ============================================================================
+
+  // API Keys - For external API access
+  // Keys are stored as hashed values for security
+  apiKeys: defineTable({
+    // Owner of this API key
+    userId: v.id('users'),
+
+    // Key metadata
+    name: v.string(), // "My Production App", "Testing Key"
+    description: v.optional(v.string()),
+
+    // Security - NEVER store the actual key, only the hash
+    keyHash: v.string(), // SHA-256 hash of the full key
+    keyPrefix: v.string(), // First 8 chars for identification (e.g., "oe_live_")
+
+    // Permissions - what this key can do
+    permissions: v.array(v.string()), // ["events:read", "events:write", "vendors:read"]
+
+    // Rate limiting
+    rateLimit: v.optional(v.number()), // Custom rate limit (requests per hour), null = default
+
+    // Status
+    status: v.union(
+      v.literal('active'),
+      v.literal('revoked'),
+      v.literal('expired')
+    ),
+
+    // Usage tracking
+    lastUsedAt: v.optional(v.number()),
+    lastUsedIp: v.optional(v.string()),
+    totalRequests: v.optional(v.number()),
+
+    // Expiration (optional)
+    expiresAt: v.optional(v.number()),
+
+    // Timestamps
+    createdAt: v.number(),
+    revokedAt: v.optional(v.number()),
+  })
+    .index('by_user', ['userId'])
+    .index('by_key_prefix', ['keyPrefix'])
+    .index('by_status', ['status']),
+
+  // API Rate Limits - Track usage per API key per time window
+  apiRateLimits: defineTable({
+    // Which API key
+    apiKeyId: v.id('apiKeys'),
+
+    // Time window (hour bucket)
+    windowStart: v.number(), // Unix timestamp of window start
+
+    // Request count in this window
+    requestCount: v.number(),
+
+    // Last request timestamp
+    lastRequestAt: v.number(),
+  })
+    .index('by_key', ['apiKeyId'])
+    .index('by_key_window', ['apiKeyId', 'windowStart']),
+
+  // API Request Logs - Audit trail for API requests (optional, for debugging)
+  apiRequestLogs: defineTable({
+    apiKeyId: v.id('apiKeys'),
+    userId: v.id('users'),
+
+    // Request details
+    method: v.string(), // GET, POST, PATCH, DELETE
+    path: v.string(), // /api/v1/events
+    statusCode: v.number(), // 200, 400, 401, 429, etc.
+    responseTimeMs: v.number(), // Response time in milliseconds
+
+    // Request metadata
+    userAgent: v.optional(v.string()),
+    ipAddress: v.optional(v.string()),
+
+    // Error info (if any)
+    errorCode: v.optional(v.string()),
+    errorMessage: v.optional(v.string()),
+
+    createdAt: v.number(),
+  })
+    .index('by_key', ['apiKeyId'])
+    .index('by_user', ['userId'])
+    .index('by_date', ['createdAt'])
+    .index('by_status', ['statusCode']),
+
+  // ============================================================================
+  // WEBHOOKS
+  // ============================================================================
+
+  // Webhooks - User-registered webhook endpoints
+  webhooks: defineTable({
+    // Owner of this webhook
+    userId: v.id('users'),
+
+    // Webhook configuration
+    name: v.string(), // "My App Webhook"
+    url: v.string(), // https://example.com/webhook
+    secret: v.string(), // Secret for signature verification (hashed)
+
+    // Events to subscribe to
+    events: v.array(v.string()), // ["event.created", "event.updated", "vendor.applied"]
+
+    // Status
+    status: v.union(
+      v.literal('active'),
+      v.literal('paused'),
+      v.literal('disabled') // Auto-disabled after too many failures
+    ),
+
+    // Failure tracking
+    failureCount: v.optional(v.number()), // Consecutive failures
+    lastFailureAt: v.optional(v.number()),
+    lastFailureReason: v.optional(v.string()),
+
+    // Success tracking
+    lastDeliveryAt: v.optional(v.number()),
+    lastDeliveryStatus: v.optional(v.number()), // HTTP status code
+    totalDeliveries: v.optional(v.number()),
+
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_user', ['userId'])
+    .index('by_status', ['status']),
+
+  // Webhook Deliveries - Log of webhook delivery attempts
+  webhookDeliveries: defineTable({
+    webhookId: v.id('webhooks'),
+    userId: v.id('users'),
+
+    // Event details
+    eventType: v.string(), // "event.created"
+    eventId: v.optional(v.string()), // ID of the related entity
+
+    // Payload
+    payload: v.string(), // JSON string of the webhook payload
+
+    // Delivery status
+    status: v.union(
+      v.literal('pending'),
+      v.literal('success'),
+      v.literal('failed'),
+      v.literal('retrying')
+    ),
+
+    // Response details
+    statusCode: v.optional(v.number()), // HTTP response status
+    responseBody: v.optional(v.string()), // First 1000 chars of response
+    responseTimeMs: v.optional(v.number()),
+
+    // Error info
+    errorMessage: v.optional(v.string()),
+
+    // Retry tracking
+    attempts: v.number(), // Number of delivery attempts
+    nextRetryAt: v.optional(v.number()), // When to retry next
+
+    createdAt: v.number(),
+    deliveredAt: v.optional(v.number()),
+  })
+    .index('by_webhook', ['webhookId'])
+    .index('by_user', ['userId'])
+    .index('by_status', ['status'])
+    .index('by_date', ['createdAt']),
 })
