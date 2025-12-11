@@ -239,6 +239,9 @@ export const PERMISSIONS = {
   BUDGET_READ: 'budget:read',
   BUDGET_WRITE: 'budget:write',
   
+  // Analytics
+  ANALYTICS_READ: 'analytics:read',
+  
   // User profile
   PROFILE_READ: 'profile:read',
   PROFILE_WRITE: 'profile:write',

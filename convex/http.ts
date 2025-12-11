@@ -835,6 +835,213 @@ http.route({
 })
 
 // ============================================================================
+// API v1 - Analytics
+// ============================================================================
+
+// CORS preflight for analytics endpoints
+http.route({
+  path: '/api/v1/analytics',
+  method: 'OPTIONS',
+  handler: httpAction(async () => handleCors()),
+})
+
+// GET /api/v1/analytics/events/trends - Get event trends over time
+http.route({
+  path: '/api/v1/analytics/events/trends',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const period = url.searchParams.get('period') || 'month'
+      const startDate = url.searchParams.get('startDate')
+        ? parseInt(url.searchParams.get('startDate')!)
+        : undefined
+      const endDate = url.searchParams.get('endDate')
+        ? parseInt(url.searchParams.get('endDate')!)
+        : undefined
+
+      const trends = await ctx.runQuery(internal.analytics.getEventTrendsInternal, {
+        userId: authResult.keyInfo.userId,
+        period: period as 'day' | 'week' | 'month' | 'year',
+        startDate,
+        endDate,
+      })
+
+      return apiSuccess(trends)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch event trends'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/analytics/events/performance - Get event performance metrics
+http.route({
+  path: '/api/v1/analytics/events/performance',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const startDate = url.searchParams.get('startDate')
+        ? parseInt(url.searchParams.get('startDate')!)
+        : undefined
+      const endDate = url.searchParams.get('endDate')
+        ? parseInt(url.searchParams.get('endDate')!)
+        : undefined
+
+      const performance = await ctx.runQuery(internal.analytics.getEventPerformanceInternal, {
+        userId: authResult.keyInfo.userId,
+        startDate,
+        endDate,
+      })
+
+      return apiSuccess(performance)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch performance metrics'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/analytics/events/comparative - Get comparative analytics
+http.route({
+  path: '/api/v1/analytics/events/comparative',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const period = url.searchParams.get('period') || 'month'
+
+      const comparative = await ctx.runQuery(internal.analytics.getComparativeAnalyticsInternal, {
+        userId: authResult.keyInfo.userId,
+        period: period as 'week' | 'month' | 'year',
+      })
+
+      return apiSuccess(comparative)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch comparative analytics'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/analytics/budget - Get budget analytics
+http.route({
+  path: '/api/v1/analytics/budget',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const startDate = url.searchParams.get('startDate')
+        ? parseInt(url.searchParams.get('startDate')!)
+        : undefined
+      const endDate = url.searchParams.get('endDate')
+        ? parseInt(url.searchParams.get('endDate')!)
+        : undefined
+
+      const budgetAnalytics = await ctx.runQuery(internal.analytics.getBudgetAnalyticsInternal, {
+        userId: authResult.keyInfo.userId,
+        startDate,
+        endDate,
+      })
+
+      return apiSuccess(budgetAnalytics)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch budget analytics'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/analytics/engagement - Get vendor/sponsor engagement analytics
+http.route({
+  path: '/api/v1/analytics/engagement',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const startDate = url.searchParams.get('startDate')
+        ? parseInt(url.searchParams.get('startDate')!)
+        : undefined
+      const endDate = url.searchParams.get('endDate')
+        ? parseInt(url.searchParams.get('endDate')!)
+        : undefined
+
+      const engagement = await ctx.runQuery(internal.analytics.getEngagementAnalyticsInternal, {
+        userId: authResult.keyInfo.userId,
+        startDate,
+        endDate,
+      })
+
+      return apiSuccess(engagement)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch engagement analytics'
+      )
+    }
+  }),
+})
+
+// ============================================================================
 // Streaming Chat Endpoint
 // ============================================================================
 
