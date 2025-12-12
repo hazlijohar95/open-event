@@ -86,6 +86,23 @@ const chatStreamSchema = z.object({
   confirmedToolCalls: z.array(z.string()).optional(),
 })
 
+// API helpers
+import {
+  apiSuccess,
+  ApiErrors,
+  handleCors,
+  parseBody,
+  getPagination,
+  paginationMeta,
+  getLastPathSegment,
+  withRateLimitHeaders,
+} from './api/helpers'
+import {
+  validateApiKey,
+  requirePermission,
+  PERMISSIONS,
+} from './api/auth'
+
 // ============================================================================
 // HTTP Router
 // ============================================================================
@@ -95,18 +112,1011 @@ const http = httpRouter()
 // Convex Auth HTTP routes (handles OAuth callbacks, magic links, etc.)
 auth.addHttpRoutes(http)
 
+// ============================================================================
+// Health Check & API Info
+// ============================================================================
+
 // Health check endpoint
 http.route({
   path: '/api/health',
   method: 'GET',
   handler: httpAction(async () => {
-    return new Response(
-      JSON.stringify({ status: 'ok', timestamp: Date.now() }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
+    return apiSuccess({
+      status: 'ok',
+      timestamp: Date.now(),
+      version: '1.0.0',
+    })
+  }),
+})
+
+// API info endpoint
+http.route({
+  path: '/api/v1',
+  method: 'GET',
+  handler: httpAction(async () => {
+    return apiSuccess({
+      name: 'Open Event API',
+      version: '1.0.0',
+      documentation: 'https://github.com/hazlijohar95/open-event',
+      endpoints: {
+        events: '/api/v1/events',
+        vendors: '/api/v1/vendors',
+        sponsors: '/api/v1/sponsors',
+        public: '/api/v1/public/events',
+      },
+    })
+  }),
+})
+
+// ============================================================================
+// CORS Preflight Handlers
+// ============================================================================
+
+// Generic CORS handler for /api/v1/*
+http.route({
+  path: '/api/v1/events',
+  method: 'OPTIONS',
+  handler: httpAction(async () => handleCors()),
+})
+
+http.route({
+  path: '/api/v1/vendors',
+  method: 'OPTIONS',
+  handler: httpAction(async () => handleCors()),
+})
+
+http.route({
+  path: '/api/v1/sponsors',
+  method: 'OPTIONS',
+  handler: httpAction(async () => handleCors()),
+})
+
+http.route({
+  path: '/api/v1/public/events',
+  method: 'OPTIONS',
+  handler: httpAction(async () => handleCors()),
+})
+
+// ============================================================================
+// API v1 - Events
+// ============================================================================
+
+// GET /api/v1/events - List events for the authenticated user
+http.route({
+  path: '/api/v1/events',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.EVENTS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const { page, limit, offset } = getPagination(url)
+      const status = url.searchParams.get('status') || undefined
+
+      // Get events for the API key's user using internal query
+      const allEvents = await ctx.runQuery(internal.api.mutations.getEventsByUser, {
+        userId: authResult.keyInfo.userId,
+        status: status === 'all' ? undefined : status,
+      })
+
+      // Apply pagination
+      const total = allEvents.length
+      const paginatedEvents = allEvents.slice(offset, offset + limit)
+
+      return apiSuccess(paginatedEvents, paginationMeta(total, page, limit))
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch events'
+      )
+    }
+  }),
+})
+
+// POST /api/v1/events - Create a new event
+http.route({
+  path: '/api/v1/events',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key - STRICT CHECK
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission - MUST have events:write permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.EVENTS_WRITE)
+    if (permError) return permError
+
+    // Parse request body
+    const body = await parseBody<{
+      title: string
+      startDate: number
+      description?: string
+      eventType?: string
+      status?: string
+      locationType?: string
+      venueName?: string
+      venueAddress?: string
+      virtualPlatform?: string
+      expectedAttendees?: number
+      budget?: number
+      budgetCurrency?: string
+      endDate?: number
+      timezone?: string
+    }>(request)
+
+    if (!body) {
+      return ApiErrors.badRequest('Invalid JSON body')
+    }
+
+    // Validate required fields
+    if (!body.title) {
+      return ApiErrors.validationError('title is required')
+    }
+    if (!body.startDate) {
+      return ApiErrors.validationError('startDate is required (Unix timestamp)')
+    }
+    if (typeof body.startDate !== 'number') {
+      return ApiErrors.validationError('startDate must be a Unix timestamp (number)')
+    }
+
+    try {
+      // Use internal mutation with userId from API key
+      const eventId = await ctx.runMutation(internal.api.mutations.createEvent, {
+        userId: authResult.keyInfo.userId,
+        title: body.title,
+        startDate: body.startDate,
+        description: body.description,
+        eventType: body.eventType,
+        status: body.status,
+        locationType: body.locationType,
+        venueName: body.venueName,
+        venueAddress: body.venueAddress,
+        virtualPlatform: body.virtualPlatform,
+        expectedAttendees: body.expectedAttendees,
+        budget: body.budget,
+        budgetCurrency: body.budgetCurrency,
+        endDate: body.endDate,
+        timezone: body.timezone,
+      })
+
+      return apiSuccess({ eventId }, { created: true }, 201)
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.badRequest(
+        error instanceof Error ? error.message : 'Failed to create event'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/events/:id - Get a single event
+http.route({
+  pathPrefix: '/api/v1/events/',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.EVENTS_READ)
+    if (permError) return permError
+
+    // Extract event ID from URL
+    const url = new URL(request.url)
+    const eventId = getLastPathSegment(url.pathname)
+
+    if (!eventId) {
+      return ApiErrors.badRequest('Event ID is required')
+    }
+
+    try {
+      // Use internal query with ownership check
+      const event = await ctx.runQuery(internal.api.mutations.getEventById, { 
+        userId: authResult.keyInfo.userId,
+        eventId: eventId as any,
+      })
+
+      if (!event) {
+        return ApiErrors.notFound('Event')
       }
-    )
+
+      return apiSuccess(event)
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch event'
+      )
+    }
+  }),
+})
+
+// PATCH /api/v1/events/:id - Update an event
+http.route({
+  pathPrefix: '/api/v1/events/',
+  method: 'PATCH',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key - STRICT CHECK
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission - MUST have events:write permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.EVENTS_WRITE)
+    if (permError) return permError
+
+    // Extract event ID from URL
+    const url = new URL(request.url)
+    const eventId = getLastPathSegment(url.pathname)
+
+    if (!eventId) {
+      return ApiErrors.badRequest('Event ID is required')
+    }
+
+    // Parse request body
+    const body = await parseBody<{
+      title?: string
+      startDate?: number
+      description?: string
+      eventType?: string
+      status?: string
+      locationType?: string
+      venueName?: string
+      venueAddress?: string
+      virtualPlatform?: string
+      expectedAttendees?: number
+      budget?: number
+      budgetCurrency?: string
+      endDate?: number
+      timezone?: string
+    }>(request)
+
+    if (!body) {
+      return ApiErrors.badRequest('Invalid JSON body')
+    }
+
+    // Check that at least one field is being updated
+    if (Object.keys(body).length === 0) {
+      return ApiErrors.badRequest('No fields to update')
+    }
+
+    try {
+      // Use internal mutation with userId from API key (includes ownership check)
+      await ctx.runMutation(internal.api.mutations.updateEvent, {
+        userId: authResult.keyInfo.userId,
+        eventId: eventId as any,
+        ...body,
+      })
+
+      return apiSuccess({ updated: true })
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.badRequest(
+        error instanceof Error ? error.message : 'Failed to update event'
+      )
+    }
+  }),
+})
+
+// DELETE /api/v1/events/:id - Delete an event
+http.route({
+  pathPrefix: '/api/v1/events/',
+  method: 'DELETE',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key - STRICT CHECK
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission - MUST have events:delete permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.EVENTS_DELETE)
+    if (permError) return permError
+
+    // Extract event ID from URL
+    const url = new URL(request.url)
+    const eventId = getLastPathSegment(url.pathname)
+
+    if (!eventId) {
+      return ApiErrors.badRequest('Event ID is required')
+    }
+
+    try {
+      // Use internal mutation with userId from API key (includes ownership check)
+      await ctx.runMutation(internal.api.mutations.deleteEvent, {
+        userId: authResult.keyInfo.userId,
+        eventId: eventId as any,
+      })
+
+      return apiSuccess({ deleted: true })
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.badRequest(
+        error instanceof Error ? error.message : 'Failed to delete event'
+      )
+    }
+  }),
+})
+
+// ============================================================================
+// API v1 - Vendors
+// ============================================================================
+
+// GET /api/v1/vendors - List approved vendors
+http.route({
+  path: '/api/v1/vendors',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.VENDORS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const { page, limit, offset } = getPagination(url)
+      const category = url.searchParams.get('category') || undefined
+      const search = url.searchParams.get('search') || undefined
+
+      const allVendors = await ctx.runQuery(api.vendors.list, {
+        category,
+        search,
+      })
+
+      // Apply pagination
+      const total = allVendors.length
+      const paginatedVendors = allVendors.slice(offset, offset + limit)
+
+      return apiSuccess(paginatedVendors, paginationMeta(total, page, limit))
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError('Failed to fetch vendors')
+    }
+  }),
+})
+
+// GET /api/v1/vendors/categories - List vendor categories
+http.route({
+  path: '/api/v1/vendors/categories',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    try {
+      const categories = await ctx.runQuery(api.vendors.getCategories)
+      return apiSuccess(categories)
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError('Failed to fetch categories')
+    }
+  }),
+})
+
+// ============================================================================
+// API v1 - Sponsors
+// ============================================================================
+
+// GET /api/v1/sponsors - List approved sponsors
+http.route({
+  path: '/api/v1/sponsors',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.SPONSORS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const { page, limit, offset } = getPagination(url)
+      const industry = url.searchParams.get('industry') || undefined
+      const search = url.searchParams.get('search') || undefined
+
+      const allSponsors = await ctx.runQuery(api.sponsors.list, {
+        industry,
+        search,
+      })
+
+      // Apply pagination
+      const total = allSponsors.length
+      const paginatedSponsors = allSponsors.slice(offset, offset + limit)
+
+      return apiSuccess(paginatedSponsors, paginationMeta(total, page, limit))
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError('Failed to fetch sponsors')
+    }
+  }),
+})
+
+// ============================================================================
+// API v1 - Public Endpoints (No API Key Required)
+// ============================================================================
+// These endpoints are safe read-only operations that don't require authentication.
+// They only expose publicly available data.
+
+// CORS preflight for public endpoints
+http.route({
+  path: '/api/v1/public/vendors',
+  method: 'OPTIONS',
+  handler: httpAction(async () => handleCors()),
+})
+
+// GET /api/v1/public/events - List public events (no auth)
+http.route({
+  path: '/api/v1/public/events',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const url = new URL(request.url)
+      const { page, limit, offset } = getPagination(url)
+      
+      const eventType = url.searchParams.get('eventType') || undefined
+      const locationType = url.searchParams.get('locationType') || undefined
+      const seekingVendors = url.searchParams.get('seekingVendors') === 'true' || undefined
+      const seekingSponsors = url.searchParams.get('seekingSponsors') === 'true' || undefined
+      const search = url.searchParams.get('search') || undefined
+
+      const allEvents = await ctx.runQuery(api.events.listPublic, {
+        eventType,
+        locationType,
+        seekingVendors,
+        seekingSponsors,
+        search,
+        limit: 100, // Internal limit
+      })
+
+      // Apply pagination
+      const total = allEvents.length
+      const paginatedEvents = allEvents.slice(offset, offset + limit)
+
+      return apiSuccess(paginatedEvents, paginationMeta(total, page, limit))
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError('Failed to fetch public events')
+    }
+  }),
+})
+
+// GET /api/v1/public/vendors - List approved vendors (no auth)
+// Only returns approved/verified vendors with public information
+http.route({
+  path: '/api/v1/public/vendors',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const url = new URL(request.url)
+      const { page, limit, offset } = getPagination(url)
+      
+      const category = url.searchParams.get('category') || undefined
+      const search = url.searchParams.get('search') || undefined
+
+      // Get approved vendors only
+      const allVendors = await ctx.runQuery(api.vendors.list, {
+        category,
+        search,
+      })
+
+      // Apply pagination
+      const total = allVendors.length
+      const paginatedVendors = allVendors.slice(offset, offset + limit)
+
+      // Return only public-safe fields (no contact details, internal notes, etc.)
+      const publicVendors = paginatedVendors.map(vendor => ({
+        _id: vendor._id,
+        name: vendor.name,
+        description: vendor.description,
+        category: vendor.category,
+        services: vendor.services,
+        location: vendor.location,
+        priceRange: vendor.priceRange,
+        rating: vendor.rating,
+        reviewCount: vendor.reviewCount,
+        website: vendor.website,
+        logoUrl: vendor.logoUrl,
+        verified: vendor.verified,
+      }))
+
+      return apiSuccess(publicVendors, paginationMeta(total, page, limit))
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError('Failed to fetch vendors')
+    }
+  }),
+})
+
+// GET /api/v1/public/vendors/categories - List vendor categories (no auth)
+http.route({
+  path: '/api/v1/public/vendors/categories',
+  method: 'GET',
+  handler: httpAction(async (ctx) => {
+    try {
+      const categories = await ctx.runQuery(api.vendors.getCategories)
+      return apiSuccess(categories)
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError('Failed to fetch categories')
+    }
+  }),
+})
+
+// ============================================================================
+// API v1 - Webhooks
+// ============================================================================
+
+// CORS preflight for webhooks
+http.route({
+  path: '/api/v1/webhooks',
+  method: 'OPTIONS',
+  handler: httpAction(async () => handleCors()),
+})
+
+// GET /api/v1/webhooks - List user's webhooks
+http.route({
+  path: '/api/v1/webhooks',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ADMIN)
+    if (permError) {
+      // Also allow if they have webhooks permission (future)
+      return permError
+    }
+
+    try {
+      // Get webhooks for the user
+      const webhooks = await ctx.runQuery(api.webhooks.list)
+      return apiSuccess(webhooks)
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError('Failed to fetch webhooks')
+    }
+  }),
+})
+
+// POST /api/v1/webhooks - Create a webhook
+http.route({
+  path: '/api/v1/webhooks',
+  method: 'POST',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ADMIN)
+    if (permError) return permError
+
+    // Parse request body
+    const body = await parseBody<{
+      name: string
+      url: string
+      events: string[]
+    }>(request)
+
+    if (!body) {
+      return ApiErrors.badRequest('Invalid JSON body')
+    }
+
+    // Validate required fields
+    if (!body.name) {
+      return ApiErrors.validationError('name is required')
+    }
+    if (!body.url) {
+      return ApiErrors.validationError('url is required')
+    }
+    if (!body.events || body.events.length === 0) {
+      return ApiErrors.validationError('events array is required')
+    }
+
+    try {
+      const result = await ctx.runMutation(api.webhooks.create, {
+        name: body.name,
+        url: body.url,
+        events: body.events,
+      })
+
+      return apiSuccess(result, { created: true }, 201)
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.badRequest(
+        error instanceof Error ? error.message : 'Failed to create webhook'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/webhooks/:id - Get a single webhook
+http.route({
+  pathPrefix: '/api/v1/webhooks/',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ADMIN)
+    if (permError) return permError
+
+    // Extract webhook ID from URL
+    const url = new URL(request.url)
+    const webhookId = getLastPathSegment(url.pathname)
+
+    if (!webhookId || webhookId === 'webhooks') {
+      return ApiErrors.badRequest('Webhook ID is required')
+    }
+
+    try {
+      const webhook = await ctx.runQuery(api.webhooks.get, {
+        id: webhookId as any,
+      })
+
+      if (!webhook) {
+        return ApiErrors.notFound('Webhook')
+      }
+
+      return apiSuccess(webhook)
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.internalError('Failed to fetch webhook')
+    }
+  }),
+})
+
+// PATCH /api/v1/webhooks/:id - Update a webhook
+http.route({
+  pathPrefix: '/api/v1/webhooks/',
+  method: 'PATCH',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ADMIN)
+    if (permError) return permError
+
+    // Extract webhook ID from URL
+    const url = new URL(request.url)
+    const webhookId = getLastPathSegment(url.pathname)
+
+    if (!webhookId || webhookId === 'webhooks') {
+      return ApiErrors.badRequest('Webhook ID is required')
+    }
+
+    // Parse request body
+    const body = await parseBody<{
+      name?: string
+      url?: string
+      events?: string[]
+      status?: 'active' | 'paused'
+    }>(request)
+
+    if (!body) {
+      return ApiErrors.badRequest('Invalid JSON body')
+    }
+
+    try {
+      await ctx.runMutation(api.webhooks.update, {
+        id: webhookId as any,
+        ...body,
+      })
+
+      return apiSuccess({ updated: true })
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.badRequest(
+        error instanceof Error ? error.message : 'Failed to update webhook'
+      )
+    }
+  }),
+})
+
+// DELETE /api/v1/webhooks/:id - Delete a webhook
+http.route({
+  pathPrefix: '/api/v1/webhooks/',
+  method: 'DELETE',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ADMIN)
+    if (permError) return permError
+
+    // Extract webhook ID from URL
+    const url = new URL(request.url)
+    const webhookId = getLastPathSegment(url.pathname)
+
+    if (!webhookId || webhookId === 'webhooks') {
+      return ApiErrors.badRequest('Webhook ID is required')
+    }
+
+    try {
+      await ctx.runMutation(api.webhooks.remove, {
+        id: webhookId as any,
+      })
+
+      return apiSuccess({ deleted: true })
+    } catch (error) {
+      console.error('API Error:', error)
+      return ApiErrors.badRequest(
+        error instanceof Error ? error.message : 'Failed to delete webhook'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/webhooks/events - List available webhook events
+http.route({
+  path: '/api/v1/webhooks/events',
+  method: 'GET',
+  handler: httpAction(async () => {
+    const events = [
+      { type: 'event.created', description: 'When a new event is created' },
+      { type: 'event.updated', description: 'When an event is updated' },
+      { type: 'event.deleted', description: 'When an event is deleted' },
+      { type: 'event.status_changed', description: 'When an event status changes' },
+      { type: 'vendor.applied', description: 'When a vendor applies to an event' },
+      { type: 'vendor.confirmed', description: 'When a vendor is confirmed for an event' },
+      { type: 'vendor.declined', description: 'When a vendor is declined' },
+      { type: 'sponsor.applied', description: 'When a sponsor applies to an event' },
+      { type: 'sponsor.confirmed', description: 'When a sponsor is confirmed' },
+      { type: 'sponsor.declined', description: 'When a sponsor is declined' },
+      { type: 'task.created', description: 'When a task is created' },
+      { type: 'task.completed', description: 'When a task is completed' },
+    ]
+    return apiSuccess(events)
+  }),
+})
+
+// ============================================================================
+// API v1 - Analytics
+// ============================================================================
+
+// CORS preflight for analytics endpoints
+http.route({
+  path: '/api/v1/analytics',
+  method: 'OPTIONS',
+  handler: httpAction(async () => handleCors()),
+})
+
+// GET /api/v1/analytics/events/trends - Get event trends over time
+http.route({
+  path: '/api/v1/analytics/events/trends',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const period = url.searchParams.get('period') || 'month'
+      const startDate = url.searchParams.get('startDate')
+        ? parseInt(url.searchParams.get('startDate')!)
+        : undefined
+      const endDate = url.searchParams.get('endDate')
+        ? parseInt(url.searchParams.get('endDate')!)
+        : undefined
+
+      const trends = await ctx.runQuery(internal.analytics.getEventTrendsInternal, {
+        userId: authResult.keyInfo.userId,
+        period: period as 'day' | 'week' | 'month' | 'year',
+        startDate,
+        endDate,
+      })
+
+      return apiSuccess(trends)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch event trends'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/analytics/events/performance - Get event performance metrics
+http.route({
+  path: '/api/v1/analytics/events/performance',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const startDate = url.searchParams.get('startDate')
+        ? parseInt(url.searchParams.get('startDate')!)
+        : undefined
+      const endDate = url.searchParams.get('endDate')
+        ? parseInt(url.searchParams.get('endDate')!)
+        : undefined
+
+      const performance = await ctx.runQuery(internal.analytics.getEventPerformanceInternal, {
+        userId: authResult.keyInfo.userId,
+        startDate,
+        endDate,
+      })
+
+      return apiSuccess(performance)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch performance metrics'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/analytics/events/comparative - Get comparative analytics
+http.route({
+  path: '/api/v1/analytics/events/comparative',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const period = url.searchParams.get('period') || 'month'
+
+      const comparative = await ctx.runQuery(internal.analytics.getComparativeAnalyticsInternal, {
+        userId: authResult.keyInfo.userId,
+        period: period as 'week' | 'month' | 'year',
+      })
+
+      return apiSuccess(comparative)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch comparative analytics'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/analytics/budget - Get budget analytics
+http.route({
+  path: '/api/v1/analytics/budget',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const startDate = url.searchParams.get('startDate')
+        ? parseInt(url.searchParams.get('startDate')!)
+        : undefined
+      const endDate = url.searchParams.get('endDate')
+        ? parseInt(url.searchParams.get('endDate')!)
+        : undefined
+
+      const budgetAnalytics = await ctx.runQuery(internal.analytics.getBudgetAnalyticsInternal, {
+        userId: authResult.keyInfo.userId,
+        startDate,
+        endDate,
+      })
+
+      return apiSuccess(budgetAnalytics)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch budget analytics'
+      )
+    }
+  }),
+})
+
+// GET /api/v1/analytics/engagement - Get vendor/sponsor engagement analytics
+http.route({
+  path: '/api/v1/analytics/engagement',
+  method: 'GET',
+  handler: httpAction(async (ctx, request) => {
+    // Validate API key
+    const authResult = await validateApiKey(ctx, request)
+    if (!authResult.success) {
+      return authResult.response
+    }
+
+    // Check permission
+    const permError = requirePermission(authResult.keyInfo, PERMISSIONS.ANALYTICS_READ)
+    if (permError) return permError
+
+    try {
+      const url = new URL(request.url)
+      const startDate = url.searchParams.get('startDate')
+        ? parseInt(url.searchParams.get('startDate')!)
+        : undefined
+      const endDate = url.searchParams.get('endDate')
+        ? parseInt(url.searchParams.get('endDate')!)
+        : undefined
+
+      const engagement = await ctx.runQuery(internal.analytics.getEngagementAnalyticsInternal, {
+        userId: authResult.keyInfo.userId,
+        startDate,
+        endDate,
+      })
+
+      return apiSuccess(engagement)
+    } catch (error) {
+      console.error('Analytics Error:', error)
+      return ApiErrors.internalError(
+        error instanceof Error ? error.message : 'Failed to fetch engagement analytics'
+      )
+    }
   }),
 })
 
