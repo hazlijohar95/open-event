@@ -1190,7 +1190,8 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'https://open-event.vercel.app',
   'https://openevent.app',
-  // Add production domains as needed
+  'https://openevent.my',
+  'https://www.openevent.my',
 ]
 
 function getCorsHeaders(request: Request) {
