@@ -3,6 +3,7 @@ import { httpAction } from './_generated/server'
 import { auth } from './auth'
 import OpenAI from 'openai'
 import { api, internal } from './_generated/api'
+import type { Id } from './_generated/dataModel'
 import { getOpenAITools, toolRequiresConfirmation } from './lib/agent/tools'
 import { executeToolHandler } from './lib/agent/handlers'
 import type { ToolName, ToolCall, ToolResult } from './lib/agent/types'
@@ -95,7 +96,6 @@ import {
   getPagination,
   paginationMeta,
   getLastPathSegment,
-  withRateLimitHeaders,
 } from './api/helpers'
 import {
   validateApiKey,
@@ -326,7 +326,7 @@ http.route({
       // Use internal query with ownership check
       const event = await ctx.runQuery(internal.api.mutations.getEventById, { 
         userId: authResult.keyInfo.userId,
-        eventId: eventId as any,
+        eventId: eventId as Id<'events'>,
       })
 
       if (!event) {
@@ -397,7 +397,7 @@ http.route({
       // Use internal mutation with userId from API key (includes ownership check)
       await ctx.runMutation(internal.api.mutations.updateEvent, {
         userId: authResult.keyInfo.userId,
-        eventId: eventId as any,
+        eventId: eventId as Id<'events'>,
         ...body,
       })
 
@@ -438,7 +438,7 @@ http.route({
       // Use internal mutation with userId from API key (includes ownership check)
       await ctx.runMutation(internal.api.mutations.deleteEvent, {
         userId: authResult.keyInfo.userId,
-        eventId: eventId as any,
+        eventId: eventId as Id<'events'>,
       })
 
       return apiSuccess({ deleted: true })
@@ -786,7 +786,7 @@ http.route({
 
     try {
       const webhook = await ctx.runQuery(api.webhooks.get, {
-        id: webhookId as any,
+        id: webhookId as Id<'webhooks'>,
       })
 
       if (!webhook) {
@@ -838,7 +838,7 @@ http.route({
 
     try {
       await ctx.runMutation(api.webhooks.update, {
-        id: webhookId as any,
+        id: webhookId as Id<'webhooks'>,
         ...body,
       })
 
@@ -877,7 +877,7 @@ http.route({
 
     try {
       await ctx.runMutation(api.webhooks.remove, {
-        id: webhookId as any,
+        id: webhookId as Id<'webhooks'>,
       })
 
       return apiSuccess({ deleted: true })

@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { cn } from '@/lib/utils'
+import { Logo, LogoIcon } from '@/components/ui/logo'
 import {
   House,
   Calendar,
@@ -11,13 +12,10 @@ import {
   Gear,
   Plus,
   ShieldCheck,
-  CaretLeft,
-  CaretRight,
 } from '@phosphor-icons/react'
 
 interface SidebarProps {
   collapsed: boolean
-  onToggle: () => void
 }
 
 const navigationItems = [
@@ -32,7 +30,7 @@ const bottomItems = [
   { label: 'Settings', icon: Gear, path: '/dashboard/settings' },
 ]
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed }: SidebarProps) {
   const location = useLocation()
   const currentUser = useQuery(api.queries.auth.getCurrentUser)
   const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'superadmin'
@@ -52,24 +50,20 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         collapsed ? 'lg:w-16' : 'lg:w-60'
       )}
     >
-      {/* Logo / Brand - Only when expanded */}
+      {/* Logo / Brand */}
       <div
         className={cn(
           'flex items-center h-12 px-4 transition-all duration-200',
           collapsed ? 'justify-center' : 'justify-start'
         )}
       >
-        {collapsed ? (
-          <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-            <span className="text-background font-semibold text-xs">O</span>
-          </div>
-        ) : (
-          <Link to="/dashboard" className="font-sans text-sm font-semibold tracking-tight">
-            <span className="text-foreground">open</span>
-            <span className="text-muted-foreground">-</span>
-            <span className="text-foreground">event</span>
-          </Link>
-        )}
+        <Link to="/dashboard" className="flex items-center">
+          {collapsed ? (
+            <LogoIcon size="sm" />
+          ) : (
+            <Logo size="sm" showDomain={false} />
+          )}
+        </Link>
       </div>
 
       {/* Create Event Button */}
@@ -173,26 +167,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             </Link>
           )
         })}
-
-        {/* Collapse Toggle */}
-        <button
-          onClick={onToggle}
-          className={cn(
-            'flex items-center gap-3 py-2.5 rounded-lg text-[14px] w-full',
-            'text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150 cursor-pointer',
-            collapsed ? 'px-2 justify-center' : 'px-3'
-          )}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? (
-            <CaretRight size={16} weight="bold" />
-          ) : (
-            <>
-              <CaretLeft size={16} weight="bold" />
-              <span>Collapse</span>
-            </>
-          )}
-        </button>
       </div>
     </aside>
   )

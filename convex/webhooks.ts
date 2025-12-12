@@ -4,8 +4,7 @@
 // Handles creation, management, and delivery of webhooks
 
 import { v } from 'convex/values'
-import { mutation, query, internalMutation, internalQuery, action } from './_generated/server'
-import { internal } from './_generated/api'
+import { mutation, query, internalMutation, internalQuery } from './_generated/server'
 import { getCurrentUser } from './lib/auth'
 import type { Id } from './_generated/dataModel'
 
@@ -19,13 +18,13 @@ const MAX_WEBHOOKS_PER_USER = 10
 // Maximum consecutive failures before auto-disabling
 const MAX_FAILURES_BEFORE_DISABLE = 5
 
-// Retry delays (exponential backoff)
-const RETRY_DELAYS_MS = [
-  1000 * 60,      // 1 minute
-  1000 * 60 * 5,  // 5 minutes
-  1000 * 60 * 30, // 30 minutes
-  1000 * 60 * 60, // 1 hour
-]
+// Retry delays (exponential backoff) - for future webhook retry implementation
+// const RETRY_DELAYS_MS = [
+//   1000 * 60,      // 1 minute
+//   1000 * 60 * 5,  // 5 minutes
+//   1000 * 60 * 30, // 30 minutes
+//   1000 * 60 * 60, // 1 hour
+// ]
 
 // Available webhook events
 export const WEBHOOK_EVENTS = {

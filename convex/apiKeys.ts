@@ -6,7 +6,6 @@
 import { v } from 'convex/values'
 import { mutation, query, internalMutation, internalQuery } from './_generated/server'
 import { getCurrentUser } from './lib/auth'
-import type { Id } from './_generated/dataModel'
 
 // ----------------------------------------------------------------------------
 // Constants

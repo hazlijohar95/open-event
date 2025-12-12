@@ -1052,6 +1052,105 @@ body {
   margin-bottom: 0.5rem;
 }
 
+/* Header row - flex layout */
+.agentic-header-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.agentic-header-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Header badges container */
+.agentic-header-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Base badge styles */
+.agentic-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  min-height: 2rem;
+  transition: all 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.agentic-badge-beta {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.625rem;
+  background: linear-gradient(to right, oklch(0.6 0.15 290 / 0.1), oklch(0.6 0.15 330 / 0.1));
+  color: oklch(0.55 0.15 290);
+  border: 1px solid oklch(0.6 0.15 290 / 0.2);
+}
+
+.dark .agentic-badge-beta {
+  color: oklch(0.75 0.15 290);
+}
+
+.agentic-badge-quota {
+  background: var(--muted);
+  background-opacity: 0.5;
+  cursor: pointer;
+}
+
+.agentic-badge-quota:hover {
+  background: var(--muted);
+}
+
+.agentic-badge-quota:active {
+  transform: scale(0.97);
+}
+
+.agentic-badge-admin {
+  background: linear-gradient(to right, oklch(0.75 0.15 80 / 0.1), oklch(0.7 0.15 50 / 0.1));
+  color: oklch(0.6 0.15 75);
+  border: 1px solid oklch(0.7 0.15 80 / 0.2);
+}
+
+.dark .agentic-badge-admin {
+  color: oklch(0.8 0.15 75);
+}
+
+.agentic-badge-clear {
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.agentic-badge-clear:hover {
+  color: oklch(0.6 0.2 25);
+  background: oklch(0.6 0.2 25 / 0.1);
+}
+
+.agentic-badge-clear:active {
+  transform: scale(0.97);
+  background: oklch(0.6 0.2 25 / 0.15);
+}
+
+/* Header title */
+.agentic-header-title {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-size: 1.25rem;
+  margin-top: 1rem;
+  color: var(--foreground);
+}
+
 /* Conversation Area - Scrollable, bottom-anchored */
 .agentic-conversation-area {
   flex: 1;
@@ -1644,8 +1743,9 @@ body {
 .agentic-bubble-v2 {
   position: relative;
   max-width: 85%;
-  word-break: break-word;
-  overflow-wrap: break-word;
+  word-break: normal;
+  overflow-wrap: anywhere;
+  hyphens: none;
   border-radius: 18px;
   padding: 14px 20px;
   font-size: 15px;
@@ -1673,6 +1773,8 @@ body {
   color: var(--warm-gray-900, #1a1a1a);
   border: none;
   border-radius: 16px;
+  min-width: fit-content;
+  white-space: pre-wrap;
 }
 
 .dark .agentic-bubble-v2.user {
@@ -1702,6 +1804,14 @@ body {
 /* Micro-interaction on hover */
 .agentic-bubble-v2:hover {
   transform: translateY(-1px);
+}
+
+/* Quick replies container */
+.agentic-quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
 }
 
 /* Quick reply buttons - Typeform style */
@@ -2106,6 +2216,337 @@ body {
 
 .dark .agentic-input-v2-send.is-ready:hover {
   background: var(--warm-gray-800, #e8e4df);
+}
+
+/* ------------------------------------------------
+   Mobile Native App Experience for Chat
+   High-performance, touch-optimized UI
+   ------------------------------------------------ */
+@media (max-width: 640px) {
+  /* Container - Full viewport height with safe areas */
+  .agentic-chat-container {
+    height: calc(100dvh - 3.5rem);
+    max-height: calc(100dvh - 3.5rem);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+    /* Performance: GPU layer promotion for smooth scrolling */
+    will-change: transform;
+    contain: layout style;
+  }
+
+  /* Layout - Edge-to-edge on mobile */
+  .agentic-chat-layout {
+    padding: 0 1rem;
+    max-width: 100%;
+  }
+
+  /* Header - Compact on mobile */
+  .agentic-header {
+    padding: 0.5rem 0;
+  }
+
+  .agentic-header-row {
+    gap: 0.5rem;
+  }
+
+  .agentic-header-badges {
+    gap: 0.375rem;
+  }
+
+  .agentic-badge {
+    min-height: 2.25rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  .agentic-header-title {
+    font-size: 1.125rem;
+    margin-top: 0.75rem;
+  }
+
+  .agentic-chat-layout.is-empty .agentic-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .agentic-chat-layout.has-messages .agentic-header {
+    margin-bottom: 0.25rem;
+  }
+
+  /* Conversation - Optimized mobile scrolling */
+  .agentic-conversation-area {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+    /* Hide scrollbar on mobile for cleaner look */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .agentic-conversation-area::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Messages - Tighter spacing on mobile */
+  .agentic-conversation-messages {
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+
+  /* Message bubbles - Full width friendly */
+  .agentic-bubble-v2 {
+    max-width: 88%;
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
+    border-radius: 1.125rem;
+    /* Performance: prevent paint on scroll */
+    contain: content;
+  }
+
+  /* Slightly rounder corners for chat bubbles */
+  .agentic-bubble-v2.user {
+    border-radius: 1.125rem 1.125rem 0.25rem 1.125rem;
+  }
+
+  .agentic-bubble-v2.ai {
+    border-radius: 1.125rem 1.125rem 1.125rem 0.25rem;
+  }
+
+  /* Input area - Bottom fixed with safe area */
+  .agentic-input-area-fixed {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0));
+    background: linear-gradient(to top, var(--background) 85%, transparent);
+    margin: 0 -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    /* Prevent input from being covered by keyboard */
+    position: sticky;
+    bottom: 0;
+  }
+
+  /* Input wrapper - Larger touch targets */
+  .agentic-input-v2-wrapper {
+    border-radius: 1.5rem;
+    padding: 0.1875rem;
+  }
+
+  .agentic-input-v2-inner {
+    border-radius: 1.375rem;
+    padding: 0.625rem 0.75rem;
+  }
+
+  /* Textarea - Better mobile sizing */
+  .agentic-input-v2-textarea {
+    font-size: 1rem; /* 16px prevents iOS zoom on focus */
+    min-height: 1.5rem;
+    max-height: 7.5rem;
+    line-height: 1.5;
+    padding: 0 0.25rem;
+  }
+
+  /* Footer actions - Larger touch targets (44px minimum) */
+  .agentic-input-v2-footer {
+    padding-top: 0.5rem;
+  }
+
+  .agentic-input-v2-btn {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.625rem;
+  }
+
+  /* Touch feedback for buttons */
+  .agentic-input-v2-btn:active:not(:disabled) {
+    transform: scale(0.95);
+  }
+
+  .agentic-input-v2-send {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.625rem;
+    border-radius: 50%;
+  }
+
+  .agentic-input-v2-send:active:not(:disabled) {
+    transform: scale(0.92);
+  }
+
+  /* Hide keyboard hint on mobile */
+  .agentic-input-area-fixed p:has(kbd) {
+    display: none;
+  }
+
+  /* Quick replies - Horizontal scroll on mobile */
+  .agentic-quick-replies {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 0.25rem;
+    margin-right: -1rem;
+    padding-right: 1rem;
+  }
+
+  .agentic-quick-replies::-webkit-scrollbar {
+    display: none;
+  }
+
+  .agentic-quick-reply {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    min-height: 2.75rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* Touch feedback for quick replies */
+  .agentic-quick-reply:active {
+    transform: scale(0.97);
+  }
+
+  /* Tool cards - Compact on mobile */
+  .agentic-tool-v2 {
+    padding: 0.75rem 0.875rem;
+    gap: 0.625rem;
+  }
+
+  /* Confirmation card - Responsive */
+  .agentic-confirm-v2 {
+    padding: 1rem;
+  }
+
+  .agentic-confirm-v2-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .agentic-confirm-v2-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 2.75rem;
+  }
+
+  /* Avatar - Slightly smaller on mobile */
+  .agentic-avatar-v2 {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .agentic-avatar-v2-inner {
+    border-radius: 0.5rem;
+  }
+
+  /* Thinking indicator */
+  .thinking-orb-v2 {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  /* Message animations - Faster on mobile for responsiveness */
+  .agentic-message {
+    animation-duration: 250ms;
+  }
+}
+
+/* Extra small screens (iPhone SE, etc) */
+@media (max-width: 375px) {
+  .agentic-chat-layout {
+    padding: 0 0.75rem;
+  }
+
+  .agentic-header-row {
+    gap: 0.375rem;
+  }
+
+  .agentic-header-logo {
+    gap: 0.375rem;
+  }
+
+  .agentic-header-logo span {
+    font-size: 0.8125rem;
+  }
+
+  .agentic-header-title {
+    font-size: 1rem;
+  }
+
+  .agentic-bubble-v2 {
+    max-width: 92%;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.875rem;
+  }
+
+  .agentic-input-area-fixed {
+    margin: 0 -0.75rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .agentic-input-v2-textarea {
+    font-size: 1rem; /* Keep 16px to prevent zoom */
+  }
+
+  .agentic-quick-replies {
+    margin-right: -0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .agentic-quick-reply {
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 900px) and (orientation: landscape) {
+  .agentic-chat-container {
+    height: calc(100dvh - 2.5rem);
+    max-height: calc(100dvh - 2.5rem);
+  }
+
+  .agentic-header {
+    padding: 0.25rem 0;
+  }
+
+  .agentic-header-row {
+    flex-direction: row;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .agentic-header-title {
+    display: none;
+  }
+
+  .agentic-conversation-messages {
+    gap: 0.5rem;
+  }
+
+  .agentic-bubble-v2 {
+    padding: 0.5rem 0.75rem;
+    max-width: 70%;
+  }
+
+  .agentic-input-v2-inner {
+    padding: 0.375rem 0.625rem;
+  }
+
+  .agentic-input-v2-textarea {
+    max-height: 4rem;
+  }
+}
+
+/* iOS specific - Handle keyboard and notch */
+@supports (-webkit-touch-callout: none) {
+  .agentic-chat-container {
+    /* Use 100% instead of vh to handle iOS keyboard */
+    height: calc(100% - 3.5rem);
+    max-height: -webkit-fill-available;
+  }
+
+  .agentic-input-v2-textarea {
+    /* Disable default iOS styling */
+    -webkit-appearance: none;
+    appearance: none;
+  }
 }
 
 /* ------------------------------------------------

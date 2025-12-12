@@ -6,7 +6,6 @@
 import { v } from 'convex/values'
 import { query, internalQuery } from './_generated/server'
 import { getCurrentUser } from './lib/auth'
-import type { Id } from './_generated/dataModel'
 
 // ============================================================================
 // Helper Functions
@@ -23,11 +22,12 @@ function getPeriodStart(timestamp: number, period: 'day' | 'week' | 'month' | 'y
       date.setHours(0, 0, 0, 0)
       return date.getTime()
     
-    case 'week':
+    case 'week': {
       const day = date.getDay()
       date.setDate(date.getDate() - day)
       date.setHours(0, 0, 0, 0)
       return date.getTime()
+    }
     
     case 'month':
       date.setDate(1)
@@ -282,18 +282,20 @@ export const getComparativeAnalytics = query({
         previousPeriodStart = currentPeriodStart - 7 * 24 * 60 * 60 * 1000
         previousPeriodEnd = currentPeriodStart
         break
-      case 'month':
+      case 'month': {
         const currentMonth = new Date(currentPeriodStart)
         currentMonth.setMonth(currentMonth.getMonth() - 1)
         previousPeriodStart = currentMonth.getTime()
         previousPeriodEnd = currentPeriodStart
         break
-      case 'year':
+      }
+      case 'year': {
         const currentYear = new Date(currentPeriodStart)
         currentYear.setFullYear(currentYear.getFullYear() - 1)
         previousPeriodStart = currentYear.getTime()
         previousPeriodEnd = currentPeriodStart
         break
+      }
     }
 
     // Get all events
@@ -709,18 +711,20 @@ export const getComparativeAnalyticsInternal = internalQuery({
         previousPeriodStart = currentPeriodStart - 7 * 24 * 60 * 60 * 1000
         previousPeriodEnd = currentPeriodStart
         break
-      case 'month':
+      case 'month': {
         const currentMonth = new Date(currentPeriodStart)
         currentMonth.setMonth(currentMonth.getMonth() - 1)
         previousPeriodStart = currentMonth.getTime()
         previousPeriodEnd = currentPeriodStart
         break
-      case 'year':
+      }
+      case 'year': {
         const currentYear = new Date(currentPeriodStart)
         currentYear.setFullYear(currentYear.getFullYear() - 1)
         previousPeriodStart = currentYear.getTime()
         previousPeriodEnd = currentPeriodStart
         break
+      }
     }
 
     const allEvents = await ctx.db

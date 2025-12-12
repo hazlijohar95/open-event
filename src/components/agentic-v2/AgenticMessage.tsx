@@ -82,7 +82,7 @@ export function AgenticMessage({
 
         {/* Quick Replies - Typeform style animated buttons */}
         {showQuickReplies && (
-          <div className="flex flex-wrap gap-2.5 mt-3">
+          <div className="agentic-quick-replies">
             {quickReplies.map((reply, i) => (
               <button
                 key={i}

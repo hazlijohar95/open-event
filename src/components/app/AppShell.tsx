@@ -31,10 +31,7 @@ export function AppShell() {
         />
 
         {/* Desktop Sidebar */}
-        <Sidebar
-          collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        />
+        <Sidebar collapsed={sidebarCollapsed} />
 
         {/* Mobile Sidebar */}
         <MobileSidebar

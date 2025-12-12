@@ -123,8 +123,8 @@ function EventPreview({ args }: { args: Record<string, unknown> }) {
         )}
       </div>
 
-      {/* Details Grid */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
+      {/* Details Grid - Responsive: 1 column on tiny screens, 2 on larger */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 xs:gap-3 text-sm">
         {startDate && (
           <DetailItem icon={Calendar}>
             {startDate}{startTime ? ` at ${startTime}` : ''}

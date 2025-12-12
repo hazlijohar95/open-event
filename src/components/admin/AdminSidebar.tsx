@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { cn } from '@/lib/utils'
+import { Logo } from '@/components/ui/logo'
 import {
   House,
   Users,
@@ -47,10 +48,8 @@ export function AdminSidebar() {
     <aside className="hidden lg:flex lg:flex-col lg:w-64 lg:fixed lg:inset-y-0 border-r border-border bg-background">
       {/* Logo with Admin Badge */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-        <Link to="/admin" className="font-mono text-lg font-bold">
-          <span className="text-foreground">open</span>
-          <span className="text-primary">-</span>
-          <span className="text-foreground">event</span>
+        <Link to="/admin">
+          <Logo size="sm" showDomain={false} />
         </Link>
         <span className="px-2 py-0.5 text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-md">
           Admin

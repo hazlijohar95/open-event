@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { Logo } from '@/components/ui/logo'
 import { Bell, Handshake, Calendar } from '@phosphor-icons/react'
 
 interface NotificationSceneProps {
@@ -31,7 +32,7 @@ export function NotificationScene({ progress }: NotificationSceneProps) {
           )}
         >
           <div className="flex items-center gap-3">
-            <div className="font-mono font-semibold text-sm">open-event</div>
+            <Logo size="sm" showDomain={false} />
             <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
               Dashboard
             </span>

@@ -1,4 +1,4 @@
-import React, { memo, useCallback, forwardRef } from 'react'
+import React, { memo, useCallback, forwardRef, useState, useEffect, useRef } from 'react'
 import { PaperPlaneTilt, Microphone, CircleNotch } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 
@@ -10,6 +10,41 @@ interface AgenticInputAreaProps {
   placeholder: string
   isLoading: boolean
   showKeyboardHint?: boolean
+}
+
+// Optimized mobile detection with ResizeObserver
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 640 : false
+  )
+  const rafRef = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => {
+        setIsMobile(window.innerWidth < 640)
+      })
+    }
+
+    // Use ResizeObserver if available for better performance
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(handleResize)
+      ro.observe(document.documentElement)
+      return () => {
+        ro.disconnect()
+        if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      }
+    }
+
+    window.addEventListener('resize', handleResize, { passive: true })
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+    }
+  }, [])
+
+  return isMobile
 }
 
 export const AgenticInputArea = memo(
@@ -25,6 +60,8 @@ export const AgenticInputArea = memo(
     },
     ref
   ) {
+    const isMobile = useIsMobile()
+
     const handleKeyDown = useCallback(
       (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -65,6 +102,11 @@ export const AgenticInputArea = memo(
                 placeholder={placeholder}
                 disabled={disabled}
                 className="agentic-input-v2-textarea"
+                rows={1}
+                enterKeyHint="send"
+                autoComplete="off"
+                autoCorrect="on"
+                spellCheck="true"
               />
               <div className="agentic-input-v2-footer">
                 <div className="agentic-input-v2-actions">
@@ -72,22 +114,25 @@ export const AgenticInputArea = memo(
                     className="agentic-input-v2-btn"
                     title="Voice input (coming soon)"
                     disabled
+                    type="button"
                   >
-                    <Microphone size={18} weight="duotone" />
+                    <Microphone size={isMobile ? 20 : 18} weight="duotone" />
                   </button>
                 </div>
                 <button
                   onClick={handleSubmitClick}
                   disabled={!value.trim() || disabled}
+                  type="button"
                   className={cn(
                     'agentic-input-v2-send',
                     isReady && 'is-ready'
                   )}
+                  aria-label="Send message"
                 >
                   {isLoading ? (
-                    <CircleNotch size={18} weight="bold" className="animate-spin" />
+                    <CircleNotch size={isMobile ? 20 : 18} weight="bold" className="animate-spin" />
                   ) : (
-                    <PaperPlaneTilt size={18} weight="fill" />
+                    <PaperPlaneTilt size={isMobile ? 20 : 18} weight="fill" />
                   )}
                 </button>
               </div>
@@ -95,8 +140,8 @@ export const AgenticInputArea = memo(
           </div>
         </div>
 
-        {/* Keyboard hint - only when empty */}
-        {showKeyboardHint && (
+        {/* Keyboard hint - only on desktop when empty */}
+        {showKeyboardHint && !isMobile && (
           <p className="text-center text-xs text-muted-foreground/40 mt-3">
             <kbd className="px-1.5 py-0.5 rounded bg-muted/30 font-mono text-[10px]">
               Enter

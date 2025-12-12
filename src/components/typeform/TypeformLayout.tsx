@@ -2,6 +2,7 @@ import { type ReactNode, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { TypeformProgress } from './TypeformProgress'
+import { Logo } from '@/components/ui/logo'
 import { cn } from '@/lib/utils'
 
 export interface TypeformLayoutProps {
@@ -18,9 +19,7 @@ export interface TypeformLayoutProps {
   canGoNext?: boolean
   /** Whether the user can go back (reserved for future use) */
   canGoPrevious?: boolean
-  /** Logo/brand text */
-  brandText?: string
-  /** Link for the brand */
+  /** Link for the brand logo */
   brandLink?: string
   /** Additional class names */
   className?: string
@@ -36,7 +35,6 @@ export function TypeformLayout({
   totalSteps,
   onNext,
   canGoNext = true,
-  brandText = 'open-event',
   brandLink = '/',
   className,
   showHeader = true,
@@ -87,9 +85,9 @@ export function TypeformLayout({
         <header className="sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 pt-5 bg-background/80 backdrop-blur-sm">
           <Link
             to={brandLink}
-            className="font-mono text-base sm:text-lg font-semibold hover:opacity-80 transition-opacity"
+            className="hover:opacity-80 transition-opacity"
           >
-            {brandText}
+            <Logo size="sm" showDomain={false} />
           </Link>
           <div className="flex items-center gap-3 sm:gap-4">
             <span className="text-xs sm:text-sm text-muted-foreground font-medium tabular-nums">

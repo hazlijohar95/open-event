@@ -3,6 +3,7 @@ import { useAuthActions } from '@convex-dev/auth/react'
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { Logo } from '@/components/ui/logo'
 import {
   Bell,
   SidebarSimple,
@@ -68,14 +69,12 @@ export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
           <Link
             to="/dashboard"
             className={cn(
-              'font-mono text-sm font-bold transition-opacity',
+              'transition-opacity',
               'lg:transition-all lg:duration-200',
               sidebarCollapsed ? 'lg:opacity-100' : 'lg:opacity-0 lg:w-0 lg:overflow-hidden'
             )}
           >
-            <span className="text-foreground">open</span>
-            <span className="text-muted-foreground">-</span>
-            <span className="text-foreground">event</span>
+            <Logo size="sm" showDomain={false} />
           </Link>
         </div>
 

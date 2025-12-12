@@ -6,7 +6,6 @@
 
 import { v } from 'convex/values'
 import { internalMutation, internalQuery } from '../_generated/server'
-import type { Id } from '../_generated/dataModel'
 
 // Valid event status transitions (state machine)
 const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
@@ -214,7 +213,9 @@ export const updateEvent = internalMutation({
     }
 
     // Build update object (exclude userId and eventId)
-    const { userId, eventId, ...updates } = args
+    const { userId: _userId, eventId: _eventId, ...updates } = args
+    void _userId // Intentionally unused - excluded from updates
+    void _eventId // Intentionally unused - excluded from updates
     
     // Filter out undefined values
     const cleanUpdates = Object.fromEntries(

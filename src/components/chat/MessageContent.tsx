@@ -247,9 +247,12 @@ export const MessageContent = memo(function MessageContent({
             </blockquote>
           ),
 
-          // Code
-          code: ({ className, children }) => {
-            const match = /language-(\w+)/.exec(className || '')
+          // Code - react-markdown v10 passes className via node.properties
+          code: ({ node, children }) => {
+            // Get className from node properties (react-markdown v10 API)
+            const classNames = node?.properties?.className as string[] | undefined
+            const classNameStr = Array.isArray(classNames) ? classNames.join(' ') : ''
+            const match = /language-(\w+)/.exec(classNameStr)
             const isBlock = match !== null
 
             if (isBlock) {
