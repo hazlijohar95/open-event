@@ -394,7 +394,7 @@ export const getBudgetAnalytics = query({
     const eventsWithBudget = eventsInRange.filter((e) => e.budget && e.budget > 0).length
 
     // Calculate actual spending from budget items
-    const totalSpent = budgetItems.reduce((sum, bi) => sum + (bi.amount || 0), 0)
+    const totalSpent = budgetItems.reduce((sum, bi) => sum + (bi.actualAmount || 0), 0)
     const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
     // Group by currency
@@ -417,7 +417,7 @@ export const getBudgetAnalytics = query({
       if (event) {
         const currency = event.budgetCurrency || 'USD'
         if (byCurrency[currency]) {
-          byCurrency[currency].spent += item.amount || 0
+          byCurrency[currency].spent += item.actualAmount || 0
         }
       }
     }
@@ -810,7 +810,7 @@ export const getBudgetAnalyticsInternal = internalQuery({
     const totalBudget = eventsInRange.reduce((sum, e) => sum + (e.budget || 0), 0)
     const eventsWithBudget = eventsInRange.filter((e) => e.budget && e.budget > 0).length
 
-    const totalSpent = budgetItems.reduce((sum, bi) => sum + (bi.amount || 0), 0)
+    const totalSpent = budgetItems.reduce((sum, bi) => sum + (bi.actualAmount || 0), 0)
     const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
     const byCurrency: Record<string, { budget: number; spent: number; count: number }> = {}
@@ -830,7 +830,7 @@ export const getBudgetAnalyticsInternal = internalQuery({
       if (event) {
         const currency = event.budgetCurrency || 'USD'
         if (byCurrency[currency]) {
-          byCurrency[currency].spent += item.amount || 0
+          byCurrency[currency].spent += item.actualAmount || 0
         }
       }
     }
