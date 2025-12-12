@@ -354,6 +354,103 @@ export const incrementUsageInternal = internalMutation({
   },
 })
 
+/**
+ * Atomic check-and-increment for HTTP actions
+ * Prevents race conditions by checking AND incrementing in a single transaction
+ */
+export const checkAndIncrementUsage = internalMutation({
+  args: {
+    userId: v.id('users'),
+  },
+  handler: async (ctx, args) => {
+    const today = getTodayDateString()
+    const now = Date.now()
+    const timeUntilReset = getTimeUntilReset()
+
+    // Get user to check role
+    const user = await ctx.db.get(args.userId)
+    if (!user) {
+      return {
+        allowed: false,
+        remaining: 0,
+        limit: 0,
+        reason: 'User not found',
+        code: 'USER_NOT_FOUND',
+      }
+    }
+
+    // Admins have unlimited access - no need to track
+    if (isAdminRole(user.role)) {
+      return {
+        allowed: true,
+        remaining: RATE_LIMIT_CONFIG.UNLIMITED,
+        limit: RATE_LIMIT_CONFIG.UNLIMITED,
+        reason: 'Admin access - unlimited prompts',
+        code: 'ADMIN_ACCESS',
+      }
+    }
+
+    // Get or create usage record
+    const usage = await ctx.db
+      .query('aiUsage')
+      .withIndex('by_user', (q) => q.eq('userId', args.userId))
+      .first()
+
+    const dailyLimit = usage?.dailyLimit ?? RATE_LIMIT_CONFIG.FREE_DAILY_LIMIT
+
+    if (!usage) {
+      // First usage ever - create record with count of 1
+      await ctx.db.insert('aiUsage', {
+        userId: args.userId,
+        promptCount: 1,
+        lastResetDate: today,
+        totalPrompts: 1,
+        createdAt: now,
+        updatedAt: now,
+      })
+      return {
+        allowed: true,
+        remaining: dailyLimit - 1,
+        limit: dailyLimit,
+        code: 'OK',
+      }
+    }
+
+    // Check if we need to reset (new day)
+    const isNewDay = usage.lastResetDate !== today
+    const currentCount = isNewDay ? 0 : usage.promptCount
+
+    // Check if limit exceeded BEFORE incrementing
+    if (currentCount >= dailyLimit) {
+      return {
+        allowed: false,
+        remaining: 0,
+        limit: dailyLimit,
+        reason: `Daily limit of ${dailyLimit} prompts reached. Resets in ${timeUntilReset.formatted}.`,
+        code: 'LIMIT_EXCEEDED',
+        resetsAt: getNextResetTime(),
+        timeUntilReset,
+      }
+    }
+
+    // Increment atomically
+    const newCount = currentCount + 1
+    await ctx.db.patch(usage._id, {
+      promptCount: newCount,
+      lastResetDate: today,
+      totalPrompts: (usage.totalPrompts ?? 0) + 1,
+      updatedAt: now,
+    })
+
+    return {
+      allowed: true,
+      remaining: Math.max(0, dailyLimit - newCount),
+      limit: dailyLimit,
+      code: 'OK',
+    }
+  },
+})
+
 // ============================================================================
 // Admin Queries - Monitoring & Analytics
 // ============================================================================
@@ -438,7 +535,7 @@ export const getUsageAnalytics = query({
     let totalPromptsToday = 0
     let activeUsersToday = 0
     let usersAtLimit = 0
-    let totalUsers = usageRecords.length
+    const totalUsers = usageRecords.length
 
     for (const usage of usageRecords) {
       totalPromptsAllTime += usage.totalPrompts ?? 0

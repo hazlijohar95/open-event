@@ -14,7 +14,14 @@ const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000 // 7 days
 const PROMPT_DELAY = 5000 // 5 seconds
 
 export function usePWA() {
-  const [isInstalled, setIsInstalled] = useState(false)
+  // Initialize isInstalled with a function to avoid triggering lint rule
+  const [isInstalled, setIsInstalled] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true
+    )
+  })
   const [isInstallable, setIsInstallable] = useState(false)
   const [isOnline, setIsOnline] = useState(navigator.onLine)
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
@@ -32,13 +39,14 @@ export function usePWA() {
     return 'unknown'
   }, [])
 
-  // Check if running as installed PWA
+  // Listen for display mode changes (if user installs while page is open)
   useEffect(() => {
-    const isStandalone =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true
-
-    setIsInstalled(isStandalone)
+    const mediaQuery = window.matchMedia('(display-mode: standalone)')
+    const handleChange = (e: MediaQueryListEvent) => {
+      setIsInstalled(e.matches)
+    }
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
   }, [])
 
   // Check if dismissed recently

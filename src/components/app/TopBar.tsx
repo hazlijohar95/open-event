@@ -20,8 +20,8 @@ interface TopBarProps {
 }
 
 const mainNavItems = [
-  { label: 'Playground', path: '/dashboard/playground' },
-  { label: 'Integration', path: '/dashboard/integration', badge: 'Coming Soon' },
+  { label: 'Playground', path: '/dashboard/playground', badge: 'Beta' },
+  { label: 'Integration', path: '/dashboard/integration', badge: 'Soon', muted: true },
 ]
 
 export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
@@ -96,7 +96,12 @@ export function TopBar({ onMenuClick, sidebarCollapsed }: TopBarProps) {
               >
                 {item.label}
                 {item.badge && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple/10 text-purple rounded-full">
+                  <span className={cn(
+                    "rounded-full font-medium",
+                    item.muted
+                      ? "px-1 py-0.5 text-[9px] bg-muted text-muted-foreground"
+                      : "px-1.5 py-0.5 text-[10px] bg-purple/10 text-purple"
+                  )}>
                     {item.badge}
                   </span>
                 )}

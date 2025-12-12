@@ -4,6 +4,7 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useAsyncAction } from '@/hooks/useAsyncAction'
 import {
   Storefront,
   CheckCircle,
@@ -64,6 +65,8 @@ export function AdminVendors() {
   const approveVendor = useMutation(api.vendors.approve)
   const rejectVendor = useMutation(api.vendors.reject)
 
+  const { execute } = useAsyncAction()
+
   // Calculate status counts
   const statusCounts = useMemo(() => {
     if (!allVendors) return {}
@@ -83,13 +86,10 @@ export function AdminVendors() {
     )
   })
 
-  const handleApprove = async (vendorId: Id<'vendors'>) => {
-    try {
-      await approveVendor({ vendorId })
-      toast.success('Vendor approved successfully')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to approve vendor')
-    }
+  const handleApprove = (vendorId: Id<'vendors'>) => {
+    execute(() => approveVendor({ vendorId }), {
+      successMessage: 'Vendor approved successfully',
+    })
   }
 
   const handleReject = async () => {
@@ -98,15 +98,14 @@ export function AdminVendors() {
       return
     }
 
-    try {
-      await rejectVendor({ vendorId: selectedVendor, reason: rejectReason })
-      toast.success('Vendor rejected')
-      setShowRejectModal(false)
-      setSelectedVendor(null)
-      setRejectReason('')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reject vendor')
-    }
+    execute(() => rejectVendor({ vendorId: selectedVendor, reason: rejectReason }), {
+      successMessage: 'Vendor rejected',
+      onSuccess: () => {
+        setShowRejectModal(false)
+        setSelectedVendor(null)
+        setRejectReason('')
+      },
+    })
   }
 
   const openRejectModal = (vendorId: Id<'vendors'>) => {

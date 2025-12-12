@@ -9,6 +9,47 @@ import type { ToolName, ToolCall, ToolResult } from './lib/agent/types'
 import { z } from 'zod'
 
 // ============================================================================
+// OpenAI Retry Helper
+// ============================================================================
+
+async function callOpenAIWithRetry(
+  openai: OpenAI,
+  params: OpenAI.Chat.ChatCompletionCreateParamsStreaming,
+  maxRetries = 3
+): Promise<AsyncIterable<OpenAI.Chat.Completions.ChatCompletionChunk>> {
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await openai.chat.completions.create(params)
+    } catch (error) {
+      lastError = error as Error
+
+      // Don't retry on auth errors
+      if (error instanceof OpenAI.APIError) {
+        if (error.status === 401 || error.status === 403) {
+          throw new Error('AI service authentication failed. Please check configuration.')
+        }
+        if (error.status === 429) {
+          // Rate limit - wait longer
+          const waitTime = Math.pow(2, attempt) * 2000
+          await new Promise(r => setTimeout(r, waitTime))
+          continue
+        }
+      }
+
+      // For other errors, exponential backoff
+      if (attempt < maxRetries - 1) {
+        const waitTime = Math.pow(2, attempt) * 1000
+        await new Promise(r => setTimeout(r, waitTime))
+      }
+    }
+  }
+
+  throw lastError || new Error('OpenAI API call failed after retries')
+}
+
+// ============================================================================
 // Request Validation Schemas
 // ============================================================================
 
@@ -135,6 +176,7 @@ Remember: Your job is to CREATE events quickly, not to be an event planning cons
 
 const ALLOWED_ORIGINS = [
   'http://localhost:5173',
+  'http://localhost:5174',
   'http://localhost:3000',
   'https://open-event.vercel.app',
   'https://openevent.app',
@@ -318,13 +360,13 @@ http.route({
       })
     }
 
-    // Check rate limit
-    const rateLimit = await ctx.runQuery(api.aiUsage.checkRateLimit, { userId: user._id })
+    // Atomic check AND increment - prevents race conditions
+    const rateLimit = await ctx.runMutation(internal.aiUsage.checkAndIncrementUsage, { userId: user._id })
     if (!rateLimit.allowed) {
       return new Response(
         JSON.stringify({
           error: 'Rate limit exceeded',
-          message: `You've used all ${rateLimit.limit} AI prompts for today. Your limit resets at midnight UTC.`,
+          message: rateLimit.reason || `You've used all ${rateLimit.limit} AI prompts for today. Your limit resets at midnight UTC.`,
           remaining: 0,
           limit: rateLimit.limit,
         }),
@@ -334,6 +376,9 @@ http.route({
         }
       )
     }
+
+    // Store rate limit info for response
+    const currentRateLimit = rateLimit
 
     // Get user profile for context
     const profile = await ctx.runQuery(api.organizerProfiles.getMyProfile)
@@ -404,8 +449,8 @@ http.route({
             // Send thinking event
             sendEvent('thinking', { iteration })
 
-            // Create streaming completion
-            const stream = await openai.chat.completions.create({
+            // Create streaming completion with retry logic
+            const stream = await callOpenAIWithRetry(openai, {
               model: 'gpt-4o-mini',
               messages: currentMessages,
               tools,
@@ -578,13 +623,9 @@ http.route({
             }
           }
 
-          // Increment usage count for successful request
-          await ctx.runMutation(internal.aiUsage.incrementUsageInternal, { userId: user._id })
+          // Usage already incremented atomically at the start - no need to increment again
 
-          // Get updated remaining prompts
-          const updatedRateLimit = await ctx.runQuery(api.aiUsage.checkRateLimit, { userId: user._id })
-
-          // Send completion event
+          // Send completion event with rate limit info from atomic check
           sendEvent('done', {
             message: finalMessage,
             toolCalls: allToolCalls,
@@ -592,10 +633,10 @@ http.route({
             pendingConfirmations,
             isComplete,
             entityId,
-            // Include rate limit info
+            // Include rate limit info from atomic check-and-increment
             rateLimit: {
-              remaining: updatedRateLimit.remaining,
-              limit: updatedRateLimit.limit,
+              remaining: currentRateLimit.remaining,
+              limit: currentRateLimit.limit,
             },
           })
         } catch (error) {

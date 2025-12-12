@@ -64,6 +64,137 @@ export const getAdmin = query({
 })
 
 /**
+ * Helper function to deduplicate users by email
+ */
+function deduplicateUsers<T extends { email?: string; role?: string; updatedAt?: number }>(
+  users: T[]
+): T[] {
+  const emailMap = new Map<string, T>()
+  for (const user of users) {
+    if (!user.email) continue
+
+    const existing = emailMap.get(user.email)
+    if (!existing) {
+      emailMap.set(user.email, user)
+    } else {
+      const existingRoleLevel = ROLE_HIERARCHY[existing.role || 'organizer'] || 1
+      const userRoleLevel = ROLE_HIERARCHY[user.role || 'organizer'] || 1
+
+      if (userRoleLevel > existingRoleLevel) {
+        emailMap.set(user.email, user)
+      } else if (
+        userRoleLevel === existingRoleLevel &&
+        (user.updatedAt || 0) > (existing.updatedAt || 0)
+      ) {
+        emailMap.set(user.email, user)
+      }
+    }
+  }
+  return Array.from(emailMap.values())
+}
+
+/**
+ * Get user counts by status (for dashboard stats)
+ * Lightweight query that only returns counts
+ */
+export const getUserCounts = query({
+  args: {},
+  handler: async (ctx) => {
+    await assertRole(ctx, 'admin')
+
+    const users = await ctx.db.query('users').collect()
+    const deduplicatedUsers = deduplicateUsers(users)
+
+    const counts = {
+      total: deduplicatedUsers.length,
+      active: 0,
+      suspended: 0,
+      pending: 0,
+      admins: 0,
+      organizers: 0,
+    }
+
+    for (const user of deduplicatedUsers) {
+      const status = user.status || 'active'
+      if (status === 'active') counts.active++
+      else if (status === 'suspended') counts.suspended++
+      else if (status === 'pending') counts.pending++
+
+      const role = user.role || 'organizer'
+      if (role === 'admin' || role === 'superadmin') counts.admins++
+      else counts.organizers++
+    }
+
+    return counts
+  },
+})
+
+/**
+ * List all users with pagination
+ * Accessible by admin and superadmin
+ */
+export const listAllUsersPaginated = query({
+  args: {
+    role: v.optional(v.union(v.literal('admin'), v.literal('organizer'), v.literal('superadmin'))),
+    status: v.optional(
+      v.union(v.literal('active'), v.literal('suspended'), v.literal('pending'))
+    ),
+    limit: v.optional(v.number()),
+    offset: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await assertRole(ctx, 'admin')
+
+    let users
+
+    // Filter by role if specified
+    if (args.role) {
+      users = await ctx.db
+        .query('users')
+        .withIndex('by_role', (q) => q.eq('role', args.role))
+        .collect()
+    } else {
+      users = await ctx.db.query('users').collect()
+    }
+
+    // Deduplicate by email
+    let deduplicatedUsers = deduplicateUsers(users)
+
+    // Filter by status in memory if specified
+    if (args.status) {
+      deduplicatedUsers = deduplicatedUsers.filter(
+        (u) => (u.status || 'active') === args.status
+      )
+    }
+
+    // Sort by creation date (newest first)
+    deduplicatedUsers.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+
+    // Apply pagination
+    const limit = args.limit || 20
+    const offset = args.offset || 0
+    const paginatedUsers = deduplicatedUsers.slice(offset, offset + limit)
+    const hasMore = offset + limit < deduplicatedUsers.length
+
+    return {
+      items: paginatedUsers.map((user) => ({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role || 'organizer',
+        status: user.status || 'active',
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        suspendedAt: user.suspendedAt,
+        suspendedReason: user.suspendedReason,
+      })),
+      hasMore,
+      totalCount: deduplicatedUsers.length,
+    }
+  },
+})
+
+/**
  * List all users (for admin management overview)
  * Accessible by admin and superadmin
  *
@@ -93,31 +224,8 @@ export const listAllUsers = query({
       users = await ctx.db.query('users').collect()
     }
 
-    // Deduplicate by email - keep the user with highest role or most recent update
-    const emailMap = new Map<string, typeof users[0]>()
-    for (const user of users) {
-      if (!user.email) continue
-
-      const existing = emailMap.get(user.email)
-      if (!existing) {
-        emailMap.set(user.email, user)
-      } else {
-        // Keep the one with higher role, or if same role, keep the more recently updated
-        const existingRoleLevel = ROLE_HIERARCHY[existing.role || 'organizer'] || 1
-        const userRoleLevel = ROLE_HIERARCHY[user.role || 'organizer'] || 1
-
-        if (userRoleLevel > existingRoleLevel) {
-          emailMap.set(user.email, user)
-        } else if (
-          userRoleLevel === existingRoleLevel &&
-          (user.updatedAt || 0) > (existing.updatedAt || 0)
-        ) {
-          emailMap.set(user.email, user)
-        }
-      }
-    }
-
-    let deduplicatedUsers = Array.from(emailMap.values())
+    // Deduplicate by email
+    let deduplicatedUsers = deduplicateUsers(users)
 
     // Filter by status in memory if specified
     if (args.status) {

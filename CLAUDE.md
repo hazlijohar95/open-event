@@ -118,18 +118,33 @@ function handlePlaceCard(nextCard) {
 ```
 src/
 ├── components/
+│   ├── agentic-v2/  # AI chat interface components
 │   ├── landing/     # Landing page sections
+│   ├── playground/  # Tldraw-based event canvas (Beta)
 │   └── ui/          # ShadCN UI components
 ├── hooks/           # Custom React hooks
+│   ├── useAsyncAction.ts  # Reusable async action with toast handling
+│   └── use-pwa.ts         # PWA installation hooks
 ├── lib/             # Utility functions
 ├── pages/           # Page components
+│   ├── admin/       # Admin panel pages
+│   └── dashboard/   # User dashboard pages
 ├── services/        # API services
 └── types/           # TypeScript types
 
 convex/
 ├── schema.ts        # Database schema
 ├── events.ts        # Event queries/mutations
-└── users.ts         # User queries/mutations
+├── aiUsage.ts       # AI rate limiting & usage tracking
+├── organizerProfiles.ts  # User profile management
+├── http.ts          # HTTP actions (AI streaming)
+├── lib/
+│   └── ai/          # AI Provider Adapter pattern
+│       ├── types.ts
+│       ├── factory.ts
+│       ├── providers/openai.ts
+│       └── index.ts
+└── queries/         # Reusable query helpers
 ```
 
 ### Import Aliases
@@ -195,6 +210,18 @@ import { House, User, Gear } from '@phosphor-icons/react'
 | Search | `MagnifyingGlass` |
 | Arrow | `ArrowRight`, `ArrowLeft`, `CaretRight` |
 
+### Logo Components
+Use the built-in logo components from `@/components/ui/logo`:
+
+```tsx
+import { Logo, LogoIcon, LogoAnimated, LogoMini } from '@/components/ui/logo'
+
+<Logo size="md" />           // Full logo with wordmark
+<LogoIcon size="sm" />       // Icon only (pixel calendar)
+<LogoAnimated size="md" />   // With hover animation
+<LogoMini />                 // Minimal "oe.my" text
+```
+
 ### Component Patterns
 ```tsx
 // Use cn() for conditional classes
@@ -241,6 +268,69 @@ const events = useQuery(api.events.list);
 const createEvent = useMutation(api.events.create);
 ```
 
+### AI Provider Pattern
+The AI system uses an Adapter pattern for provider flexibility:
+
+```ts
+import { createAIProvider, DEFAULT_CONFIGS } from './lib/ai'
+
+// Create provider instance
+const provider = createAIProvider('openai', {
+  openai: process.env.OPENAI_API_KEY,
+})
+
+// Use with streaming
+const stream = await provider.createStreamingChat(
+  messages,
+  tools,
+  DEFAULT_CONFIGS.openai
+)
+```
+
+Supported providers:
+- **OpenAI** - Fully implemented with tool calling
+- **Anthropic** - Planned
+- **Groq** - Planned
+
+---
+
+## Custom Hooks
+
+### useAsyncAction Hook
+Eliminates repetitive try-catch-toast patterns for async operations.
+
+```tsx
+import { useAsyncAction } from '@/hooks/useAsyncAction'
+
+function MyComponent() {
+  const { isLoading, execute } = useAsyncAction()
+
+  const handleSave = async () => {
+    await execute(
+      () => saveMutation({ data }),
+      {
+        successMessage: 'Saved successfully',
+        errorMessage: 'Failed to save',
+        onSuccess: () => console.log('Done!'),
+      }
+    )
+  }
+}
+```
+
+### useAsyncActions Hook (Multiple Actions)
+For components with multiple async operations:
+
+```tsx
+const actions = useAsyncActions<'save' | 'delete' | 'publish'>()
+
+// Check individual loading states
+actions.isLoading('save')
+
+// Execute with specific key
+actions.execute('delete', () => deleteMutation({ id }), { ... })
+```
+
 ---
 
 ## Code Quality
@@ -249,6 +339,37 @@ const createEvent = useMutation(api.events.create);
 - Strict mode enabled
 - Define types in `src/types/`
 - Avoid `any` - use `unknown` and narrow
+
+### React Compiler Compliance
+The project uses React Compiler with strict linting. Key rules:
+
+1. **No impure functions during render** - Don't call `Date.now()`, `Math.random()` directly
+   ```tsx
+   // ❌ BAD
+   const now = Date.now()
+
+   // ✅ GOOD - Use useState lazy initializer
+   const [now] = useState(() => Date.now())
+   ```
+
+2. **No ref access during render** - Don't read `.current` in render logic
+   ```tsx
+   // ❌ BAD
+   if (myRef.current.value) { ... }
+
+   // ✅ GOOD - Use state for render-time values
+   const [value, setValue] = useState('')
+   ```
+
+3. **Destructure hooks returning refs** - Helps compiler track ref vs state
+   ```tsx
+   // ❌ BAD - chat object contains both refs and state
+   {chat.hasMessages && <div ref={chat.myRef}>}
+
+   // ✅ GOOD - Destructure to separate refs from state
+   const { hasMessages, myRef } = useMyHook()
+   {hasMessages && <div ref={myRef}>}
+   ```
 
 ### Performance
 - Use `useMemo` for expensive computations

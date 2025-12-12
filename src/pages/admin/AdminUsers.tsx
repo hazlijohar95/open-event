@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useQuery, useMutation } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
@@ -17,6 +17,7 @@ import {
   UserCircle,
   Crown,
   Trash,
+  CaretDown,
 } from '@phosphor-icons/react'
 import {
   Tooltip,
@@ -85,13 +86,19 @@ export function AdminUsers() {
   const currentUser = useQuery(api.queries.auth.getCurrentUser)
   const isSuperadmin = currentUser?.role === 'superadmin'
 
-  // Get all users to calculate counts
-  const allUsers = useQuery(api.admin.listAllUsers, { limit: 100 })
-  const users = useQuery(
-    api.admin.listAllUsers,
+  // Pagination state
+  const [offset, setOffset] = useState(0)
+  const PAGE_SIZE = 20
+
+  // Get counts for stats (lightweight query)
+  const userCounts = useQuery(api.admin.getUserCounts)
+
+  // Get paginated users with filters
+  const usersResult = useQuery(
+    api.admin.listAllUsersPaginated,
     roleFilter === 'all'
-      ? { status: statusFilter === 'all' ? undefined : statusFilter, limit: 100 }
-      : { role: roleFilter, status: statusFilter === 'all' ? undefined : statusFilter, limit: 100 }
+      ? { status: statusFilter === 'all' ? undefined : statusFilter, limit: PAGE_SIZE, offset }
+      : { role: roleFilter, status: statusFilter === 'all' ? undefined : statusFilter, limit: PAGE_SIZE, offset }
   )
 
   const admins = useQuery(api.admin.listAdmins)
@@ -101,24 +108,43 @@ export function AdminUsers() {
   const suspendUser = useMutation(api.moderation.suspendUser)
   const unsuspendUser = useMutation(api.moderation.unsuspendUser)
 
-  // Calculate status counts
-  const statusCounts = useMemo(() => {
-    if (!allUsers) return {}
-    return allUsers.reduce((acc, user) => {
-      const status = user.status || 'active'
-      acc[status] = (acc[status] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
-  }, [allUsers])
+  // Reset pagination when filters change
+  const handleFilterChange = useCallback((type: 'role' | 'status', value: string) => {
+    setOffset(0)
+    if (type === 'role') {
+      setRoleFilter(value as 'all' | 'admin' | 'organizer')
+    } else {
+      setStatusFilter(value as 'all' | 'active' | 'suspended' | 'pending')
+    }
+  }, [])
 
-  const filteredUsers = users?.filter((u) => {
-    if (!searchQuery.trim()) return true
+  // Status counts from lightweight query
+  const statusCounts = useMemo(() => {
+    if (!userCounts) return {}
+    return {
+      active: userCounts.active,
+      suspended: userCounts.suspended,
+      pending: userCounts.pending,
+    }
+  }, [userCounts])
+
+  // Filter users by search query with useMemo
+  const filteredUsers = useMemo(() => {
+    if (!usersResult?.items) return []
+    if (!searchQuery.trim()) return usersResult.items
     const search = searchQuery.toLowerCase()
-    return (
+    return usersResult.items.filter((u) =>
       u.name?.toLowerCase().includes(search) ||
       u.email?.toLowerCase().includes(search)
     )
-  })
+  }, [usersResult, searchQuery])
+
+  // Load more handler
+  const handleLoadMore = useCallback(() => {
+    if (usersResult?.hasMore) {
+      setOffset((prev) => prev + PAGE_SIZE)
+    }
+  }, [usersResult?.hasMore])
 
   const handleCreateAdmin = async () => {
     if (!newAdminEmail.trim() || !newAdminName.trim()) {
@@ -212,8 +238,8 @@ export function AdminUsers() {
     })
   }
 
-  const adminCount = admins?.length || 0
-  const totalCount = allUsers?.length || 0
+  const adminCount = userCounts?.admins || admins?.length || 0
+  const totalCount = userCounts?.total || 0
 
   return (
     <div className="space-y-6">
@@ -300,7 +326,7 @@ export function AdminUsers() {
             return (
               <button
                 key={filter.value}
-                onClick={() => setRoleFilter(filter.value)}
+                onClick={() => handleFilterChange('role', filter.value)}
                 className={cn(
                   'px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer',
                   isActive
@@ -328,7 +354,7 @@ export function AdminUsers() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => setStatusFilter(filter.value)}
+                      onClick={() => handleFilterChange('status', filter.value)}
                       className={cn(
                         'flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer',
                         isActive
@@ -365,7 +391,7 @@ export function AdminUsers() {
 
       {/* Users List */}
       <div className="space-y-3">
-        {!users ? (
+        {!usersResult ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
               <div key={i} className="rounded-xl border border-border bg-card p-5 animate-pulse">
@@ -516,6 +542,28 @@ export function AdminUsers() {
               </div>
             )
           })
+        )}
+
+        {/* Load More Button */}
+        {usersResult?.hasMore && (
+          <div className="flex justify-center pt-4">
+            <button
+              onClick={handleLoadMore}
+              className={cn(
+                'flex items-center gap-2 px-6 py-2.5 rounded-lg',
+                'border border-border bg-card text-sm font-medium',
+                'hover:bg-muted transition-colors cursor-pointer'
+              )}
+            >
+              <CaretDown size={16} weight="bold" />
+              Load More
+              {usersResult.totalCount && (
+                <span className="text-muted-foreground">
+                  ({filteredUsers.length} of {usersResult.totalCount})
+                </span>
+              )}
+            </button>
+          </div>
         )}
       </div>
 

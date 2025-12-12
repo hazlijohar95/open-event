@@ -4,6 +4,7 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useAsyncAction } from '@/hooks/useAsyncAction'
 import {
   ClipboardText,
   Storefront,
@@ -66,7 +67,6 @@ export function AdminPublicApplications() {
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
-  const [isConverting, setIsConverting] = useState(false)
 
   // Get all applications to calculate counts
   const allApplications = useQuery(api.publicApplications.listForAdmin, {})
@@ -84,6 +84,8 @@ export function AdminPublicApplications() {
   const updateStatus = useMutation(api.publicApplications.updateStatus)
   const convertToVendor = useMutation(api.publicApplications.convertToVendor)
   const convertToSponsor = useMutation(api.publicApplications.convertToSponsor)
+
+  const { isLoading, execute } = useAsyncAction()
 
   // Calculate status counts
   const statusCounts = useMemo(() => {
@@ -104,13 +106,10 @@ export function AdminPublicApplications() {
     )
   })
 
-  const handleMarkUnderReview = async (appId: Id<'publicApplications'>) => {
-    try {
-      await updateStatus({ applicationId: appId, status: 'under_review' })
-      toast.success('Application marked as under review')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update status')
-    }
+  const handleMarkUnderReview = (appId: Id<'publicApplications'>) => {
+    execute(() => updateStatus({ applicationId: appId, status: 'under_review' }), {
+      successMessage: 'Application marked as under review',
+    })
   }
 
   const handleReject = async () => {
@@ -119,49 +118,47 @@ export function AdminPublicApplications() {
       return
     }
 
-    try {
-      await updateStatus({
+    execute(
+      () => updateStatus({
         applicationId: selectedApplication,
         status: 'rejected',
         rejectionReason: rejectReason,
-      })
-      toast.success('Application rejected')
-      setShowRejectModal(false)
-      setShowDetailModal(false)
-      setSelectedApplication(null)
-      setRejectReason('')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reject application')
-    }
+      }),
+      {
+        successMessage: 'Application rejected',
+        onSuccess: () => {
+          setShowRejectModal(false)
+          setShowDetailModal(false)
+          setSelectedApplication(null)
+          setRejectReason('')
+        },
+      }
+    )
   }
 
-  const handleConvert = async (autoApprove: boolean) => {
+  const handleConvert = (autoApprove: boolean) => {
     if (!selectedApplication || !applicationDetail) return
 
-    setIsConverting(true)
-    try {
-      if (applicationDetail.applicationType === 'vendor') {
-        await convertToVendor({
-          applicationId: selectedApplication,
-          autoApprove,
-        })
-      } else {
-        await convertToSponsor({
-          applicationId: selectedApplication,
-          autoApprove,
-        })
-      }
-      toast.success(
-        autoApprove
-          ? `${applicationDetail.applicationType === 'vendor' ? 'Vendor' : 'Sponsor'} created and approved`
-          : `${applicationDetail.applicationType === 'vendor' ? 'Vendor' : 'Sponsor'} created (pending approval)`
-      )
+    const isVendor = applicationDetail.applicationType === 'vendor'
+    const entityName = isVendor ? 'Vendor' : 'Sponsor'
+    const successMsg = autoApprove
+      ? `${entityName} created and approved`
+      : `${entityName} created (pending approval)`
+    const onSuccessCallback = () => {
       setShowDetailModal(false)
       setSelectedApplication(null)
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to convert application')
-    } finally {
-      setIsConverting(false)
+    }
+
+    if (isVendor) {
+      execute(
+        () => convertToVendor({ applicationId: selectedApplication, autoApprove }),
+        { successMessage: successMsg, onSuccess: onSuccessCallback }
+      )
+    } else {
+      execute(
+        () => convertToSponsor({ applicationId: selectedApplication, autoApprove }),
+        { successMessage: successMsg, onSuccess: onSuccessCallback }
+      )
     }
   }
 
@@ -693,7 +690,7 @@ export function AdminPublicApplications() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleConvert(false)}
-                      disabled={isConverting}
+                      disabled={isLoading}
                       className={cn(
                         'flex items-center gap-2 px-4 py-2 rounded-lg border border-border',
                         'text-sm font-medium hover:bg-muted transition-colors',
@@ -705,7 +702,7 @@ export function AdminPublicApplications() {
                     </button>
                     <button
                       onClick={() => handleConvert(true)}
-                      disabled={isConverting}
+                      disabled={isLoading}
                       className={cn(
                         'flex items-center gap-2 px-4 py-2 rounded-lg',
                         'bg-green-500 text-white text-sm font-medium',
@@ -713,7 +710,7 @@ export function AdminPublicApplications() {
                         'disabled:opacity-50 disabled:cursor-not-allowed'
                       )}
                     >
-                      {isConverting ? (
+                      {isLoading ? (
                         <>
                           <CircleNotch size={16} weight="bold" className="animate-spin" />
                           Converting...

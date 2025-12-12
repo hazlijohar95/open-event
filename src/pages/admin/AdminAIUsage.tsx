@@ -56,6 +56,20 @@ const sortOptions: { value: SortOption; label: string }[] = [
   { value: 'updatedAt', label: 'Last Active' },
 ]
 
+// Helper function to format relative time - placed outside component to avoid purity issues
+function formatLastActive(timestamp: number | undefined, now: number): string {
+  if (!timestamp) return 'Never'
+  const diff = now - timestamp
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
+
+  if (minutes < 1) return 'Just now'
+  if (minutes < 60) return `${minutes}m ago`
+  if (hours < 24) return `${hours}h ago`
+  return `${days}d ago`
+}
+
 export function AdminAIUsage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('totalPrompts')
@@ -140,18 +154,8 @@ export function AdminAIUsage() {
     setShowResetModal(true)
   }
 
-  const formatLastActive = (timestamp?: number) => {
-    if (!timestamp) return 'Never'
-    const diff = Date.now() - timestamp
-    const minutes = Math.floor(diff / 60000)
-    const hours = Math.floor(diff / 3600000)
-    const days = Math.floor(diff / 86400000)
-
-    if (minutes < 1) return 'Just now'
-    if (minutes < 60) return `${minutes}m ago`
-    if (hours < 24) return `${hours}h ago`
-    return `${days}d ago`
-  }
+  // Use useState with lazy initializer - only evaluated once at mount
+  const [now] = useState(() => Date.now())
 
   return (
     <div className="space-y-6">
@@ -426,7 +430,7 @@ export function AdminAIUsage() {
                       {/* Last Active */}
                       <td className="px-4 py-4 text-center">
                         <span className="text-sm text-muted-foreground">
-                          {formatLastActive(user.lastUsedAt)}
+                          {formatLastActive(user.lastUsedAt, now)}
                         </span>
                       </td>
 

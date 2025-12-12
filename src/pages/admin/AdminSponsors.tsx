@@ -4,6 +4,7 @@ import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { useAsyncAction } from '@/hooks/useAsyncAction'
 import {
   Handshake,
   CheckCircle,
@@ -64,6 +65,8 @@ export function AdminSponsors() {
   const approveSponsor = useMutation(api.sponsors.approve)
   const rejectSponsor = useMutation(api.sponsors.reject)
 
+  const { execute } = useAsyncAction()
+
   // Calculate status counts
   const statusCounts = useMemo(() => {
     if (!allSponsors) return {}
@@ -84,13 +87,10 @@ export function AdminSponsors() {
     )
   })
 
-  const handleApprove = async (sponsorId: Id<'sponsors'>) => {
-    try {
-      await approveSponsor({ sponsorId })
-      toast.success('Sponsor approved successfully')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to approve sponsor')
-    }
+  const handleApprove = (sponsorId: Id<'sponsors'>) => {
+    execute(() => approveSponsor({ sponsorId }), {
+      successMessage: 'Sponsor approved successfully',
+    })
   }
 
   const handleReject = async () => {
@@ -99,15 +99,14 @@ export function AdminSponsors() {
       return
     }
 
-    try {
-      await rejectSponsor({ sponsorId: selectedSponsor, reason: rejectReason })
-      toast.success('Sponsor rejected')
-      setShowRejectModal(false)
-      setSelectedSponsor(null)
-      setRejectReason('')
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to reject sponsor')
-    }
+    execute(() => rejectSponsor({ sponsorId: selectedSponsor, reason: rejectReason }), {
+      successMessage: 'Sponsor rejected',
+      onSuccess: () => {
+        setShowRejectModal(false)
+        setSelectedSponsor(null)
+        setRejectReason('')
+      },
+    })
   }
 
   const openRejectModal = (sponsorId: Id<'sponsors'>) => {

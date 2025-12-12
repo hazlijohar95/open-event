@@ -1643,7 +1643,9 @@ body {
    ------------------------------------------------ */
 .agentic-bubble-v2 {
   position: relative;
-  max-width: 75%;
+  max-width: 85%;
+  word-break: break-word;
+  overflow-wrap: break-word;
   border-radius: 18px;
   padding: 14px 20px;
   font-size: 15px;

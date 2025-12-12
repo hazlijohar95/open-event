@@ -25,6 +25,7 @@ import type * as lib_agent_index from "../lib/agent/index.js";
 import type * as lib_agent_tools from "../lib/agent/tools.js";
 import type * as lib_agent_types from "../lib/agent/types.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_errors from "../lib/errors.js";
 import type * as moderation from "../moderation.js";
 import type * as mutations_events from "../mutations/events.js";
 import type * as mutations_superadmin from "../mutations/superadmin.js";
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   "lib/agent/tools": typeof lib_agent_tools;
   "lib/agent/types": typeof lib_agent_types;
   "lib/auth": typeof lib_auth;
+  "lib/errors": typeof lib_errors;
   moderation: typeof moderation;
   "mutations/events": typeof mutations_events;
   "mutations/superadmin": typeof mutations_superadmin;
