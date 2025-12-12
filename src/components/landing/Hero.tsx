@@ -49,7 +49,7 @@ export function Hero() {
       <div
         className={cn(
           'fixed top-0 right-0 bottom-0 w-[280px] bg-background border-l border-border z-50 transform transition-transform duration-300 ease-out sm:hidden safe-area-top safe-area-bottom',
-          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          mobileMenuOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         )}
       >
         <div className="flex flex-col h-full p-6">
