@@ -2,8 +2,8 @@ import {
   ShapeUtil,
   HTMLContainer,
   Rectangle2d,
-  type TLOnResizeHandler,
 } from 'tldraw'
+import type { TLResizeInfo } from '@tldraw/editor'
 import type { TaskCardShape, TaskCardProps } from '@/lib/playground/types'
 import { CheckSquare, Calendar, Flag } from '@phosphor-icons/react'
 
@@ -47,7 +47,7 @@ export class TaskCardShapeUtil extends ShapeUtil<TaskCardShape> {
     return true
   }
 
-  override onResize: TLOnResizeHandler<TaskCardShape> = (shape, info) => {
+  override onResize = (_shape: TaskCardShape, info: TLResizeInfo<TaskCardShape>) => {
     return {
       props: {
         w: Math.max(200, info.initialBounds.width * info.scaleX),

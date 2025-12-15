@@ -14,13 +14,14 @@
  * ```
  */
 export class AppError extends Error {
-  constructor(
-    message: string,
-    public readonly code: string,
-    public readonly status: number = 400
-  ) {
+  public readonly code: string
+  public readonly status: number
+
+  constructor(message: string, code: string, status: number = 400) {
     super(message)
     this.name = 'AppError'
+    this.code = code
+    this.status = status
   }
 }
 

@@ -2,8 +2,8 @@ import {
   ShapeUtil,
   HTMLContainer,
   Rectangle2d,
-  type TLOnResizeHandler,
 } from 'tldraw'
+import type { TLResizeInfo } from '@tldraw/editor'
 import type { EventCardShape, EventCardProps } from '@/lib/playground/types'
 import { CalendarBlank, MapPin, Users, CurrencyDollar } from '@phosphor-icons/react'
 
@@ -54,7 +54,7 @@ export class EventCardShapeUtil extends ShapeUtil<EventCardShape> {
     return true
   }
 
-  override onResize: TLOnResizeHandler<EventCardShape> = (shape, info) => {
+  override onResize = (_shape: EventCardShape, info: TLResizeInfo<EventCardShape>) => {
     return {
       props: {
         w: Math.max(240, info.initialBounds.width * info.scaleX),

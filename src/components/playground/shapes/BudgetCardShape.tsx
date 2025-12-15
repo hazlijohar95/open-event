@@ -2,8 +2,8 @@ import {
   ShapeUtil,
   HTMLContainer,
   Rectangle2d,
-  type TLOnResizeHandler,
 } from 'tldraw'
+import type { TLResizeInfo } from '@tldraw/editor'
 import type { BudgetCardShape, BudgetCardProps } from '@/lib/playground/types'
 import { CurrencyDollar, TrendUp, TrendDown } from '@phosphor-icons/react'
 
@@ -48,7 +48,7 @@ export class BudgetCardShapeUtil extends ShapeUtil<BudgetCardShape> {
     return true
   }
 
-  override onResize: TLOnResizeHandler<BudgetCardShape> = (shape, info) => {
+  override onResize = (_shape: BudgetCardShape, info: TLResizeInfo<BudgetCardShape>) => {
     return {
       props: {
         w: Math.max(200, info.initialBounds.width * info.scaleX),

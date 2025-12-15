@@ -479,12 +479,17 @@ export function DocsPage() {
                 </div>
                 <h2 className="text-lg font-semibold">API Reference</h2>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+              <p className="text-sm text-muted-foreground mb-6">
+                Build integrations, automate workflows, and connect Open Event with your tools using our RESTful API.
+              </p>
+
+              {/* Features */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                 {[
                   { title: 'RESTful endpoints', desc: 'Standard REST API for all CRUD operations.' },
-                  { title: 'Real-time subscriptions', desc: 'WebSocket connections via Convex.' },
-                  { title: 'Authentication', desc: 'JWT-based auth with OAuth providers.' },
-                  { title: 'Rate limiting', desc: 'Fair usage limits for stability.' },
+                  { title: 'API key authentication', desc: 'Secure, scoped access with permission-based keys.' },
+                  { title: 'Rate limiting', desc: '1,000 requests/hour per key for stability.' },
+                  { title: 'Webhooks support', desc: 'Real-time notifications for event changes.' },
                 ].map((item) => (
                   <div key={item.title} className="p-4 rounded-lg border border-border/40">
                     <p className="text-sm font-medium text-foreground mb-1">{item.title}</p>
@@ -492,18 +497,119 @@ export function DocsPage() {
                   </div>
                 ))}
               </div>
-              <div className="p-3 rounded-lg bg-muted/30 border border-border/40">
+
+              {/* Quick Start */}
+              <div className="p-4 rounded-lg bg-muted/30 border border-border/40 mb-6">
+                <p className="text-sm font-medium text-foreground mb-3">Quick Start</p>
+                <div className="space-y-2 text-xs font-mono text-muted-foreground bg-background/50 p-3 rounded border border-border/40 overflow-x-auto">
+                  <div>
+                    <span className="text-muted-foreground/70"># Get your API key from Settings → API Keys</span>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground/70">curl</span>{' '}
+                    <span className="text-blue-500">-H</span>{' '}
+                    <span className="text-green-500">"X-API-Key: oe_live_your_key"</span>{' '}
+                    <span className="text-purple-500">https://your-project.convex.site/api/v1/events</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Endpoints Overview */}
+              <div className="mb-6">
+                <p className="text-sm font-medium text-foreground mb-3">Available Endpoints</p>
+                <div className="space-y-2">
+                  {[
+                    { method: 'GET', path: '/api/v1/events', desc: 'List your events' },
+                    { method: 'POST', path: '/api/v1/events', desc: 'Create a new event' },
+                    { method: 'GET', path: '/api/v1/events/:id', desc: 'Get event details' },
+                    { method: 'PATCH', path: '/api/v1/events/:id', desc: 'Update an event' },
+                    { method: 'DELETE', path: '/api/v1/events/:id', desc: 'Delete an event' },
+                    { method: 'GET', path: '/api/v1/public/events', desc: 'List public events (no auth)' },
+                    { method: 'GET', path: '/api/v1/vendors', desc: 'Browse vendor directory' },
+                    { method: 'GET', path: '/api/v1/sponsors', desc: 'Browse sponsor directory' },
+                    { method: 'GET', path: '/api/v1/webhooks', desc: 'Manage webhooks' },
+                  ].map((endpoint) => (
+                    <div
+                      key={`${endpoint.method}-${endpoint.path}`}
+                      className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted/30 transition-colors border border-border/40"
+                    >
+                      <span
+                        className={`
+                          px-2 py-0.5 text-xs font-semibold rounded shrink-0
+                          ${
+                            endpoint.method === 'GET'
+                              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                              : endpoint.method === 'POST'
+                                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                : endpoint.method === 'PATCH'
+                                  ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                                  : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                          }
+                        `}
+                      >
+                        {endpoint.method}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <code className="text-xs font-mono text-foreground break-all">{endpoint.path}</code>
+                        <p className="text-xs text-muted-foreground mt-0.5">{endpoint.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Authentication */}
+              <div className="p-4 rounded-lg bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-800/30 mb-6">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">Authentication</p>
+                <p className="text-xs text-blue-800 dark:text-blue-200 mb-3">
+                  All protected endpoints require an API key. Include it in the <code className="px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded text-xs">X-API-Key</code> header or{' '}
+                  <code className="px-1 py-0.5 bg-blue-100 dark:bg-blue-900/30 rounded text-xs">Authorization: Bearer</code> header.
+                </p>
+                <div className="text-xs font-mono text-blue-900 dark:text-blue-100 bg-blue-100/50 dark:bg-blue-900/20 p-2 rounded border border-blue-200/50 dark:border-blue-800/30">
+                  <div>X-API-Key: oe_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxx</div>
+                </div>
+              </div>
+
+              {/* Documentation Links */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <a
+                  href="https://github.com/hazlijohar95/open-event/blob/main/docs/API.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-4 rounded-lg border border-border/40 hover:border-border hover:bg-muted/20 transition-all group"
+                >
+                  <Code size={20} className="text-slate-600 dark:text-slate-400" weight="duotone" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      Full API Documentation
+                    </p>
+                    <p className="text-xs text-muted-foreground">Complete endpoint reference</p>
+                  </div>
+                  <ArrowUpRight size={14} className="ml-auto text-muted-foreground" />
+                </a>
+                <a
+                  href="https://github.com/hazlijohar95/open-event/blob/main/docs/API_TESTING_GUIDE.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 p-4 rounded-lg border border-border/40 hover:border-border hover:bg-muted/20 transition-all group"
+                >
+                  <Rocket size={20} className="text-indigo-600 dark:text-indigo-400" weight="duotone" />
+                  <div>
+                    <p className="text-sm font-medium text-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      Testing Guide
+                    </p>
+                    <p className="text-xs text-muted-foreground">Step-by-step testing instructions</p>
+                  </div>
+                  <ArrowUpRight size={14} className="ml-auto text-muted-foreground" />
+                </a>
+              </div>
+
+              {/* Note */}
+              <div className="mt-6 p-3 rounded-lg bg-muted/30 border border-border/40">
                 <p className="text-xs text-muted-foreground">
-                  <strong className="text-foreground">API docs coming soon.</strong> Explore the{' '}
-                  <a
-                    href="https://github.com/hazlijohar95/open-event/tree/main/convex"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline underline-offset-2 hover:text-foreground"
-                  >
-                    /convex directory
-                  </a>{' '}
-                  for now.
+                  <strong className="text-foreground">Base URL:</strong> Your API base URL is your Convex deployment URL +{' '}
+                  <code className="px-1 py-0.5 bg-background/50 rounded text-xs">/api/v1</code>. Find it in your{' '}
+                  <code className="px-1 py-0.5 bg-background/50 rounded text-xs">.env</code> file or Convex Dashboard.
                 </p>
               </div>
             </section>
