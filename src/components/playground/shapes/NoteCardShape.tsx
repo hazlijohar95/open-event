@@ -2,8 +2,8 @@ import {
   ShapeUtil,
   HTMLContainer,
   Rectangle2d,
-  type TLOnResizeHandler,
 } from 'tldraw'
+import type { TLResizeInfo } from '@tldraw/editor'
 import type { NoteCardShape, NoteCardProps } from '@/lib/playground/types'
 import { Note } from '@phosphor-icons/react'
 
@@ -44,7 +44,7 @@ export class NoteCardShapeUtil extends ShapeUtil<NoteCardShape> {
     return true
   }
 
-  override onResize: TLOnResizeHandler<NoteCardShape> = (shape, info) => {
+  override onResize = (_shape: NoteCardShape, info: TLResizeInfo<NoteCardShape>) => {
     return {
       props: {
         w: Math.max(160, info.initialBounds.width * info.scaleX),

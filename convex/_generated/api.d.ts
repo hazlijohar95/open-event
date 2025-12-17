@@ -12,6 +12,7 @@ import type * as admin from "../admin.js";
 import type * as aiTools from "../aiTools.js";
 import type * as aiUsage from "../aiUsage.js";
 import type * as analytics from "../analytics.js";
+import type * as apiKeys from "../apiKeys.js";
 import type * as api_adminHelpers from "../api/adminHelpers.js";
 import type * as api_auth from "../api/auth.js";
 import type * as api_helpers from "../api/helpers.js";
@@ -59,6 +60,7 @@ declare const fullApi: ApiFromModules<{
   aiTools: typeof aiTools;
   aiUsage: typeof aiUsage;
   analytics: typeof analytics;
+  apiKeys: typeof apiKeys;
   "api/adminHelpers": typeof api_adminHelpers;
   "api/auth": typeof api_auth;
   "api/helpers": typeof api_helpers;

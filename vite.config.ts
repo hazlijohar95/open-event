@@ -45,6 +45,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Allow precaching of larger main bundle produced by Vite
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
         // Use index.html as fallback for SPA routing - this ensures the React app
         // loads properly for all routes. Offline detection is handled in-app via usePWA hook.
         navigateFallback: '/index.html',
