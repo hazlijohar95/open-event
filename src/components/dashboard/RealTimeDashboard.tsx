@@ -1,6 +1,6 @@
 import { useQuery } from 'convex/react'
 import { api } from '../../../convex/_generated/api'
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import {
   LineChart,
   Line,
@@ -32,11 +32,16 @@ import {
   ArrowDown,
   Wallet,
   Target,
+  DownloadSimple,
 } from '@phosphor-icons/react'
 import type { IconProps } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { useAnalyticsExport } from '@/hooks/use-analytics-export'
+import { ExportModal } from './ExportModal'
+import type { AnalyticsExportData, ExportFormat, ExportSectionId } from '@/lib/export'
 
 type Period = 'day' | 'week' | 'month' | 'year'
 
@@ -51,35 +56,61 @@ const COLORS = {
   pink: '#ec4899',
 }
 
-
 export function RealTimeDashboard() {
   const [trendPeriod, setTrendPeriod] = useState<Period>('month')
   const [comparativePeriod, setComparativePeriod] = useState<'week' | 'month' | 'year'>('month')
+
+  // Export functionality
+  const { isExporting, exportFormat, showModal, openModal, closeModal, exportToCSV, exportToPDF } =
+    useAnalyticsExport()
 
   // Get current user to determine role
   const user = useQuery(api.queries.auth.getCurrentUser)
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin'
 
-  // Real-time queries - conditionally use platform-wide or organizer-specific queries
-  // Note: Type assertions needed until Convex regenerates API types to include analytics module
-  const stats = isAdmin
-    ? useQuery(api.events.getPlatformStats)
-    : useQuery(api.events.getMyStats)
-  const trends = isAdmin
-    ? useQuery((api as any).analytics?.getPlatformEventTrends, { period: trendPeriod })
-    : useQuery((api as any).analytics?.getEventTrends, { period: trendPeriod })
-  const performance = isAdmin
-    ? useQuery((api as any).analytics?.getPlatformEventPerformance)
-    : useQuery((api as any).analytics?.getEventPerformance)
-  const comparative = isAdmin
-    ? useQuery((api as any).analytics?.getPlatformComparativeAnalytics, { period: comparativePeriod })
-    : useQuery((api as any).analytics?.getComparativeAnalytics, { period: comparativePeriod })
-  const budget = isAdmin
-    ? useQuery((api as any).analytics?.getPlatformBudgetAnalytics)
-    : useQuery((api as any).analytics?.getBudgetAnalytics)
-  const engagement = isAdmin
-    ? useQuery((api as any).analytics?.getPlatformEngagementAnalytics)
-    : useQuery((api as any).analytics?.getEngagementAnalytics)
+  // Real-time queries - use 'skip' pattern to avoid conditional hook calls
+  // Always call all hooks, but skip the ones we don't need based on role
+  const platformStats = useQuery(api.events.getPlatformStats, isAdmin ? undefined : 'skip')
+  const myStats = useQuery(api.events.getMyStats, !isAdmin ? undefined : 'skip')
+  const stats = isAdmin ? platformStats : myStats
+
+  const platformTrends = useQuery(
+    api.analytics.getPlatformEventTrends,
+    isAdmin ? { period: trendPeriod } : 'skip'
+  )
+  const myTrends = useQuery(
+    api.analytics.getEventTrends,
+    !isAdmin ? { period: trendPeriod } : 'skip'
+  )
+  const trends = isAdmin ? platformTrends : myTrends
+
+  const platformPerformance = useQuery(
+    api.analytics.getPlatformEventPerformance,
+    isAdmin ? {} : 'skip'
+  )
+  const myPerformance = useQuery(api.analytics.getEventPerformance, !isAdmin ? {} : 'skip')
+  const performance = isAdmin ? platformPerformance : myPerformance
+
+  const platformComparative = useQuery(
+    api.analytics.getPlatformComparativeAnalytics,
+    isAdmin ? { period: comparativePeriod } : 'skip'
+  )
+  const myComparative = useQuery(
+    api.analytics.getComparativeAnalytics,
+    !isAdmin ? { period: comparativePeriod } : 'skip'
+  )
+  const comparative = isAdmin ? platformComparative : myComparative
+
+  const platformBudget = useQuery(api.analytics.getPlatformBudgetAnalytics, isAdmin ? {} : 'skip')
+  const myBudget = useQuery(api.analytics.getBudgetAnalytics, !isAdmin ? {} : 'skip')
+  const budget = isAdmin ? platformBudget : myBudget
+
+  const platformEngagement = useQuery(
+    api.analytics.getPlatformEngagementAnalytics,
+    isAdmin ? {} : 'skip'
+  )
+  const myEngagement = useQuery(api.analytics.getEngagementAnalytics, !isAdmin ? {} : 'skip')
+  const engagement = isAdmin ? platformEngagement : myEngagement
 
   // Loading state
   if (stats === undefined || trends === undefined || performance === undefined) {
@@ -122,16 +153,17 @@ export function RealTimeDashboard() {
   }
 
   // Prepare chart data
-  const trendsData = (trends as any)?.map((t: any) => ({
-    period: new Date(t.period).toLocaleDateString('en-US', {
-      month: 'short',
-      day: trendPeriod === 'day' ? 'numeric' : undefined,
-      year: trendPeriod === 'year' ? 'numeric' : undefined,
-    }),
-    events: t.totalEvents,
-    budget: t.totalBudget,
-    attendees: t.totalAttendees,
-  })) || []
+  const trendsData =
+    trends?.map((t) => ({
+      period: new Date(t.period).toLocaleDateString('en-US', {
+        month: 'short',
+        day: trendPeriod === 'day' ? 'numeric' : undefined,
+        year: trendPeriod === 'year' ? 'numeric' : undefined,
+      }),
+      events: t.totalEvents,
+      budget: t.totalBudget,
+      attendees: t.totalAttendees,
+    })) || []
 
   const statusData = stats
     ? [
@@ -174,8 +206,57 @@ export function RealTimeDashboard() {
             <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             <span className="text-sm font-medium text-green-600 dark:text-green-400">Live</span>
           </div>
+          {/* Export Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openModal}
+            disabled={!stats}
+            className="gap-2"
+          >
+            <DownloadSimple size={16} />
+            Export
+          </Button>
         </div>
       </div>
+
+      {/* Export Modal */}
+      <ExportModal
+        open={showModal}
+        onOpenChange={closeModal}
+        onExport={(format: ExportFormat, sections: ExportSectionId[]) => {
+          const exportData: AnalyticsExportData = {
+            stats: stats || undefined,
+            trends: trends || undefined,
+            performance: performance || undefined,
+            comparative: comparative || undefined,
+            budget: budget || undefined,
+            engagement: engagement || undefined,
+            exportedAt: Date.now(),
+            period: trendPeriod,
+            isAdmin,
+          }
+          if (format === 'csv') {
+            exportToCSV(exportData, sections)
+          } else {
+            exportToPDF(exportData, sections)
+          }
+        }}
+        isExporting={isExporting}
+        exportFormat={exportFormat}
+        data={{
+          stats: stats || undefined,
+          trends: trends || undefined,
+          performance: performance || undefined,
+          comparative: comparative || undefined,
+          budget: budget || undefined,
+          engagement: engagement || undefined,
+          // eslint-disable-next-line react-hooks/purity -- timestamp captured at render time
+          exportedAt: Date.now(),
+          period: trendPeriod,
+          isAdmin,
+        }}
+      />
 
       {/* Key Metrics */}
       {stats && (
@@ -284,9 +365,8 @@ export function RealTimeDashboard() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={(props: any) => {
-                      const { name, percent } = props
-                      return `${name} ${((percent ?? 0) * 100).toFixed(0)}%`
+                    label={({ name, percent }: { name?: string; percent?: number }) => {
+                      return `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
                     }}
                     outerRadius={100}
                     fill="#8884d8"
@@ -312,7 +392,9 @@ export function RealTimeDashboard() {
                 </h3>
                 <select
                   value={comparativePeriod}
-                  onChange={(e) => setComparativePeriod(e.target.value as 'week' | 'month' | 'year')}
+                  onChange={(e) =>
+                    setComparativePeriod(e.target.value as 'week' | 'month' | 'year')
+                  }
                   className="text-sm px-3 py-1.5 rounded-lg border border-border bg-background"
                 >
                   <option value="week">Week</option>
@@ -466,24 +548,24 @@ export function RealTimeDashboard() {
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">Vendor Conversion</span>
                         <span className="text-lg font-bold">
-                          {performance.vendorMetrics.conversionRate.toFixed(1)}%
+                          {(performance.vendorMetrics?.conversionRate ?? 0).toFixed(1)}%
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {performance.vendorMetrics.confirmed} of {performance.vendorMetrics.totalApplications}{' '}
-                        confirmed
+                        {performance.vendorMetrics?.confirmed ?? 0} of{' '}
+                        {performance.vendorMetrics?.totalApplications ?? 0} confirmed
                       </div>
                     </div>
                     <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">Sponsor Conversion</span>
                         <span className="text-lg font-bold">
-                          {performance.sponsorMetrics.conversionRate.toFixed(1)}%
+                          {(performance.sponsorMetrics?.conversionRate ?? 0).toFixed(1)}%
                         </span>
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {performance.sponsorMetrics.confirmed} of {performance.sponsorMetrics.totalApplications}{' '}
-                        confirmed
+                        {performance.sponsorMetrics?.confirmed ?? 0} of{' '}
+                        {performance.sponsorMetrics?.totalApplications ?? 0} confirmed
                       </div>
                     </div>
                   </div>
@@ -527,7 +609,8 @@ export function RealTimeDashboard() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium">Budget Utilization</span>
                       <span className="text-sm text-muted-foreground">
-                        ${budget.totalSpent.toLocaleString()} / ${budget.totalBudget.toLocaleString()}
+                        ${budget.totalSpent.toLocaleString()} / $
+                        {budget.totalBudget.toLocaleString()}
                       </span>
                     </div>
                     <div className="h-3 bg-muted rounded-full overflow-hidden">
@@ -627,8 +710,8 @@ export function RealTimeDashboard() {
   )
 }
 
-// Helper Components
-function MetricCard({
+// Helper Components - Memoized for performance
+const MetricCard = memo(function MetricCard({
   label,
   value,
   icon: Icon,
@@ -648,7 +731,11 @@ function MetricCard({
           className="w-10 h-10 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: `${color}20` }}
         >
-          <Icon size={20} weight="duotone" style={{ color } as React.CSSProperties & { color: string }} />
+          <Icon
+            size={20}
+            weight="duotone"
+            style={{ color } as React.CSSProperties & { color: string }}
+          />
         </div>
       </div>
       <p className="text-3xl font-bold font-mono">{value}</p>
@@ -656,9 +743,9 @@ function MetricCard({
       {subtitle && <p className="text-xs text-muted-foreground/70 mt-0.5">{subtitle}</p>}
     </Card>
   )
-}
+})
 
-function ComparisonCard({
+const ComparisonCard = memo(function ComparisonCard({
   label,
   current,
   change,
@@ -693,7 +780,7 @@ function ComparisonCard({
       <p className="text-xs text-muted-foreground mt-2">vs previous period</p>
     </Card>
   )
-}
+})
 
 function EngagementMetric({ label, value }: { label: string; value: number }) {
   return (
@@ -703,4 +790,3 @@ function EngagementMetric({ label, value }: { label: string; value: number }) {
     </div>
   )
 }
-

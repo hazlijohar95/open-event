@@ -99,7 +99,7 @@ describe('SignUpForm', () => {
     })
   })
 
-  it('should show error for password less than 8 characters', async () => {
+  it('should show error for password not meeting requirements', async () => {
     render(<SignUpForm onSubmit={mockOnSubmit} />)
     const user = userEvent.setup()
 
@@ -116,7 +116,8 @@ describe('SignUpForm', () => {
     await user.click(submitButton)
 
     await waitFor(() => {
-      expect(screen.getByText(/password must be at least 8 characters/i)).toBeInTheDocument()
+      // Password validation shows the first failing requirement
+      expect(screen.getByText(/at least 12 characters/i)).toBeInTheDocument()
     })
 
     expect(mockOnSubmit).not.toHaveBeenCalled()
@@ -133,7 +134,8 @@ describe('SignUpForm', () => {
     await user.type(emailInput, 'test@example.com')
 
     const passwordInput = screen.getByPlaceholderText(/create a password/i)
-    await user.type(passwordInput, 'password123')
+    // Password must be 12+ chars with uppercase, lowercase, number, special char
+    await user.type(passwordInput, 'SecurePass123!')
 
     const submitButton = screen.getByRole('button', { name: /create account/i })
     await user.click(submitButton)
@@ -142,7 +144,7 @@ describe('SignUpForm', () => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
         name: 'John Doe',
         email: 'test@example.com',
-        password: 'password123',
+        password: 'SecurePass123!',
       })
     })
   })
@@ -178,7 +180,10 @@ describe('SignUpForm', () => {
 
     expect(screen.getByLabelText(/full name/i)).toHaveAttribute('autocomplete', 'name')
     expect(screen.getByLabelText(/email/i)).toHaveAttribute('autocomplete', 'email')
-    expect(screen.getByPlaceholderText(/create a password/i)).toHaveAttribute('autocomplete', 'new-password')
+    expect(screen.getByPlaceholderText(/create a password/i)).toHaveAttribute(
+      'autocomplete',
+      'new-password'
+    )
   })
 
   it('should clear validation errors when user types', async () => {
@@ -217,13 +222,14 @@ describe('SignUpForm', () => {
     await user.type(emailInput, 'test@example.com')
 
     const passwordInput = screen.getByPlaceholderText(/create a password/i)
-    await user.type(passwordInput, 'password123{Enter}')
+    // Password must be 12+ chars with uppercase, lowercase, number, special char
+    await user.type(passwordInput, 'SecurePass123!{Enter}')
 
     await waitFor(() => {
       expect(mockOnSubmit).toHaveBeenCalledWith({
         name: 'John Doe',
         email: 'test@example.com',
-        password: 'password123',
+        password: 'SecurePass123!',
       })
     })
   })
@@ -231,7 +237,8 @@ describe('SignUpForm', () => {
   it('should display password hint text', () => {
     render(<SignUpForm />)
 
-    expect(screen.getByText(/must be at least 8 characters/i)).toBeInTheDocument()
+    // Hint shows: "Min 12 characters with uppercase, lowercase, number, and special character"
+    expect(screen.getByText(/min 12 characters/i)).toBeInTheDocument()
   })
 
   it('should update form fields when user types', async () => {
@@ -251,4 +258,3 @@ describe('SignUpForm', () => {
     expect(passwordInput.value).toBe('securepass123')
   })
 })
-

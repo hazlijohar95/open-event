@@ -27,25 +27,25 @@ export const API_PERMISSIONS = {
   EVENTS_READ: 'events:read',
   EVENTS_WRITE: 'events:write',
   EVENTS_DELETE: 'events:delete',
-  
+
   // Vendors
   VENDORS_READ: 'vendors:read',
-  
+
   // Sponsors
   SPONSORS_READ: 'sponsors:read',
-  
+
   // Tasks
   TASKS_READ: 'tasks:read',
   TASKS_WRITE: 'tasks:write',
-  
+
   // Budget
   BUDGET_READ: 'budget:read',
   BUDGET_WRITE: 'budget:write',
-  
+
   // User profile
   PROFILE_READ: 'profile:read',
   PROFILE_WRITE: 'profile:write',
-  
+
   // Full access
   ADMIN: '*',
 } as const
@@ -61,12 +61,12 @@ export const API_PERMISSIONS = {
 function generateApiKey(environment: 'live' | 'test' = 'live'): string {
   const prefix = environment === 'live' ? KEY_PREFIX_LIVE : KEY_PREFIX_TEST
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  
+
   let randomPart = ''
   for (let i = 0; i < KEY_RANDOM_LENGTH; i++) {
     randomPart += chars.charAt(Math.floor(Math.random() * chars.length))
   }
-  
+
   return prefix + randomPart
 }
 
@@ -79,7 +79,7 @@ async function hashApiKey(key: string): Promise<string> {
   const data = encoder.encode(key)
   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
 /**
@@ -175,11 +175,11 @@ export const list = query({
 
     const keys = await ctx.db
       .query('apiKeys')
-      .withIndex('by_user', q => q.eq('userId', user._id))
+      .withIndex('by_user', (q) => q.eq('userId', user._id))
       .collect()
 
     // Return keys without the hash
-    return keys.map(key => ({
+    return keys.map((key) => ({
       _id: key._id,
       name: key.name,
       description: key.description,
@@ -252,25 +252,25 @@ export const update = mutation({
 
     // Build update object
     const updates: Record<string, unknown> = {}
-    
+
     if (args.name !== undefined) {
       if (args.name.trim().length === 0) {
         throw new Error('API key name is required')
       }
       updates.name = args.name.trim()
     }
-    
+
     if (args.description !== undefined) {
       updates.description = args.description.trim()
     }
-    
+
     if (args.permissions !== undefined) {
       if (args.permissions.length === 0) {
         throw new Error('At least one permission is required')
       }
       updates.permissions = args.permissions
     }
-    
+
     if (args.rateLimit !== undefined) {
       if (args.rateLimit < 1) {
         throw new Error('Rate limit must be at least 1')
@@ -332,9 +332,9 @@ export const remove = mutation({
     // Delete associated rate limit records
     const rateLimits = await ctx.db
       .query('apiRateLimits')
-      .withIndex('by_key', q => q.eq('apiKeyId', args.id))
+      .withIndex('by_key', (q) => q.eq('apiKeyId', args.id))
       .collect()
-    
+
     for (const limit of rateLimits) {
       await ctx.db.delete(limit._id)
     }
@@ -363,7 +363,7 @@ export const validateKey = internalQuery({
     // Find key by prefix first (faster lookup)
     const keys = await ctx.db
       .query('apiKeys')
-      .withIndex('by_key_prefix', q => q.eq('keyPrefix', args.keyPrefix))
+      .withIndex('by_key_prefix', (q) => q.eq('keyPrefix', args.keyPrefix))
       .collect()
 
     // Find the one with matching hash
@@ -432,15 +432,15 @@ export const checkRateLimit = internalQuery({
 
     const limit = key.rateLimit || DEFAULT_RATE_LIMIT
     const now = Date.now()
-    
+
     // Get current hour window
     const windowStart = Math.floor(now / (60 * 60 * 1000)) * (60 * 60 * 1000)
-    const windowEnd = windowStart + (60 * 60 * 1000)
+    const windowEnd = windowStart + 60 * 60 * 1000
 
     // Find rate limit record for this window
     const rateLimitRecords = await ctx.db
       .query('apiRateLimits')
-      .withIndex('by_key_window', q => 
+      .withIndex('by_key_window', (q) =>
         q.eq('apiKeyId', args.keyId).eq('windowStart', windowStart)
       )
       .collect()
@@ -468,14 +468,14 @@ export const incrementRateLimit = internalMutation({
   },
   handler: async (ctx, args) => {
     const now = Date.now()
-    
+
     // Get current hour window
     const windowStart = Math.floor(now / (60 * 60 * 1000)) * (60 * 60 * 1000)
 
     // Find or create rate limit record
     const rateLimitRecords = await ctx.db
       .query('apiRateLimits')
-      .withIndex('by_key_window', q => 
+      .withIndex('by_key_window', (q) =>
         q.eq('apiKeyId', args.keyId).eq('windowStart', windowStart)
       )
       .collect()
@@ -498,10 +498,10 @@ export const incrementRateLimit = internalMutation({
       })
 
       // Clean up old rate limit records (older than 24 hours)
-      const oldWindowStart = now - (24 * 60 * 60 * 1000)
+      const oldWindowStart = now - 24 * 60 * 60 * 1000
       const oldRecords = await ctx.db
         .query('apiRateLimits')
-        .withIndex('by_key', q => q.eq('apiKeyId', args.keyId))
+        .withIndex('by_key', (q) => q.eq('apiKeyId', args.keyId))
         .collect()
 
       for (const record of oldRecords) {
@@ -521,24 +521,20 @@ export const incrementRateLimit = internalMutation({
  * Check if an API key has a specific permission
  * Supports wildcard matching: "events:*" matches "events:read", "events:write", etc.
  */
-export function hasPermission(
-  permissions: string[],
-  required: string
-): boolean {
-  return permissions.some(perm => {
+export function hasPermission(permissions: string[], required: string): boolean {
+  return permissions.some((perm) => {
     // Full admin access
     if (perm === '*') return true
-    
+
     // Exact match
     if (perm === required) return true
-    
+
     // Wildcard match (e.g., "events:*" matches "events:read")
     if (perm.endsWith(':*')) {
       const prefix = perm.slice(0, -1) // Remove the "*"
       return required.startsWith(prefix)
     }
-    
+
     return false
   })
 }
-

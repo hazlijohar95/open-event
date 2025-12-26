@@ -1,8 +1,9 @@
 import { useQuery, useMutation } from 'convex/react'
-import { useAuthActions } from '@convex-dev/auth/react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../../convex/_generated/api'
 import { usePWA } from '@/hooks/use-pwa'
+import { useAuth } from '@/contexts/AuthContext'
+import { useAuthActions } from '@convex-dev/auth/react'
 import {
   User,
   Buildings,
@@ -36,6 +37,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
+import { TwoFactorSetup, TwoFactorStatus } from '@/components/security'
 
 const organizationTypes = [
   { value: 'company', label: 'Company' },
@@ -74,16 +76,20 @@ const experienceLevels = [
 ]
 
 export function SettingsPage() {
-  const { signOut } = useAuthActions()
+  const { user, accessToken, signOut: customSignOut } = useAuth()
+  const { signOut: convexSignOut } = useAuthActions()
   const navigate = useNavigate()
-  const user = useQuery(api.queries.auth.getCurrentUser)
-  const profile = useQuery(api.organizerProfiles.getMyProfile)
+  const profile = useQuery(
+    api.organizerProfiles.getMyProfile,
+    accessToken ? { accessToken } : 'skip'
+  )
   const saveProfile = useMutation(api.organizerProfiles.saveProfile)
   const { isInstalled, isInstallable, isOnline, promptInstall, getPlatform } = usePWA()
 
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false)
 
   // Profile form state
   const [formData, setFormData] = useState({
@@ -136,9 +142,11 @@ export function SettingsPage() {
   }
 
   const handleSave = async () => {
+    if (!accessToken) return
     setIsSaving(true)
     try {
       await saveProfile({
+        accessToken,
         organizationName: formData.organizationName || undefined,
         organizationType: formData.organizationType || undefined,
         eventTypes: formData.eventTypes.length > 0 ? formData.eventTypes : undefined,
@@ -156,7 +164,11 @@ export function SettingsPage() {
 
   const handleSignOut = async () => {
     try {
-      await signOut()
+      // Sign out from both auth systems
+      await Promise.all([
+        customSignOut().catch(() => {}), // Ignore errors, continue with sign out
+        convexSignOut().catch(() => {}), // Ignore errors, continue with sign out
+      ])
       navigate('/sign-in')
     } catch {
       toast.error('Failed to sign out')
@@ -222,7 +234,7 @@ export function SettingsPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+        <TabsList className="grid w-full grid-cols-4 lg:w-[500px]">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User size={16} weight="duotone" />
             <span className="hidden sm:inline">Profile</span>
@@ -230,6 +242,10 @@ export function SettingsPage() {
           <TabsTrigger value="organization" className="flex items-center gap-2">
             <Buildings size={16} weight="duotone" />
             <span className="hidden sm:inline">Organization</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="flex items-center gap-2">
+            <Shield size={16} weight="duotone" />
+            <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell size={16} weight="duotone" />
@@ -361,11 +377,17 @@ export function SettingsPage() {
               {/* Network Status */}
               <div className="flex items-center justify-between p-4 rounded-lg border border-border">
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    'w-10 h-10 rounded-lg flex items-center justify-center',
-                    isOnline ? 'bg-emerald-500/10' : 'bg-amber-500/10'
-                  )}>
-                    <WifiHigh size={20} weight="duotone" className={isOnline ? 'text-emerald-500' : 'text-amber-500'} />
+                  <div
+                    className={cn(
+                      'w-10 h-10 rounded-lg flex items-center justify-center',
+                      isOnline ? 'bg-emerald-500/10' : 'bg-amber-500/10'
+                    )}
+                  >
+                    <WifiHigh
+                      size={20}
+                      weight="duotone"
+                      className={isOnline ? 'text-emerald-500' : 'text-amber-500'}
+                    />
                   </div>
                   <div>
                     <p className="font-medium text-sm">Network Status</p>
@@ -374,10 +396,14 @@ export function SettingsPage() {
                     </p>
                   </div>
                 </div>
-                <div className={cn(
-                  'px-2.5 py-1 rounded-full text-xs font-medium',
-                  isOnline ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
-                )}>
+                <div
+                  className={cn(
+                    'px-2.5 py-1 rounded-full text-xs font-medium',
+                    isOnline
+                      ? 'bg-emerald-500/10 text-emerald-600'
+                      : 'bg-amber-500/10 text-amber-600'
+                  )}
+                >
                   {isOnline ? 'Online' : 'Offline'}
                 </div>
               </div>
@@ -505,6 +531,84 @@ export function SettingsPage() {
           </div>
         </TabsContent>
 
+        {/* Security Tab */}
+        <TabsContent value="security" className="space-y-6">
+          {showTwoFactorSetup ? (
+            <div className="rounded-xl border border-border bg-card p-6">
+              <TwoFactorSetup
+                onComplete={() => {
+                  setShowTwoFactorSetup(false)
+                  toast.success('Two-factor authentication enabled successfully!')
+                }}
+                onCancel={() => setShowTwoFactorSetup(false)}
+              />
+            </div>
+          ) : (
+            <TwoFactorStatus onEnableClick={() => setShowTwoFactorSetup(true)} />
+          )}
+
+          {/* Password Section */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h3 className="font-semibold mb-6 flex items-center gap-2">
+              <Shield size={18} weight="duotone" className="text-primary" />
+              Password
+            </h3>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                    <Envelope size={20} weight="duotone" className="text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Change Password</p>
+                    <p className="text-xs text-muted-foreground">
+                      Update your password to keep your account secure
+                    </p>
+                  </div>
+                </div>
+                <button
+                  className={cn(
+                    'px-4 py-2 text-sm rounded-lg border border-border',
+                    'hover:bg-muted transition-colors cursor-pointer'
+                  )}
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Sessions Section */}
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h3 className="font-semibold mb-6 flex items-center gap-2">
+              <DeviceMobile size={18} weight="duotone" className="text-primary" />
+              Active Sessions
+            </h3>
+
+            <div className="p-4 rounded-lg border border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                    <DeviceMobile size={20} weight="duotone" className="text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">Current Session</p>
+                    <p className="text-xs text-muted-foreground">This device - Active now</p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-600">
+                  Current
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-muted-foreground mt-4 text-center">
+              Session management coming soon. You'll be able to view and revoke active sessions.
+            </p>
+          </div>
+        </TabsContent>
+
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6">
           <div className="rounded-xl border border-border bg-card p-6">
@@ -577,7 +681,8 @@ export function SettingsPage() {
 
           <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
             <p className="text-sm text-muted-foreground">
-              Notification preferences are saved locally for now. Full notification system coming soon.
+              Notification preferences are saved locally for now. Full notification system coming
+              soon.
             </p>
           </div>
         </TabsContent>
@@ -614,7 +719,11 @@ function StatCard({
   label,
   value,
 }: {
-  icon: React.ComponentType<{ size?: number; weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'; className?: string }>
+  icon: React.ComponentType<{
+    size?: number
+    weight?: 'thin' | 'light' | 'regular' | 'bold' | 'fill' | 'duotone'
+    className?: string
+  }>
   label: string
   value: string
 }) {
@@ -702,13 +811,19 @@ function AIUsageStats() {
 
   if (usage === null) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Sign in to view your AI usage statistics.
-      </p>
+      <p className="text-sm text-muted-foreground">Sign in to view your AI usage statistics.</p>
     )
   }
 
-  const { promptsUsed, promptsRemaining, dailyLimit, totalPrompts, status, timeUntilReset, isAdmin } = usage
+  const {
+    promptsUsed,
+    promptsRemaining,
+    dailyLimit,
+    totalPrompts,
+    status,
+    timeUntilReset,
+    isAdmin,
+  } = usage
   const percentage = Math.min(100, Math.round((promptsUsed / dailyLimit) * 100))
 
   // Status colors
@@ -748,9 +863,7 @@ function AIUsageStats() {
       <div className="grid grid-cols-3 gap-3">
         <div className="p-3 rounded-lg bg-muted/50 text-center">
           <Lightning size={18} weight="duotone" className="text-primary mx-auto mb-1" />
-          <p className="text-lg font-bold font-mono">
-            {isAdmin ? '∞' : promptsRemaining}
-          </p>
+          <p className="text-lg font-bold font-mono">{isAdmin ? '∞' : promptsRemaining}</p>
           <p className="text-[10px] text-muted-foreground">Remaining</p>
         </div>
         <div className="p-3 rounded-lg bg-muted/50 text-center">
@@ -782,9 +895,7 @@ function AIUsageStats() {
       )}
       {isAdmin && (
         <div className="p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-          <p className="text-xs text-purple-600">
-            As an admin, you have unlimited AI access.
-          </p>
+          <p className="text-xs text-purple-600">As an admin, you have unlimited AI access.</p>
         </div>
       )}
     </div>

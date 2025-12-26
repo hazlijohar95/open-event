@@ -34,11 +34,7 @@ export type {
 export { DEFAULT_CONFIGS } from './types'
 
 // Factory
-export {
-  createAIProvider,
-  isProviderAvailable,
-  getDefaultProvider,
-} from './factory'
+export { createAIProvider, isProviderAvailable, getDefaultProvider } from './factory'
 
 // Providers
 export { OpenAIProvider } from './providers/openai'

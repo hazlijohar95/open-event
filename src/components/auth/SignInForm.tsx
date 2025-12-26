@@ -6,6 +6,7 @@ import { PasswordInput } from './PasswordInput'
 import { SocialAuthButtons } from './SocialAuthButtons'
 import { Separator } from '@/components/ui/separator'
 import { SignIn } from '@phosphor-icons/react'
+import { isValidEmail } from '@/lib/validation'
 
 interface SignInFormProps {
   onSubmit?: (data: { email: string; password: string }) => void
@@ -23,7 +24,7 @@ export function SignInForm({ onSubmit, onGoogleSignIn, isLoading }: SignInFormPr
 
     if (!email) {
       newErrors.email = 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!isValidEmail(email)) {
       newErrors.email = 'Please enter a valid email'
     }
 
@@ -56,9 +57,14 @@ export function SignInForm({ onSubmit, onGoogleSignIn, isLoading }: SignInFormPr
             className={errors.email ? 'border-destructive' : ''}
             disabled={isLoading}
             autoComplete="email"
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? 'email-error' : undefined}
+            aria-required
           />
           {errors.email && (
-            <p className="text-sm text-destructive">{errors.email}</p>
+            <p id="email-error" role="alert" className="text-sm text-destructive">
+              {errors.email}
+            </p>
           )}
         </div>
 
@@ -72,9 +78,14 @@ export function SignInForm({ onSubmit, onGoogleSignIn, isLoading }: SignInFormPr
             error={errors.password}
             disabled={isLoading}
             autoComplete="current-password"
+            aria-invalid={!!errors.password}
+            aria-describedby={errors.password ? 'password-error' : undefined}
+            aria-required
           />
           {errors.password && (
-            <p className="text-sm text-destructive">{errors.password}</p>
+            <p id="password-error" role="alert" className="text-sm text-destructive">
+              {errors.password}
+            </p>
           )}
         </div>
       </div>
@@ -93,10 +104,7 @@ export function SignInForm({ onSubmit, onGoogleSignIn, isLoading }: SignInFormPr
         </div>
       </div>
 
-      <SocialAuthButtons
-        onGoogleClick={onGoogleSignIn}
-        isLoading={isLoading}
-      />
+      <SocialAuthButtons onGoogleClick={onGoogleSignIn} isLoading={isLoading} />
     </form>
   )
 }

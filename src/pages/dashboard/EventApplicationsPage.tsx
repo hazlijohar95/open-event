@@ -42,7 +42,9 @@ export function EventApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('pending')
   const [typeFilter, setTypeFilter] = useState<'all' | 'vendor' | 'sponsor'>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedApplication, setSelectedApplication] = useState<Id<'eventApplications'> | null>(null)
+  const [selectedApplication, setSelectedApplication] = useState<Id<'eventApplications'> | null>(
+    null
+  )
   const [rejectReason, setRejectReason] = useState('')
   const [showRejectModal, setShowRejectModal] = useState(false)
   const [showDetailModal, setShowDetailModal] = useState(false)
@@ -246,9 +248,7 @@ export function EventApplicationsPage() {
       {/* Applications List */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         {!applications ? (
-          <div className="p-8 text-center text-muted-foreground">
-            Loading applications...
-          </div>
+          <div className="p-8 text-center text-muted-foreground">Loading applications...</div>
         ) : filteredApplications?.length === 0 ? (
           <div className="p-8 text-center">
             <User size={48} weight="duotone" className="mx-auto mb-4 text-muted-foreground/50" />
@@ -261,10 +261,7 @@ export function EventApplicationsPage() {
               const isVendor = app.applicantType === 'vendor'
 
               return (
-                <div
-                  key={app._id}
-                  className="p-4 hover:bg-muted/30 transition-colors"
-                >
+                <div key={app._id} className="p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     {/* Applicant Info */}
                     <div className="flex-1 min-w-0">
@@ -439,10 +436,7 @@ export function EventApplicationsPage() {
       {/* Reject Modal */}
       {showRejectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowRejectModal(false)}
-          />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowRejectModal(false)} />
           <div className="relative bg-background rounded-xl border border-border p-6 w-full max-w-md mx-4 shadow-xl">
             <h3 className="text-lg font-semibold mb-4">Reject Application</h3>
             <p className="text-sm text-muted-foreground mb-4">
@@ -485,10 +479,7 @@ export function EventApplicationsPage() {
       {/* Detail Modal */}
       {showDetailModal && selectedApp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowDetailModal(false)}
-          />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDetailModal(false)} />
           <div className="relative bg-background rounded-xl border border-border p-6 w-full max-w-lg mx-4 shadow-xl max-h-[80vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4">Application Details</h3>
 
@@ -499,18 +490,26 @@ export function EventApplicationsPage() {
                 <p className="font-semibold">{selectedApp.applicantDetails?.name}</p>
                 <p className="text-sm text-muted-foreground capitalize">
                   {selectedApp.applicantType}
-                  {selectedApp.applicantDetails?.category && ` - ${selectedApp.applicantDetails.category}`}
-                  {selectedApp.applicantDetails?.industry && ` - ${selectedApp.applicantDetails.industry}`}
+                  {selectedApp.applicantDetails?.category &&
+                    ` - ${selectedApp.applicantDetails.category}`}
+                  {selectedApp.applicantDetails?.industry &&
+                    ` - ${selectedApp.applicantDetails.industry}`}
                 </p>
               </div>
 
               {/* Contact */}
-              {(selectedApp.contactName || selectedApp.contactEmail || selectedApp.contactPhone) && (
+              {(selectedApp.contactName ||
+                selectedApp.contactEmail ||
+                selectedApp.contactPhone) && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground mb-1">Contact</p>
                   {selectedApp.contactName && <p>{selectedApp.contactName}</p>}
-                  {selectedApp.contactEmail && <p className="text-sm">{selectedApp.contactEmail}</p>}
-                  {selectedApp.contactPhone && <p className="text-sm">{selectedApp.contactPhone}</p>}
+                  {selectedApp.contactEmail && (
+                    <p className="text-sm">{selectedApp.contactEmail}</p>
+                  )}
+                  {selectedApp.contactPhone && (
+                    <p className="text-sm">{selectedApp.contactPhone}</p>
+                  )}
                 </div>
               )}
 
@@ -525,7 +524,9 @@ export function EventApplicationsPage() {
               {/* Proposed Services */}
               {selectedApp.proposedServices && selectedApp.proposedServices.length > 0 && (
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Proposed Services</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Proposed Services
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {selectedApp.proposedServices.map((service, i) => (
                       <span key={i} className="px-2 py-1 text-xs bg-muted rounded-md">

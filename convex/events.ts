@@ -86,6 +86,8 @@ export const create = mutation({
     description: v.optional(v.string()),
     eventType: v.optional(v.string()),
     status: v.optional(v.string()),
+    // Organization support
+    organizationId: v.optional(v.id('organizations')),
     // Location fields
     locationType: v.optional(v.string()),
     venueName: v.optional(v.string()),
@@ -103,6 +105,34 @@ export const create = mutation({
     const user = await getCurrentUser(ctx)
     if (!user) {
       throw new Error('Authentication required')
+    }
+
+    // Verify organization membership if organizationId is provided
+    if (args.organizationId) {
+      const orgId = args.organizationId // Store to help TypeScript narrowing
+      const membership = await ctx.db
+        .query('organizationMembers')
+        .withIndex('by_org_user', (q) =>
+          q.eq('organizationId', orgId).eq('userId', user._id)
+        )
+        .first()
+
+      if (!membership || membership.status !== 'active') {
+        throw new Error('You are not an active member of this organization')
+      }
+
+      // Must have at least manager role to create events for org
+      const roleHierarchy: Record<string, number> = {
+        viewer: 1,
+        member: 2,
+        manager: 3,
+        admin: 4,
+        owner: 5,
+      }
+      const memberRole = roleHierarchy[membership.role] || 0
+      if (memberRole < roleHierarchy.manager) {
+        throw new Error('Insufficient permissions to create events for this organization')
+      }
     }
 
     // Input validation - string length limits
@@ -131,7 +161,7 @@ export const create = mutation({
     }
 
     // Validate date is not too far in the past
-    const oneYearAgo = Date.now() - (365 * 24 * 60 * 60 * 1000)
+    const oneYearAgo = Date.now() - 365 * 24 * 60 * 60 * 1000
     if (args.startDate < oneYearAgo) {
       throw new Error('Event date cannot be more than one year in the past')
     }
@@ -143,6 +173,7 @@ export const create = mutation({
 
     return await ctx.db.insert('events', {
       organizerId: user._id, // Always use current user's ID
+      organizationId: args.organizationId, // Optional org association
       title: args.title.trim(),
       startDate: args.startDate,
       description: args.description?.trim(),
@@ -171,6 +202,8 @@ export const update = mutation({
     description: v.optional(v.string()),
     eventType: v.optional(v.string()),
     status: v.optional(v.string()),
+    // Organization support
+    organizationId: v.optional(v.id('organizations')),
     // Location fields
     locationType: v.optional(v.string()),
     venueName: v.optional(v.string()),
@@ -209,6 +242,35 @@ export const update = mutation({
     // Only owner or superadmin can update
     if (user.role !== 'superadmin' && event.organizerId !== user._id) {
       throw new Error('Access denied - you can only update your own events')
+    }
+
+    // Verify organization membership if changing organizationId
+    if (args.organizationId !== undefined && args.organizationId !== event.organizationId) {
+      if (args.organizationId !== null) {
+        const membership = await ctx.db
+          .query('organizationMembers')
+          .withIndex('by_org_user', (q) =>
+            q.eq('organizationId', args.organizationId!).eq('userId', user._id)
+          )
+          .first()
+
+        if (!membership || membership.status !== 'active') {
+          throw new Error('You are not an active member of this organization')
+        }
+
+        // Must have at least manager role to assign events to org
+        const roleHierarchy: Record<string, number> = {
+          viewer: 1,
+          member: 2,
+          manager: 3,
+          admin: 4,
+          owner: 5,
+        }
+        const memberRole = roleHierarchy[membership.role] || 0
+        if (memberRole < roleHierarchy.manager) {
+          throw new Error('Insufficient permissions to assign events to this organization')
+        }
+      }
     }
 
     // Input validation - string length limits
@@ -250,7 +312,7 @@ export const update = mutation({
       if (!isValidStatusTransition(event.status, args.status)) {
         throw new Error(
           `Invalid status transition: cannot change from "${event.status}" to "${args.status}". ` +
-          `Allowed transitions: ${VALID_STATUS_TRANSITIONS[event.status]?.join(', ') || 'none'}`
+            `Allowed transitions: ${VALID_STATUS_TRANSITIONS[event.status]?.join(', ') || 'none'}`
         )
       }
     }
@@ -346,7 +408,9 @@ export const remove = mutation({
         .first()
 
       if (confirmedVendors || confirmedSponsors) {
-        throw new Error('Cannot delete active event with confirmed vendors or sponsors. Cancel the event first.')
+        throw new Error(
+          'Cannot delete active event with confirmed vendors or sponsors. Cancel the event first.'
+        )
       }
     }
 
@@ -431,9 +495,7 @@ export const listPublic = query({
       .collect()
 
     // Filter to only active/planning events
-    events = events.filter(
-      (e) => e.status === 'active' || e.status === 'planning'
-    )
+    events = events.filter((e) => e.status === 'active' || e.status === 'planning')
 
     // Filter by event type
     if (args.eventType && args.eventType !== 'all') {
@@ -482,7 +544,8 @@ export const listPublic = query({
       locationType: e.locationType,
       // Respect visibility settings
       venueName: e.publicVisibility?.showVenue !== false ? e.venueName : undefined,
-      expectedAttendees: e.publicVisibility?.showAttendees !== false ? e.expectedAttendees : undefined,
+      expectedAttendees:
+        e.publicVisibility?.showAttendees !== false ? e.expectedAttendees : undefined,
       budget: e.publicVisibility?.showBudget ? e.budget : undefined,
       budgetCurrency: e.publicVisibility?.showBudget ? e.budgetCurrency : undefined,
       // What they're looking for
@@ -525,7 +588,8 @@ export const getPublic = query({
       venueName: event.publicVisibility?.showVenue !== false ? event.venueName : undefined,
       venueAddress: event.publicVisibility?.showVenue !== false ? event.venueAddress : undefined,
       virtualPlatform: event.locationType !== 'in-person' ? event.virtualPlatform : undefined,
-      expectedAttendees: event.publicVisibility?.showAttendees !== false ? event.expectedAttendees : undefined,
+      expectedAttendees:
+        event.publicVisibility?.showAttendees !== false ? event.expectedAttendees : undefined,
       budget: event.publicVisibility?.showBudget ? event.budget : undefined,
       budgetCurrency: event.publicVisibility?.showBudget ? event.budgetCurrency : undefined,
       // What they're looking for
@@ -533,11 +597,14 @@ export const getPublic = query({
       seekingSponsors: event.seekingSponsors,
       vendorCategories: event.vendorCategories,
       sponsorBenefits: event.sponsorBenefits,
-      requirements: event.publicVisibility?.showRequirements !== false ? event.requirements : undefined,
+      requirements:
+        event.publicVisibility?.showRequirements !== false ? event.requirements : undefined,
       // Organizer info
-      organizer: organizer ? {
-        name: organizer.name,
-      } : undefined,
+      organizer: organizer
+        ? {
+            name: organizer.name,
+          }
+        : undefined,
       createdAt: event.createdAt,
     }
   },

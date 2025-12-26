@@ -6,6 +6,50 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Create vendor chunks for large dependencies
+          if (id.includes('node_modules')) {
+            // TLDraw - largest dependency (PlaygroundPage)
+            if (id.includes('tldraw') || id.includes('@tldraw/')) {
+              return 'vendor-tldraw'
+            }
+            // Charts library (AnalyticsPage)
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'vendor-charts'
+            }
+            // Core React
+            if (id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react'
+            }
+            // Radix UI components
+            if (id.includes('@radix-ui/')) {
+              return 'vendor-radix'
+            }
+            // Icons
+            if (id.includes('@phosphor-icons/')) {
+              return 'vendor-icons'
+            }
+            // Convex (backend client)
+            if (id.includes('convex')) {
+              return 'vendor-convex'
+            }
+            // Markdown rendering
+            if (id.includes('react-markdown') || id.includes('remark') || id.includes('unified') || id.includes('mdast') || id.includes('micromark')) {
+              return 'vendor-markdown'
+            }
+            // PDF generation
+            if (id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'vendor-pdf'
+            }
+          }
+          return undefined
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -51,8 +95,8 @@ export default defineConfig({
         // loads properly for all routes. Offline detection is handled in-app via usePWA hook.
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
-          /^\/api/,      // API routes
-          /^\/__/,       // Internal routes
+          /^\/api/, // API routes
+          /^\/__/, // Internal routes
           /^\/.*\.[^/]+$/, // Files with extensions (assets, etc.)
         ],
         runtimeCaching: [

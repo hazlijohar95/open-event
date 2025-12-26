@@ -6,6 +6,7 @@ import { PasswordInput } from './PasswordInput'
 import { SocialAuthButtons } from './SocialAuthButtons'
 import { Separator } from '@/components/ui/separator'
 import { UserPlus } from '@phosphor-icons/react'
+import { isValidEmail, validatePasswordStrength } from '@/lib/validation'
 
 interface SignUpFormProps {
   onSubmit?: (data: { name: string; email: string; password: string }) => void
@@ -28,14 +29,17 @@ export function SignUpForm({ onSubmit, onGoogleSignUp, isLoading }: SignUpFormPr
 
     if (!email) {
       newErrors.email = 'Email is required'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!isValidEmail(email)) {
       newErrors.email = 'Please enter a valid email'
     }
 
     if (!password) {
       newErrors.password = 'Password is required'
-    } else if (password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters'
+    } else {
+      const passwordValidation = validatePasswordStrength(password)
+      if (!passwordValidation.isValid) {
+        newErrors.password = passwordValidation.errors[0]
+      }
     }
 
     setErrors(newErrors)
@@ -63,9 +67,14 @@ export function SignUpForm({ onSubmit, onGoogleSignUp, isLoading }: SignUpFormPr
             className={errors.name ? 'border-destructive' : ''}
             disabled={isLoading}
             autoComplete="name"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? 'name-error' : undefined}
+            aria-required
           />
           {errors.name && (
-            <p className="text-sm text-destructive">{errors.name}</p>
+            <p id="name-error" role="alert" className="text-sm text-destructive">
+              {errors.name}
+            </p>
           )}
         </div>
 
@@ -80,9 +89,14 @@ export function SignUpForm({ onSubmit, onGoogleSignUp, isLoading }: SignUpFormPr
             className={errors.email ? 'border-destructive' : ''}
             disabled={isLoading}
             autoComplete="email"
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? 'signup-email-error' : undefined}
+            aria-required
           />
           {errors.email && (
-            <p className="text-sm text-destructive">{errors.email}</p>
+            <p id="signup-email-error" role="alert" className="text-sm text-destructive">
+              {errors.email}
+            </p>
           )}
         </div>
 
@@ -96,12 +110,17 @@ export function SignUpForm({ onSubmit, onGoogleSignUp, isLoading }: SignUpFormPr
             error={errors.password}
             disabled={isLoading}
             autoComplete="new-password"
+            aria-invalid={!!errors.password}
+            aria-describedby={errors.password ? 'signup-password-error' : 'password-requirements'}
+            aria-required
           />
           {errors.password && (
-            <p className="text-sm text-destructive">{errors.password}</p>
+            <p id="signup-password-error" role="alert" className="text-sm text-destructive">
+              {errors.password}
+            </p>
           )}
-          <p className="text-xs text-muted-foreground">
-            Must be at least 8 characters
+          <p id="password-requirements" className="text-xs text-muted-foreground">
+            Min 12 characters with uppercase, lowercase, number, and special character
           </p>
         </div>
       </div>
@@ -120,10 +139,7 @@ export function SignUpForm({ onSubmit, onGoogleSignUp, isLoading }: SignUpFormPr
         </div>
       </div>
 
-      <SocialAuthButtons
-        onGoogleClick={onGoogleSignUp}
-        isLoading={isLoading}
-      />
+      <SocialAuthButtons onGoogleClick={onGoogleSignUp} isLoading={isLoading} />
     </form>
   )
 }

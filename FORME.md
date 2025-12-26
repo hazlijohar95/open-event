@@ -3,6 +3,7 @@
 ## What This Project Does
 
 **Open Event** is an open-source event management platform that connects three key players:
+
 - **Organizers**: Create and manage events with AI assistance, track budgets, coordinate vendors, and find sponsors
 - **Vendors**: Showcase services, discover event opportunities, and get hired
 - **Sponsors**: Find events to support, manage sponsorship tiers, and track investments
@@ -44,8 +45,14 @@ The backend is organized by domain:
 - **`moderation.ts`** - Admin moderation actions
 - **`analytics.ts`** - Analytics queries
 - **`admin.ts`** - Admin-only operations
+- **`organizations.ts`** - Multi-tenant organization/team management
+- **`accountLockout.ts`** - Brute force protection (account lockout after failed attempts)
+- **`globalRateLimit.ts`** - IP-based rate limiting with sliding windows
+- **`auditLog.ts`** - Security audit trail logging
+- **`twoFactorAuth.ts`** - TOTP-based two-factor authentication
 
 **Subdirectories:**
+
 - **`lib/agent/`** - AI agent system (tools, handlers, types)
 - **`lib/ai/`** - AI provider abstraction (OpenAI, Anthropic, Groq adapters)
 - **`api/`** - Public API endpoints and helpers
@@ -65,6 +72,8 @@ The backend is organized by domain:
 - **`agent/`** - AI tool execution UI (confirmations, results)
 - **`admin/`** - Admin panel components (AdminLayout, AdminSidebar)
 - **`dashboard/`** - Dashboard-specific components
+- **`security/`** - Security components (TwoFactorSetup, TwoFactorStatus, TwoFactorVerifyModal)
+- **`organizations/`** - Organization management (CreateOrganizationModal, TeamMembersList, InviteMemberModal)
 - **`chat/`** - Chat UI components (messages, streaming text)
 - **`onboarding/`** - User onboarding flow components
 - **`playground/`** - Tldraw-based event canvas (Beta feature)
@@ -74,7 +83,7 @@ The backend is organized by domain:
 #### `/src/pages` - Page Components (Route Handlers)
 
 - **`dashboard/`** - Main app pages (Events, Vendors, Sponsors, Analytics, Settings)
-- **`admin/`** - Admin panel pages (Users, Vendors, Sponsors, Moderation)
+- **`admin/`** - Admin panel pages (Users, Vendors, Sponsors, Moderation, AuditLogs, RateLimits)
 - **`auth/`** - Authentication pages (SignIn, SignUp)
 - **`onboarding/`** - User onboarding flow
 - **`public/`** - Public pages (Event directory, event details)
@@ -126,7 +135,7 @@ The backend is organized by domain:
 - **`auth.spec.ts`** - Authentication flow tests
 - **`landing.spec.ts`** - Landing page tests
 
-**Note:** Unit tests are co-located with their components/utilities (e.g., `SignUpForm.test.tsx` next to `SignUpForm.tsx`). Test setup is in `src/test/setup.ts`.
+**Note:** Unit tests are co-located with their components/utilities (e.g., `SignUpForm.test.tsx` next to `SignUpForm.tsx`). Security module tests are in `src/lib/` (accountLockout.test.ts, globalRateLimit.test.ts, auditLog.test.ts). Test setup is in `src/test/setup.ts`.
 
 ### `/scripts` - Utility Scripts
 
@@ -147,6 +156,7 @@ The backend is organized by domain:
 3. **Component Organization**: Pages compose components from `/components`, which use UI primitives from `/components/ui`.
 4. **Type Safety**: Full TypeScript coverage with Convex-generated types from `_generated/api`.
 5. **Public API**: RESTful API with API key authentication, rate limiting, and webhook support.
+6. **Security Layer**: Account lockout, global rate limiting, audit logging, and optional 2FA for enterprise users.
 
 ## Entry Points
 
@@ -240,7 +250,9 @@ The backend is organized by domain:
 │  ├───────────────────────────────────────────────────────────────────────┤  │
 │  │  Tables: users, events, vendors, sponsors, eventTasks, budgetItems,   │  │
 │  │          eventVendors, eventSponsors, eventApplications, inquiries,   │  │
-│  │          apiKeys, webhooks, webhookDeliveries, aiUsage, etc.          │  │
+│  │          apiKeys, webhooks, webhookDeliveries, aiUsage, organizations,│  │
+│  │          organizationMembers, organizationInvitations, auditLogs,     │  │
+│  │          rateLimitRecords, accountLockouts, etc.                      │  │
 │  └───────────────────────────────────────────────────────────────────────┘  │
 │                                    │                                         │
 │  ┌─────────────────────────────────▼─────────────────────────────────────┐  │
@@ -485,4 +497,3 @@ External Application
 - **Public API ↔ External Apps**: RESTful endpoints with API key auth
 - **Webhooks ↔ External Services**: HTTP POST with retry logic
 - **Auth ↔ Google OAuth**: Convex Auth handles OAuth flow
-

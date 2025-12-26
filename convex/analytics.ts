@@ -16,29 +16,29 @@ import { getCurrentUser, isAdminRole } from './lib/auth'
  */
 function getPeriodStart(timestamp: number, period: 'day' | 'week' | 'month' | 'year'): number {
   const date = new Date(timestamp)
-  
+
   switch (period) {
     case 'day':
       date.setHours(0, 0, 0, 0)
       return date.getTime()
-    
+
     case 'week': {
       const day = date.getDay()
       date.setDate(date.getDate() - day)
       date.setHours(0, 0, 0, 0)
       return date.getTime()
     }
-    
+
     case 'month':
       date.setDate(1)
       date.setHours(0, 0, 0, 0)
       return date.getTime()
-    
+
     case 'year':
       date.setMonth(0, 1)
       date.setHours(0, 0, 0, 0)
       return date.getTime()
-    
+
     default:
       return timestamp
   }
@@ -53,17 +53,17 @@ function groupByPeriod<T>(
   period: 'day' | 'week' | 'month' | 'year'
 ): Map<number, T[]> {
   const grouped = new Map<number, T[]>()
-  
+
   for (const item of items) {
     const timestamp = getTimestamp(item)
     const periodStart = getPeriodStart(timestamp, period)
-    
+
     if (!grouped.has(periodStart)) {
       grouped.set(periodStart, [])
     }
     grouped.get(periodStart)!.push(item)
   }
-  
+
   return grouped
 }
 
@@ -77,12 +77,9 @@ function groupByPeriod<T>(
  */
 export const getEventTrends = query({
   args: {
-    period: v.optional(v.union(
-      v.literal('day'),
-      v.literal('week'),
-      v.literal('month'),
-      v.literal('year')
-    )),
+    period: v.optional(
+      v.union(v.literal('day'), v.literal('week'), v.literal('month'), v.literal('year'))
+    ),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   },
@@ -116,7 +113,7 @@ export const getEventTrends = query({
         const totalEvents = events.length
         const totalBudget = events.reduce((sum, e) => sum + (e.budget || 0), 0)
         const totalAttendees = events.reduce((sum, e) => sum + (e.expectedAttendees || 0), 0)
-        
+
         // Count by status
         const byStatus = {
           draft: events.filter((e) => e.status === 'draft').length,
@@ -259,11 +256,7 @@ export const getEventPerformance = query({
  */
 export const getComparativeAnalytics = query({
   args: {
-    period: v.optional(v.union(
-      v.literal('week'),
-      v.literal('month'),
-      v.literal('year')
-    )),
+    period: v.optional(v.union(v.literal('week'), v.literal('month'), v.literal('year'))),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx)
@@ -338,13 +331,17 @@ export const getComparativeAnalytics = query({
       period,
       current: {
         ...current,
-        averageBudget: current.totalEvents > 0 ? Math.round(current.totalBudget / current.totalEvents) : 0,
-        averageAttendees: current.totalEvents > 0 ? Math.round(current.totalAttendees / current.totalEvents) : 0,
+        averageBudget:
+          current.totalEvents > 0 ? Math.round(current.totalBudget / current.totalEvents) : 0,
+        averageAttendees:
+          current.totalEvents > 0 ? Math.round(current.totalAttendees / current.totalEvents) : 0,
       },
       previous: {
         ...previous,
-        averageBudget: previous.totalEvents > 0 ? Math.round(previous.totalBudget / previous.totalEvents) : 0,
-        averageAttendees: previous.totalEvents > 0 ? Math.round(previous.totalAttendees / previous.totalEvents) : 0,
+        averageBudget:
+          previous.totalEvents > 0 ? Math.round(previous.totalBudget / previous.totalEvents) : 0,
+        averageAttendees:
+          previous.totalEvents > 0 ? Math.round(previous.totalAttendees / previous.totalEvents) : 0,
       },
       changes: {
         totalEvents: calculateChange(current.totalEvents, previous.totalEvents),
@@ -394,7 +391,10 @@ export const getBudgetAnalytics = query({
     const eventsWithBudget = eventsInRange.filter((e) => e.budget && e.budget > 0).length
 
     // Calculate actual spending from budget items
-    const totalSpent = budgetItems.reduce((sum, bi) => sum + (bi.actualAmount || bi.estimatedAmount || 0), 0)
+    const totalSpent = budgetItems.reduce(
+      (sum, bi) => sum + (bi.actualAmount || bi.estimatedAmount || 0),
+      0
+    )
     const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
     // Group by currency
@@ -493,7 +493,8 @@ export const getEngagementAnalytics = query({
     const eventsWithSponsors = new Set(eventSponsors.map((es) => es.eventId)).size
 
     const avgVendorsPerEvent = eventsWithVendors > 0 ? vendorApplications / eventsWithVendors : 0
-    const avgSponsorsPerEvent = eventsWithSponsors > 0 ? sponsorApplications / eventsWithSponsors : 0
+    const avgSponsorsPerEvent =
+      eventsWithSponsors > 0 ? sponsorApplications / eventsWithSponsors : 0
 
     return {
       vendors: {
@@ -528,12 +529,9 @@ export const getEngagementAnalytics = query({
  */
 export const getPlatformEventTrends = query({
   args: {
-    period: v.optional(v.union(
-      v.literal('day'),
-      v.literal('week'),
-      v.literal('month'),
-      v.literal('year')
-    )),
+    period: v.optional(
+      v.union(v.literal('day'), v.literal('week'), v.literal('month'), v.literal('year'))
+    ),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   },
@@ -565,7 +563,7 @@ export const getPlatformEventTrends = query({
         const totalEvents = events.length
         const totalBudget = events.reduce((sum, e) => sum + (e.budget || 0), 0)
         const totalAttendees = events.reduce((sum, e) => sum + (e.expectedAttendees || 0), 0)
-        
+
         const byStatus = {
           draft: events.filter((e) => e.status === 'draft').length,
           planning: events.filter((e) => e.status === 'planning').length,
@@ -707,11 +705,7 @@ export const getPlatformEventPerformance = query({
  */
 export const getPlatformComparativeAnalytics = query({
   args: {
-    period: v.optional(v.union(
-      v.literal('week'),
-      v.literal('month'),
-      v.literal('year')
-    )),
+    period: v.optional(v.union(v.literal('week'), v.literal('month'), v.literal('year'))),
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx)
@@ -785,13 +779,17 @@ export const getPlatformComparativeAnalytics = query({
       period,
       current: {
         ...current,
-        averageBudget: current.totalEvents > 0 ? Math.round(current.totalBudget / current.totalEvents) : 0,
-        averageAttendees: current.totalEvents > 0 ? Math.round(current.totalAttendees / current.totalEvents) : 0,
+        averageBudget:
+          current.totalEvents > 0 ? Math.round(current.totalBudget / current.totalEvents) : 0,
+        averageAttendees:
+          current.totalEvents > 0 ? Math.round(current.totalAttendees / current.totalEvents) : 0,
       },
       previous: {
         ...previous,
-        averageBudget: previous.totalEvents > 0 ? Math.round(previous.totalBudget / previous.totalEvents) : 0,
-        averageAttendees: previous.totalEvents > 0 ? Math.round(previous.totalAttendees / previous.totalEvents) : 0,
+        averageBudget:
+          previous.totalEvents > 0 ? Math.round(previous.totalBudget / previous.totalEvents) : 0,
+        averageAttendees:
+          previous.totalEvents > 0 ? Math.round(previous.totalAttendees / previous.totalEvents) : 0,
       },
       changes: {
         totalEvents: calculateChange(current.totalEvents, previous.totalEvents),
@@ -840,7 +838,10 @@ export const getPlatformBudgetAnalytics = query({
     const eventsWithBudget = eventsInRange.filter((e) => e.budget && e.budget > 0).length
 
     // Calculate actual spending from budget items
-    const totalSpent = budgetItems.reduce((sum, bi) => sum + (bi.actualAmount || bi.estimatedAmount || 0), 0)
+    const totalSpent = budgetItems.reduce(
+      (sum, bi) => sum + (bi.actualAmount || bi.estimatedAmount || 0),
+      0
+    )
     const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
     // Group by currency
@@ -938,7 +939,8 @@ export const getPlatformEngagementAnalytics = query({
     const eventsWithSponsors = new Set(eventSponsors.map((es) => es.eventId)).size
 
     const avgVendorsPerEvent = eventsWithVendors > 0 ? vendorApplications / eventsWithVendors : 0
-    const avgSponsorsPerEvent = eventsWithSponsors > 0 ? sponsorApplications / eventsWithSponsors : 0
+    const avgSponsorsPerEvent =
+      eventsWithSponsors > 0 ? sponsorApplications / eventsWithSponsors : 0
 
     return {
       vendors: {
@@ -974,12 +976,9 @@ export const getPlatformEngagementAnalytics = query({
 export const getEventTrendsInternal = internalQuery({
   args: {
     userId: v.id('users'),
-    period: v.optional(v.union(
-      v.literal('day'),
-      v.literal('week'),
-      v.literal('month'),
-      v.literal('year')
-    )),
+    period: v.optional(
+      v.union(v.literal('day'), v.literal('week'), v.literal('month'), v.literal('year'))
+    ),
     startDate: v.optional(v.number()),
     endDate: v.optional(v.number()),
   },
@@ -1005,7 +1004,7 @@ export const getEventTrendsInternal = internalQuery({
         const totalEvents = events.length
         const totalBudget = events.reduce((sum, e) => sum + (e.budget || 0), 0)
         const totalAttendees = events.reduce((sum, e) => sum + (e.expectedAttendees || 0), 0)
-        
+
         const byStatus = {
           draft: events.filter((e) => e.status === 'draft').length,
           planning: events.filter((e) => e.status === 'planning').length,
@@ -1137,11 +1136,7 @@ export const getEventPerformanceInternal = internalQuery({
 export const getComparativeAnalyticsInternal = internalQuery({
   args: {
     userId: v.id('users'),
-    period: v.optional(v.union(
-      v.literal('week'),
-      v.literal('month'),
-      v.literal('year')
-    )),
+    period: v.optional(v.union(v.literal('week'), v.literal('month'), v.literal('year'))),
   },
   handler: async (ctx, args) => {
     const period = args.period || 'month'
@@ -1207,13 +1202,17 @@ export const getComparativeAnalyticsInternal = internalQuery({
       period,
       current: {
         ...current,
-        averageBudget: current.totalEvents > 0 ? Math.round(current.totalBudget / current.totalEvents) : 0,
-        averageAttendees: current.totalEvents > 0 ? Math.round(current.totalAttendees / current.totalEvents) : 0,
+        averageBudget:
+          current.totalEvents > 0 ? Math.round(current.totalBudget / current.totalEvents) : 0,
+        averageAttendees:
+          current.totalEvents > 0 ? Math.round(current.totalAttendees / current.totalEvents) : 0,
       },
       previous: {
         ...previous,
-        averageBudget: previous.totalEvents > 0 ? Math.round(previous.totalBudget / previous.totalEvents) : 0,
-        averageAttendees: previous.totalEvents > 0 ? Math.round(previous.totalAttendees / previous.totalEvents) : 0,
+        averageBudget:
+          previous.totalEvents > 0 ? Math.round(previous.totalBudget / previous.totalEvents) : 0,
+        averageAttendees:
+          previous.totalEvents > 0 ? Math.round(previous.totalAttendees / previous.totalEvents) : 0,
       },
       changes: {
         totalEvents: calculateChange(current.totalEvents, previous.totalEvents),
@@ -1255,7 +1254,10 @@ export const getBudgetAnalyticsInternal = internalQuery({
     const totalBudget = eventsInRange.reduce((sum, e) => sum + (e.budget || 0), 0)
     const eventsWithBudget = eventsInRange.filter((e) => e.budget && e.budget > 0).length
 
-    const totalSpent = budgetItems.reduce((sum, bi) => sum + (bi.actualAmount || bi.estimatedAmount || 0), 0)
+    const totalSpent = budgetItems.reduce(
+      (sum, bi) => sum + (bi.actualAmount || bi.estimatedAmount || 0),
+      0
+    )
     const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0
 
     const byCurrency: Record<string, { budget: number; spent: number; count: number }> = {}
@@ -1342,7 +1344,8 @@ export const getEngagementAnalyticsInternal = internalQuery({
     const eventsWithSponsors = new Set(eventSponsors.map((es) => es.eventId)).size
 
     const avgVendorsPerEvent = eventsWithVendors > 0 ? vendorApplications / eventsWithVendors : 0
-    const avgSponsorsPerEvent = eventsWithSponsors > 0 ? sponsorApplications / eventsWithSponsors : 0
+    const avgSponsorsPerEvent =
+      eventsWithSponsors > 0 ? sponsorApplications / eventsWithSponsors : 0
 
     return {
       vendors: {
@@ -1366,4 +1369,3 @@ export const getEngagementAnalyticsInternal = internalQuery({
     }
   },
 })
-

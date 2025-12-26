@@ -122,7 +122,10 @@ describe('SignInForm', () => {
     render(<SignInForm />)
 
     expect(screen.getByLabelText(/email/i)).toHaveAttribute('autocomplete', 'email')
-    expect(screen.getByPlaceholderText(/enter your password/i)).toHaveAttribute('autocomplete', 'current-password')
+    expect(screen.getByPlaceholderText(/enter your password/i)).toHaveAttribute(
+      'autocomplete',
+      'current-password'
+    )
   })
 
   it('should clear validation errors when user types', async () => {

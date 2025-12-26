@@ -14,7 +14,40 @@ import { getCurrentUser as getCurrentUserFromLib } from '../lib/auth'
 export const getCurrentUser = query({
   args: {},
   handler: async (ctx) => {
-    return await getCurrentUserFromLib(ctx)
+    // #region agent log
+    console.log('[DEBUG-AUTH] getCurrentUser query called:', JSON.stringify({
+      location: 'convex/queries/auth.ts:16',
+      message: 'getCurrentUser query entry',
+      data: {
+        timestamp: Date.now(),
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'client-query',
+      hypothesisId: 'Q1',
+    }))
+    // #endregion
+    
+    const result = await getCurrentUserFromLib(ctx)
+    
+    // #region agent log
+    console.log('[DEBUG-AUTH] getCurrentUser query result:', JSON.stringify({
+      location: 'convex/queries/auth.ts:25',
+      message: 'getCurrentUser query result',
+      data: {
+        hasUser: !!result,
+        userId: result?._id?.toString() ?? 'null',
+        userRole: result?.role ?? 'null',
+        userStatus: result?.status ?? 'null',
+      },
+      timestamp: Date.now(),
+      sessionId: 'debug-session',
+      runId: 'client-query',
+      hypothesisId: 'Q2',
+    }))
+    // #endregion
+    
+    return result
   },
 })
 
@@ -51,4 +84,3 @@ export const getUserRole = query({
     return user?.role ?? null
   },
 })
-

@@ -1,8 +1,4 @@
-import {
-  ShapeUtil,
-  HTMLContainer,
-  Rectangle2d,
-} from 'tldraw'
+import { ShapeUtil, HTMLContainer, Rectangle2d } from 'tldraw'
 import type { TLResizeInfo } from '@tldraw/editor'
 import type { NoteCardShape, NoteCardProps } from '@/lib/playground/types'
 import { Note } from '@phosphor-icons/react'
@@ -88,9 +84,7 @@ export class NoteCardShapeUtil extends ShapeUtil<NoteCardShape> {
 
           {/* Content */}
           <div className="flex-1 px-3 pb-3 overflow-hidden">
-            <h3 className="font-medium text-foreground text-sm leading-tight mb-1">
-              {title}
-            </h3>
+            <h3 className="font-medium text-foreground text-sm leading-tight mb-1">{title}</h3>
             {content && (
               <p className="text-xs text-muted-foreground line-clamp-4 whitespace-pre-wrap">
                 {content}
@@ -103,13 +97,6 @@ export class NoteCardShapeUtil extends ShapeUtil<NoteCardShape> {
   }
 
   indicator(shape: NoteCardShape) {
-    return (
-      <rect
-        width={shape.props.w}
-        height={shape.props.h}
-        rx={12}
-        ry={12}
-      />
-    )
+    return <rect width={shape.props.w} height={shape.props.h} rx={12} ry={12} />
   }
 }

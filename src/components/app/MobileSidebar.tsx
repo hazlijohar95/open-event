@@ -28,9 +28,7 @@ const navigationItems = [
   { label: 'Analytics', icon: ChartLine, path: '/dashboard/analytics' },
 ]
 
-const bottomItems = [
-  { label: 'Settings', icon: Gear, path: '/dashboard/settings' },
-]
+const bottomItems = [{ label: 'Settings', icon: Gear, path: '/dashboard/settings' }]
 
 export function MobileSidebar({ open, onClose }: MobileSidebarProps) {
   const location = useLocation()

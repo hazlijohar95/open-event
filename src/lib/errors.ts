@@ -1,6 +1,6 @@
 /**
  * Centralized error handling utilities
- * 
+ *
  * Provides consistent error handling patterns across the application.
  * Use these utilities instead of inline try-catch with toast notifications.
  */
@@ -34,7 +34,7 @@ export function getErrorMessage(error: unknown, fallback = ERROR_MESSAGES.GENERI
 
 /**
  * Handle an error with a toast notification
- * 
+ *
  * @example
  * ```ts
  * try {
@@ -47,14 +47,14 @@ export function getErrorMessage(error: unknown, fallback = ERROR_MESSAGES.GENERI
 export function handleError(error: unknown, context?: string): void {
   const message = getErrorMessage(error)
   const displayMessage = context ? `${context}: ${message}` : message
-  
+
   console.error('[Error]', context || 'Unknown context', error)
   toast.error(displayMessage)
 }
 
 /**
  * Wrapper for async operations with automatic error handling
- * 
+ *
  * @example
  * ```ts
  * const result = await withErrorHandling(
@@ -82,7 +82,7 @@ export async function withErrorHandling<T>(
 
 /**
  * Wrapper for async operations with success toast
- * 
+ *
  * @example
  * ```ts
  * await withToast(
@@ -104,4 +104,3 @@ export async function withToast<T>(
     return null
   }
 }
-

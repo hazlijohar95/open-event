@@ -23,11 +23,7 @@ export function AuthLayout({
       {/* Left Panel - Image Background (hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 xl:w-3/5 relative overflow-hidden">
         {/* Background Image */}
-        <img
-          src="/auth-bg.jpg"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <img src="/auth-bg.jpg" alt="" className="absolute inset-0 w-full h-full object-cover" />
 
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-br from-black/40 via-transparent to-black/60" />
@@ -48,8 +44,8 @@ export function AuthLayout({
               Manage events with the right partners.
             </h2>
             <p className="text-white/70 text-lg">
-              Connect with sponsors, vendors, and volunteers.
-              Powered by AI for seamless event operations.
+              Connect with sponsors, vendors, and volunteers. Powered by AI for seamless event
+              operations.
             </p>
           </div>
 
@@ -63,9 +59,7 @@ export function AuthLayout({
                 />
               ))}
             </div>
-            <p className="text-white/60 text-sm">
-              Early adopters welcome
-            </p>
+            <p className="text-white/60 text-sm">Early adopters welcome</p>
           </div>
         </div>
       </div>
@@ -98,9 +92,7 @@ export function AuthLayout({
           <div className="w-full max-w-md space-y-8">
             {/* Title Section */}
             <div className="space-y-2">
-              <h1 className="font-mono text-3xl sm:text-4xl font-bold tracking-tight">
-                {title}
-              </h1>
+              <h1 className="font-mono text-3xl sm:text-4xl font-bold tracking-tight">{title}</h1>
               <p className="text-muted-foreground">{subtitle}</p>
             </div>
 
@@ -112,10 +104,7 @@ export function AuthLayout({
             {/* Footer Link */}
             <p className="text-center text-sm text-muted-foreground">
               {footerText}{' '}
-              <Link
-                to={footerLinkTo}
-                className="text-primary hover:underline font-medium"
-              >
+              <Link to={footerLinkTo} className="text-primary hover:underline font-medium">
                 {footerLinkText}
               </Link>
             </p>
@@ -126,9 +115,13 @@ export function AuthLayout({
         <footer className="px-6 py-4 lg:px-12 text-center lg:text-left">
           <p className="text-xs text-muted-foreground">
             By continuing, you agree to our{' '}
-            <Link to="/terms" className="underline hover:text-foreground">Terms of Service</Link>
-            {' '}and{' '}
-            <Link to="/privacy" className="underline hover:text-foreground">Privacy Policy</Link>
+            <Link to="/terms" className="underline hover:text-foreground">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="underline hover:text-foreground">
+              Privacy Policy
+            </Link>
           </p>
         </footer>
       </div>
